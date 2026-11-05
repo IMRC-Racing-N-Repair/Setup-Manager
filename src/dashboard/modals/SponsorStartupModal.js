@@ -1,9 +1,11 @@
-import { Linking, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Linking, Modal, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { Image } from 'expo-image';
 
 import { AppColors } from '../../theme/colors';
 
 export default function SponsorStartupModal({ visible, sponsor, onClose }) {
+  const { height } = useWindowDimensions();
+  const artworkHeight = Math.max(165, Math.min(285, Math.round(height * 0.35)));
   const sponsorImage = sponsor?.logo || sponsor?.image || '';
   const openSponsor = () => {
     if (!sponsor?.url) return;
@@ -31,7 +33,7 @@ export default function SponsorStartupModal({ visible, sponsor, onClose }) {
                 contentFit="contain"
                 cachePolicy="memory-disk"
                 transition={120}
-                style={styles.sponsorImage}
+                style={[styles.sponsorImage, { height: artworkHeight }]}
               />
             ) : (
               <View style={styles.sponsorPlaceholder}>
@@ -39,7 +41,6 @@ export default function SponsorStartupModal({ visible, sponsor, onClose }) {
               </View>
             )}
             <View style={styles.sponsorCaption}>
-              <Text style={styles.sponsorCaptionLabel}>PRESENTED BY</Text>
               <Text style={styles.sponsorCaptionName} numberOfLines={2}>
                 {sponsor?.name || 'Available Banner'}
               </Text>
@@ -71,7 +72,7 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 440,
     alignSelf: 'center',
-    padding: 18,
+    padding: 14,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: AppColors.borderStrong,
@@ -84,24 +85,22 @@ const styles = StyleSheet.create({
     letterSpacing: 1.4,
   },
   title: {
-    marginTop: 3,
+    marginTop: 1,
     color: AppColors.textStrong,
-    fontSize: 27,
-    lineHeight: 30,
+    fontSize: 25,
+    lineHeight: 27,
     fontWeight: '900',
   },
   intro: {
-    marginTop: 7,
-    marginBottom: 14,
+    marginTop: 2,
+    marginBottom: 6,
     color: AppColors.mutedText,
     fontSize: 12,
-    lineHeight: 17,
+    lineHeight: 14,
   },
   sponsorArtwork: {
-    position: 'relative',
     width: '100%',
-    height: 232,
-    marginBottom: 16,
+    marginBottom: 10,
     borderRadius: 5,
     borderWidth: 1,
     borderColor: AppColors.borderStrong,
@@ -110,13 +109,12 @@ const styles = StyleSheet.create({
   },
   sponsorImage: {
     width: '100%',
-    height: '100%',
   },
   sponsorPlaceholder: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingBottom: 58,
+    minHeight: 150,
   },
   sponsorPlaceholderText: {
     color: '#18201B',
@@ -125,36 +123,25 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   sponsorCaption: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    minHeight: 58,
+    minHeight: 32,
     justifyContent: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    backgroundColor: 'rgba(5, 10, 8, 0.90)',
-  },
-  sponsorCaptionLabel: {
-    color: AppColors.success,
-    fontSize: 8,
-    fontWeight: '900',
-    letterSpacing: 1.2,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    backgroundColor: '#202522',
   },
   sponsorCaptionName: {
-    marginTop: 2,
     color: '#FFFFFF',
-    fontSize: 15,
-    lineHeight: 18,
+    fontSize: 13,
+    lineHeight: 15,
     fontWeight: '900',
   },
   actions: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 8,
   },
   secondaryButton: {
     flex: 1,
-    minHeight: 44,
+    minHeight: 42,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 5,
@@ -164,7 +151,7 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     flex: 1.2,
-    minHeight: 44,
+    minHeight: 42,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 5,

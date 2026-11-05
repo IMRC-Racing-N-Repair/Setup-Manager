@@ -2,7 +2,7 @@
 import { AppState, Platform, ScrollView, Text, View, useWindowDimensions } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { dashboardStyles as styles } from './dashboard.styles';
 import { formatLastSync } from './logic/formatters';
@@ -23,7 +23,10 @@ import RaceDayButton from './buttons/RaceDayButton';
 import RaceDayStartModal from './modals/RaceDayStartModal';
 import RecentChangesCard from './components/RecentChangesCard';
 import SponsorBanner from './components/SponsorBanner';
+import SponsorStartupModal from './modals/SponsorStartupModal';
 import StatsRow from './components/StatsRow';
+
+let sponsorPopupShownThisLaunch = false;
 
 function Footer({ version, lastSyncAt, style }) {
   return <Text style={[styles.footerText, style]}>v{version} · last sync {formatLastSync(lastSyncAt)}</Text>;
@@ -137,6 +140,11 @@ export default function DashboardScreen({
   const startDismissTimerRef = useRef(null);
   const activeDismissTimerRef = useRef(null);
   const archiveDismissTimerRef = useRef(null);
+  const [showSponsorPopup, setShowSponsorPopup] = useState(() => {
+    if (sponsorPopupShownThisLaunch) return false;
+    sponsorPopupShownThisLaunch = true;
+    return true;
+  });
 
   const isShortLandscape = isLandscape && height < 540;
   const isVeryShortLandscape = isLandscape && height < 470;
@@ -169,7 +177,7 @@ export default function DashboardScreen({
         statCard: {
           minHeight: isVeryShortLandscape ? 38 : isShortLandscape ? 44 : 54,
           padding: isVeryShortLandscape ? 5 : isShortLandscape ? 6 : 8,
-          borderRadius: isVeryShortLandscape ? 12 : 14,
+          borderRadius: 4,
         },
         statValue: {
           fontSize: isVeryShortLandscape ? 15 : isShortLandscape ? 17 : 20,
@@ -181,7 +189,7 @@ export default function DashboardScreen({
         },
         raceDayButton: {
           marginBottom: isVeryShortLandscape ? 8 : 12,
-          borderRadius: isVeryShortLandscape ? 14 : 18,
+          borderRadius: 6,
         },
         raceDayGradient: {
           minHeight: isVeryShortLandscape ? 52 : isShortLandscape ? 60 : 70,
@@ -196,7 +204,7 @@ export default function DashboardScreen({
         },
         bottomButton: {
           minHeight: isVeryShortLandscape ? 38 : isShortLandscape ? 42 : 46,
-          borderRadius: isVeryShortLandscape ? 12 : 14,
+          borderRadius: 5,
         },
         footerText: {
           marginTop: isVeryShortLandscape ? 3 : 6,
@@ -272,7 +280,7 @@ export default function DashboardScreen({
           statCard: {
             minHeight: statH,
             padding: isTinyPhone ? 5 : isSmallPhone ? 6 : 8,
-            borderRadius: isTinyPhone ? 11 : 14,
+            borderRadius: 4,
           },
           statValue: {
             fontSize: isTinyPhone ? 15 : isSmallPhone ? 16 : isMidPhone ? 18 : 20,
@@ -281,11 +289,11 @@ export default function DashboardScreen({
           statIconBubble: {
             width: isTinyPhone ? 20 : isSmallPhone ? 22 : 28,
             height: isTinyPhone ? 20 : isSmallPhone ? 22 : 28,
-            borderRadius: isTinyPhone ? 8 : 10,
+            borderRadius: 2,
           },
           raceDayButton: {
             marginBottom: isTinyPhone ? 6 : isSmallPhone ? 7 : 12,
-            borderRadius: isTinyPhone ? 13 : 18,
+            borderRadius: 6,
           },
           raceDayGradient: {
             minHeight: raceH,
@@ -298,7 +306,7 @@ export default function DashboardScreen({
             minHeight: recentMin,
             padding: isTinyPhone ? 8 : isSmallPhone ? 9 : 14,
             marginBottom: isTinyPhone ? 6 : isSmallPhone ? 7 : 14,
-            borderRadius: isTinyPhone ? 13 : 16,
+            borderRadius: 6,
           },
           recentTitle: {
             fontSize: isTinyPhone ? 14 : isSmallPhone ? 15 : 18,
@@ -309,7 +317,7 @@ export default function DashboardScreen({
           },
           sponsorCard: {
             padding: isTinyPhone ? 5 : isSmallPhone ? 6 : 8,
-            borderRadius: isTinyPhone ? 13 : 16,
+            borderRadius: 6,
           },
           sponsorImage: {
             height: sponsorH,
@@ -335,7 +343,7 @@ export default function DashboardScreen({
           },
           bottomButton: {
             minHeight: isTinyPhone ? 34 : isSmallPhone ? 38 : 46,
-            borderRadius: isTinyPhone ? 11 : 14,
+            borderRadius: 5,
           },
           footerText: {
             marginTop: isTinyPhone ? 2 : isSmallPhone ? 3 : 6,
@@ -456,6 +464,13 @@ export default function DashboardScreen({
 
   const mainContent = (
     <>
+      <SponsorBanner
+        sponsor={sponsor}
+        style={portraitSizing?.sponsorCard}
+        imageStyle={portraitSizing?.sponsorImage}
+        placeholderStyle={portraitSizing?.sponsorPlaceholder}
+        nameStyle={portraitSizing?.sponsorName}
+      />
       <StatsRow
         counts={counts}
         router={router}
@@ -477,13 +492,6 @@ export default function DashboardScreen({
         style={portraitSizing?.recentCard}
         titleStyle={portraitSizing?.recentTitle}
         rowStyle={portraitSizing?.recentRow}
-      />
-      <SponsorBanner
-        sponsor={sponsor}
-        style={portraitSizing?.sponsorCard}
-        imageStyle={portraitSizing?.sponsorImage}
-        placeholderStyle={portraitSizing?.sponsorPlaceholder}
-        nameStyle={portraitSizing?.sponsorName}
       />
     </>
   );
@@ -520,19 +528,19 @@ export default function DashboardScreen({
 
   const landscapeRightContent = (
     <>
-      <RecentChangesCard
-        rows={recent.recentRows}
-        onViewMore={() => router.push('/recent-changes')}
-        style={landscapeSizing?.recentCard}
-        titleStyle={landscapeSizing?.recentTitle}
-        rowStyle={landscapeSizing?.recentRow}
-      />
       <SponsorBanner
         sponsor={sponsor}
         style={landscapeSizing?.sponsorCard}
         imageStyle={landscapeSizing?.sponsorImage}
         placeholderStyle={landscapeSizing?.sponsorPlaceholder}
         nameStyle={landscapeSizing?.sponsorName}
+      />
+      <RecentChangesCard
+        rows={recent.recentRows}
+        onViewMore={() => router.push('/recent-changes')}
+        style={landscapeSizing?.recentCard}
+        titleStyle={landscapeSizing?.recentTitle}
+        rowStyle={landscapeSizing?.recentRow}
       />
     </>
   );
@@ -637,6 +645,11 @@ export default function DashboardScreen({
         onOpenSession={queueArchiveSession}
         onCloseDetail={() => raceDay.modals.setArchiveDetail?.(null)}
         onDismiss={finishArchiveModalDismissal}
+      />
+      <SponsorStartupModal
+        visible={showSponsorPopup}
+        sponsor={sponsor}
+        onClose={() => setShowSponsorPopup(false)}
       />
     </StableSafeAreaView>
   );

@@ -16,7 +16,7 @@ export default function SponsorBanner({ sponsor, style, imageStyle, placeholderS
   return (
     <TouchableOpacity activeOpacity={0.9} onPress={openSponsor} style={[styles.sponsorCard, style]}>
       <View style={styles.sponsorImageWrap}>
-        <Text style={styles.sponsorLabel}>Sponsored By</Text>
+        <Text style={styles.sponsorLabel}>Presented by</Text>
         {hasImage ? (
           <Image source={{ uri: sponsorImage }} contentFit="contain" cachePolicy="memory-disk" transition={120} style={[styles.sponsorImage, imageStyle]} />
         ) : (

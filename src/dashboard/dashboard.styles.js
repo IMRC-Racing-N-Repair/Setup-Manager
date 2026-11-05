@@ -50,7 +50,7 @@ export const dashboardStyles = StyleSheet.create({
   recentWhat: { flex: 1, color: '#D1D5DB', fontSize: 12.5, fontWeight: '800', paddingRight: 6 },
   recentChangeValue: { flex: 0.55, color: AppColors.valueGreen, fontSize: 12.5, fontWeight: '900', textAlign: 'right' },
 
-  sponsorCard: { borderRadius: 6, borderWidth: 1, borderColor: AppColors.border, padding: 8, backgroundColor: AppColors.card, alignItems: 'center', marginBottom: 0, justifyContent: 'center', minHeight: 0, overflow: 'hidden' },
+  sponsorCard: { borderRadius: 6, borderWidth: 1, borderColor: AppColors.border, padding: 8, backgroundColor: AppColors.card, alignItems: 'center', marginBottom: 12, justifyContent: 'center', minHeight: 0, overflow: 'hidden' },
   sponsorImageWrap: { width: '100%', alignItems: 'center', justifyContent: 'center', minHeight: 0 },
   sponsorImage: { width: '100%', height: 220, maxHeight: 260 },
   sponsorPlaceholder: { width: '100%', height: 220, backgroundColor: AppColors.surface, borderWidth: 1, borderColor: AppColors.border, alignItems: 'center', justifyContent: 'center' },

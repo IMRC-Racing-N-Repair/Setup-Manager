@@ -12,7 +12,7 @@ export default function RaceDayHistoryButton({ onPress, style }) {
         {
           minHeight: 38,
           marginTop: 6,
-          borderTopColor: '#22C55E',
+          borderTopColor: '#2F8CFF',
           borderTopWidth: 2,
         },
         style,

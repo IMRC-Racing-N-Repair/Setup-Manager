@@ -2,7 +2,7 @@
 
 import { Platform, StatusBar, StyleSheet } from 'react-native';
 
-export const TRACK_BLUE = '#20C96B';
+export const TRACK_BLUE = '#2F8CFF';
 
 const TRACK_SAFE_TOP = Platform.select({
   android: (StatusBar.currentHeight || 0) + 8,
@@ -17,22 +17,22 @@ const TRACK_SAFE_BOTTOM = Platform.select({
 });
 
 export const trackColors = {
-  background: '#080D0A',
-  panel: '#101612',
-  panelSoft: '#121914',
-  card: '#172019',
-  border: '#2A352E',
-  text: '#F0F4F1',
-  muted: '#96A39B',
-  mutedDark: '#6F7D74',
+  background: '#070B13',
+  panel: '#0E1622',
+  panelSoft: '#111B29',
+  card: '#162235',
+  border: '#26364C',
+  text: '#EEF5FF',
+  muted: '#9AA9BC',
+  mutedDark: '#718198',
   blue: TRACK_BLUE,
-  blueSoft: 'rgba(32, 201, 107, 0.10)',
-  bluePill: 'rgba(32, 201, 107, 0.14)',
-  blueBorder: 'rgba(32, 201, 107, 0.60)',
+  blueSoft: 'rgba(47, 140, 255, 0.10)',
+  bluePill: 'rgba(47, 140, 255, 0.15)',
+  blueBorder: 'rgba(47, 140, 255, 0.60)',
   danger: '#EF4444',
   dangerSoft: 'rgba(239, 68, 68, 0.14)',
-  overlay: 'rgba(3, 7, 5, 0.82)',
-  white: '#F0F4F1',
+  overlay: 'rgba(2, 6, 13, 0.84)',
+  white: '#EEF5FF',
 };
 
 const shadow = Platform.select({
@@ -127,15 +127,15 @@ export const trackStyles = StyleSheet.create({
     minHeight: 36,
     borderRadius: 5,
     borderWidth: 1,
-    borderColor: 'rgba(34, 197, 94, 0.38)',
-    backgroundColor: 'rgba(34, 197, 94, 0.14)',
+    borderColor: 'rgba(47, 140, 255, 0.38)',
+    backgroundColor: 'rgba(47, 140, 255, 0.14)',
     paddingHorizontal: 11,
     alignItems: 'center',
     justifyContent: 'center',
   },
 
   headerImportButtonText: {
-    color: '#BFF7CF',
+    color: '#A9D0FF',
     fontSize: 12,
     fontWeight: '900',
   },

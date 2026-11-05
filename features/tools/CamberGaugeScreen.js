@@ -666,7 +666,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     backgroundColor: TOOL_CARD_2,
-    borderColor: 'rgba(38,217,109,0.32)',
+    borderColor: 'rgba(47,140,255,0.32)',
   },
   stepRow: {
     width: '100%',
@@ -690,7 +690,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,212,107,0.08)',
   },
   stepPillDone: {
-    backgroundColor: 'rgba(57,255,136,0.12)',
+    backgroundColor: 'rgba(47,140,255,0.12)',
     borderColor: TOOL_LINE,
   },
   stepPillText: {
@@ -791,9 +791,9 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     borderRadius: 999,
-    backgroundColor: 'rgba(57,255,136,0.25)',
+    backgroundColor: 'rgba(47,140,255,0.25)',
     borderWidth: 1,
-    borderColor: 'rgba(57,255,136,0.40)',
+    borderColor: 'rgba(47,140,255,0.40)',
   },
   tipMark: {
     position: 'absolute',
@@ -821,7 +821,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(57,255,136,0.10)',
+    backgroundColor: 'rgba(47,140,255,0.10)',
     borderWidth: 1,
     borderColor: TOOL_LINE,
   },
@@ -850,7 +850,7 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     backgroundColor: 'rgba(0,0,0,0.25)',
     borderWidth: 1,
-    borderColor: 'rgba(57,255,136,0.18)',
+    borderColor: 'rgba(47,140,255,0.18)',
   },
 
   modalOverlay: {
@@ -865,7 +865,7 @@ const styles = StyleSheet.create({
     maxWidth: 430,
     borderRadius: 8,
     padding: 16,
-    backgroundColor: '#101915',
+    backgroundColor: '#0E1622',
     borderWidth: 1,
     borderColor: TOOL_LINE,
   },

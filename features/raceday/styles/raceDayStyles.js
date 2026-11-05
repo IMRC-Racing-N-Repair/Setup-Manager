@@ -1,25 +1,25 @@
 import { StyleSheet } from 'react-native';
 
 export const raceDayColors = {
-  bg: '#080D0A',
-  panel: '#101612',
-  card: '#121914',
-  cardAlt: '#172019',
-  border: '#2A352E',
-  text: '#F0F4F1',
-  muted: '#96A39B',
-  faint: '#6F7D74',
-  accent: '#20C96B',
-  accentSoft: 'rgba(32,201,107,0.10)',
-  accentSofter: 'rgba(32,201,107,0.055)',
-  accentBorder: 'rgba(32,201,107,0.60)',
-  accentTextDark: '#04130A',
+  bg: '#070B13',
+  panel: '#0E1622',
+  card: '#111B29',
+  cardAlt: '#162235',
+  border: '#26364C',
+  text: '#EEF5FF',
+  muted: '#9AA9BC',
+  faint: '#718198',
+  accent: '#2F8CFF',
+  accentSoft: 'rgba(47,140,255,0.11)',
+  accentSofter: 'rgba(47,140,255,0.06)',
+  accentBorder: 'rgba(47,140,255,0.60)',
+  accentTextDark: '#04101F',
   danger: '#EF4444',
   dangerSoft: 'rgba(239,68,68,0.14)',
   blue: '#38BDF8',
   blueSoft: 'rgba(56,189,248,0.14)',
   purple: '#A78BFA',
-  input: '#0B100D',
+  input: '#0A0F19',
 };
 
 export const raceDayStyles = StyleSheet.create({
@@ -186,7 +186,7 @@ export const raceDayStyles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: '#0A1711',
     borderWidth: 1.5,
-    borderColor: 'rgba(34,197,94,0.62)',
+    borderColor: 'rgba(47,140,255,0.62)',
     borderRadius: 8,
     paddingHorizontal: 14,
     paddingTop: 12,
@@ -429,7 +429,7 @@ export const raceDayStyles = StyleSheet.create({
     borderRadius: 5,
     backgroundColor: raceDayColors.accentSofter,
     borderWidth: 1,
-    borderColor: 'rgba(34,197,94,0.32)',
+    borderColor: 'rgba(47,140,255,0.32)',
   },
   eventPickerMessage: {
     color: raceDayColors.muted,
@@ -515,7 +515,7 @@ export const raceDayStyles = StyleSheet.create({
     borderRadius: 6,
     backgroundColor: raceDayColors.accentSofter,
     borderWidth: 1,
-    borderColor: 'rgba(34,197,94,0.32)',
+    borderColor: 'rgba(47,140,255,0.32)',
   },
   changeEventButton: {
     alignSelf: 'flex-end',
@@ -525,7 +525,7 @@ export const raceDayStyles = StyleSheet.create({
     borderRadius: 999,
     backgroundColor: raceDayColors.accentSofter,
     borderWidth: 1,
-    borderColor: 'rgba(34,197,94,0.42)',
+    borderColor: 'rgba(47,140,255,0.42)',
   },
   changeEventButtonText: {
     color: raceDayColors.accent,
@@ -855,7 +855,7 @@ export const raceDayStyles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: raceDayColors.accentSofter,
     borderWidth: 1,
-    borderColor: 'rgba(34,197,94,0.42)',
+    borderColor: 'rgba(47,140,255,0.42)',
   },
   resultTop5ButtonText: {
     color: raceDayColors.accent,
@@ -869,7 +869,7 @@ export const raceDayStyles = StyleSheet.create({
     borderRadius: 5,
     backgroundColor: raceDayColors.accentSofter,
     borderWidth: 1,
-    borderColor: 'rgba(34,197,94,0.28)',
+    borderColor: 'rgba(47,140,255,0.28)',
   },
   dashboardBlockHintTitle: {
     color: raceDayColors.accent,

@@ -18,16 +18,16 @@ import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import StableSafeAreaView from '../../src/layout/StableSafeAreaView';
 
-export const TOOL_GREEN = '#20C96B';
-export const TOOL_GREEN_DARK = '#0C2717';
-export const TOOL_BG = '#080D0A';
-export const TOOL_PANEL = '#101612';
-export const TOOL_CARD = '#121914';
-export const TOOL_CARD_2 = '#172019';
-export const TOOL_LINE = 'rgba(32,201,107,0.36)';
-export const TOOL_LINE_SOFT = '#2A352E';
-export const TOOL_TEXT = '#F0F4F1';
-export const TOOL_MUTED = '#96A39B';
+export const TOOL_GREEN = '#2F8CFF';
+export const TOOL_GREEN_DARK = '#102A4A';
+export const TOOL_BG = '#070B13';
+export const TOOL_PANEL = '#0E1622';
+export const TOOL_CARD = '#111B29';
+export const TOOL_CARD_2 = '#162235';
+export const TOOL_LINE = 'rgba(47,140,255,0.38)';
+export const TOOL_LINE_SOFT = '#26364C';
+export const TOOL_TEXT = '#EEF5FF';
+export const TOOL_MUTED = '#9AA9BC';
 export const TOOL_WARN = '#F1BD2B';
 export const TOOL_RED = '#E65C5C';
 
@@ -251,9 +251,9 @@ export const styles = StyleSheet.create({
     opacity: 0.95,
   },
   header: {
-    minHeight: 58,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    minHeight: 54,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: TOOL_PANEL,
@@ -295,9 +295,9 @@ export const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   content: {
-    paddingHorizontal: 10,
-    paddingTop: 9,
-    gap: 8,
+    paddingHorizontal: 9,
+    paddingTop: 8,
+    gap: 7,
   },
   listHeader: {
     gap: 8,
@@ -306,8 +306,8 @@ export const styles = StyleSheet.create({
     backgroundColor: TOOL_CARD,
     borderColor: TOOL_LINE_SOFT,
     borderWidth: 1,
-    borderRadius: 6,
-    padding: 12,
+    borderRadius: 4,
+    padding: 10,
     shadowColor: '#000',
     shadowOpacity: 0.08,
     shadowOffset: { width: 0, height: 2 },
@@ -315,8 +315,8 @@ export const styles = StyleSheet.create({
     elevation: 1,
   },
   cardCompact: {
-    padding: 8,
-    borderRadius: 5,
+    padding: 7,
+    borderRadius: 3,
   },
   sectionTitleRow: {
     flexDirection: 'row',
@@ -337,8 +337,8 @@ export const styles = StyleSheet.create({
     fontSize: 11,
   },
   button: {
-    minHeight: 38,
-    borderRadius: 5,
+    minHeight: 36,
+    borderRadius: 3,
     backgroundColor: TOOL_GREEN,
     alignItems: 'center',
     justifyContent: 'center',
@@ -347,7 +347,7 @@ export const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.10)',
   },
   secondaryButton: {
-    backgroundColor: 'rgba(38,217,109,0.10)',
+    backgroundColor: 'rgba(47,140,255,0.10)',
     borderColor: TOOL_LINE,
   },
   dangerButton: {
@@ -357,7 +357,7 @@ export const styles = StyleSheet.create({
   disabledButton: { opacity: 0.45 },
   pressed: { transform: [{ scale: 0.985 }], opacity: 0.90 },
   buttonText: {
-    color: '#04110a',
+    color: '#FFFFFF',
     fontWeight: '900',
     fontSize: 13,
   },
@@ -370,7 +370,7 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 9,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(38,217,109,0.10)',
+    backgroundColor: 'rgba(47,140,255,0.10)',
     borderWidth: 1,
     borderColor: TOOL_LINE,
   },
@@ -442,7 +442,7 @@ export const styles = StyleSheet.create({
     fontWeight: '900',
     fontSize: 11,
   },
-  segmentTextSelected: { color: '#04110a' },
+  segmentTextSelected: { color: '#FFFFFF' },
   resultRow: {
     paddingVertical: 6,
     borderBottomWidth: 1,

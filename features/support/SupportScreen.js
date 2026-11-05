@@ -21,13 +21,13 @@ const FACEBOOK_URL = 'https://www.facebook.com/IMRCracingNrepair';
 const DISCORD_URL = 'https://discord.gg/rTSYeh5cGZ';
 const SUPPORT_EMAIL = 'shopimrc@gmail.com';
 
-const SUPPORT_ACCENT = '#38bdf8';
-const BG = '#070a10';
-const PANEL = '#0d121c';
-const CARD = '#151923';
-const BORDER = 'rgba(255,255,255,0.10)';
-const TEXT = '#f8fafc';
-const MUTED = '#a7b0c0';
+const SUPPORT_ACCENT = '#2F8CFF';
+const BG = '#070B13';
+const PANEL = '#0E1622';
+const CARD = '#111B29';
+const BORDER = '#26364C';
+const TEXT = '#EEF5FF';
+const MUTED = '#9AA9BC';
 
 export default function SupportScreen({ navigation }) {
   const [guideVisible, setGuideVisible] = useState(false);
@@ -103,8 +103,8 @@ export default function SupportScreen({ navigation }) {
           </Pressable>
 
           <View style={styles.headerTitleWrap}>
+            <Text style={styles.headerKicker}>IMRC SUPPORT</Text>
             <Text style={styles.headerTitle}>Support</Text>
-            <View style={styles.headerUnderline} />
           </View>
 
           <View style={styles.headerButtonSpacer} />
@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
     backgroundColor: BG,
   },
   header: {
-    minHeight: 58,
+    minHeight: 64,
     paddingHorizontal: 14,
     paddingTop: 6,
     paddingBottom: 8,
@@ -206,12 +206,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderBottomWidth: 1,
     borderBottomColor: BORDER,
-    backgroundColor: '#090d14',
+    backgroundColor: BG,
   },
   headerButton: {
     minWidth: 72,
     height: 38,
-    borderRadius: 6,
+    borderRadius: 3,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: PANEL,
@@ -222,27 +222,27 @@ const styles = StyleSheet.create({
     opacity: 0,
   },
   headerButtonText: {
-    color: TEXT,
+    color: SUPPORT_ACCENT,
     fontSize: 13,
     fontWeight: '900',
   },
   headerTitleWrap: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'center',
+  },
+  headerKicker: {
+    color: SUPPORT_ACCENT,
+    fontSize: 8,
+    lineHeight: 10,
+    fontWeight: '900',
+    letterSpacing: 1.1,
   },
   headerTitle: {
     color: TEXT,
-    fontSize: 22,
+    fontSize: 23,
     fontWeight: '900',
     letterSpacing: 0.4,
-  },
-  headerUnderline: {
-    marginTop: 5,
-    width: 58,
-    height: 3,
-    borderRadius: 999,
-    backgroundColor: SUPPORT_ACCENT,
   },
   headerButtonSpacer: {
     width: 72,
@@ -251,13 +251,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentInner: {
-    padding: 14,
+    paddingHorizontal: 14,
+    paddingTop: 10,
     paddingBottom: 24,
-    gap: 11,
+    gap: 7,
   },
   heroCard: {
-    borderRadius: 8,
-    padding: 15,
+    borderRadius: 3,
+    padding: 12,
     backgroundColor: PANEL,
     borderWidth: 1,
     borderColor: BORDER,
@@ -275,8 +276,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   card: {
-    borderRadius: 8,
-    padding: 13,
+    borderRadius: 3,
+    padding: 11,
     backgroundColor: CARD,
     borderWidth: 1,
     borderColor: BORDER,
@@ -285,8 +286,8 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   accentCard: {
-    borderColor: 'rgba(56,189,248,0.35)',
-    backgroundColor: 'rgba(56,189,248,0.08)',
+    borderColor: 'rgba(47,140,255,0.40)',
+    backgroundColor: 'rgba(47,140,255,0.09)',
   },
   cardTextWrap: {
     flex: 1,
@@ -307,14 +308,14 @@ const styles = StyleSheet.create({
   cardButton: {
     minWidth: 112,
     height: 40,
-    borderRadius: 6,
+    borderRadius: 3,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: SUPPORT_ACCENT,
     paddingHorizontal: 12,
   },
   cardButtonText: {
-    color: '#03111a',
+    color: '#FFFFFF',
     fontSize: 12.5,
     fontWeight: '900',
   },

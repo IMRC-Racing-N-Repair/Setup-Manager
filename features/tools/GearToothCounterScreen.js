@@ -419,7 +419,7 @@ function GearPhotoGuide({ uri, overlay, zoom = 1, onZoomIn, onZoomOut }) {
               rx={overlay.ellipse.rx}
               ry={overlay.ellipse.ry}
               transform={`rotate(${overlay.ellipse.rotationDeg || 0} ${overlay.ellipse.cx} ${overlay.ellipse.cy})`}
-              stroke="rgba(38,217,109,0.85)"
+              stroke="rgba(47,140,255,0.85)"
               strokeWidth={2.4}
               fill="none"
             />
@@ -440,7 +440,7 @@ function GearPhotoGuide({ uri, overlay, zoom = 1, onZoomIn, onZoomOut }) {
               cx={overlay.cx}
               cy={overlay.cy}
               r={overlay.outerRadius}
-              stroke="rgba(38,217,109,0.85)"
+              stroke="rgba(47,140,255,0.85)"
               strokeWidth={2.4}
               fill="none"
             />
@@ -470,7 +470,7 @@ function GearPhotoGuide({ uri, overlay, zoom = 1, onZoomIn, onZoomOut }) {
             y1={tick.y1}
             x2={tick.x2}
             y2={tick.y2}
-            stroke={idx % 5 === 0 ? 'rgba(38,217,109,1)' : 'rgba(38,217,109,0.72)'}
+            stroke={idx % 5 === 0 ? 'rgba(47,140,255,1)' : 'rgba(47,140,255,0.72)'}
             strokeWidth={idx % 5 === 0 ? 2.6 : 1.7}
             strokeLinecap="round"
           />
@@ -992,7 +992,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   miniResultAccent: {
-    backgroundColor: 'rgba(38,217,109,0.12)',
+    backgroundColor: 'rgba(47,140,255,0.12)',
     borderColor: TOOL_LINE,
   },
   miniLabel: {
@@ -1032,7 +1032,7 @@ const styles = StyleSheet.create({
   },
   photoWrapZoom: {
     height: 218,
-    backgroundColor: '#050906',
+    backgroundColor: '#060A12',
   },
   zoomRail: {
     position: 'absolute',
@@ -1046,9 +1046,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(3,14,8,0.82)',
+    backgroundColor: 'rgba(3,9,18,0.84)',
     borderWidth: 1,
-    borderColor: 'rgba(38,217,109,0.34)',
+    borderColor: 'rgba(47,140,255,0.34)',
   },
   zoomButtonText: {
     color: TOOL_GREEN,
@@ -1078,10 +1078,10 @@ const styles = StyleSheet.create({
   },
   autoCandidateChipPrimary: {
     borderColor: TOOL_GREEN,
-    backgroundColor: 'rgba(46, 220, 115, 0.12)',
+    backgroundColor: 'rgba(47, 140, 255, 0.12)',
   },
   autoCandidateChipSelected: {
-    backgroundColor: 'rgba(46, 220, 115, 0.18)',
+    backgroundColor: 'rgba(47, 140, 255, 0.18)',
     borderWidth: 1.4,
   },
   autoCandidateTooth: {
@@ -1117,9 +1117,9 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 8,
     paddingVertical: 3,
-    backgroundColor: 'rgba(3,14,8,0.72)',
+    backgroundColor: 'rgba(3,9,18,0.76)',
     borderWidth: 1,
-    borderColor: 'rgba(38,217,109,0.34)',
+    borderColor: 'rgba(47,140,255,0.34)',
   },
   zoomBadgeText: {
     color: TOOL_GREEN,
@@ -1153,7 +1153,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     marginTop: 7,
     justifyContent: 'center',
-    backgroundColor: 'rgba(38,217,109,0.10)',
+    backgroundColor: 'rgba(47,140,255,0.10)',
     borderWidth: 1,
     borderColor: TOOL_LINE,
   },
@@ -1173,7 +1173,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,214,102,0.38)',
   },
   autoResultBarVerified: {
-    backgroundColor: 'rgba(38,217,109,0.12)',
+    backgroundColor: 'rgba(47,140,255,0.12)',
     borderColor: TOOL_LINE,
   },
   photoStatus: {
@@ -1193,7 +1193,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 7,
     borderRadius: 9,
-    backgroundColor: 'rgba(38,217,109,0.10)',
+    backgroundColor: 'rgba(47,140,255,0.10)',
     borderWidth: 1,
     borderColor: TOOL_LINE,
   },
@@ -1249,7 +1249,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
   },
   pitchChipTextSelected: {
-    color: '#04110a',
+    color: '#FFFFFF',
   },
   row: {
     flexDirection: 'row',
@@ -1269,7 +1269,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     overflow: 'hidden',
     color: TOOL_GREEN,
-    backgroundColor: 'rgba(38,217,109,0.08)',
+    backgroundColor: 'rgba(47,140,255,0.08)',
     borderWidth: 1,
     borderColor: TOOL_LINE,
     fontSize: 35,

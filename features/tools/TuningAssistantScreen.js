@@ -1745,7 +1745,7 @@ const styles = StyleSheet.create({
   },
   selectorCard: {
     backgroundColor: TOOL_CARD_2,
-    borderColor: 'rgba(38,217,109,0.24)',
+    borderColor: 'rgba(47,140,255,0.24)',
   },
   selectorLabel: {
     color: TOOL_MUTED,
@@ -1763,7 +1763,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 9,
     backgroundColor: 'rgba(255,255,255,0.04)',
     borderWidth: 1,
-    borderColor: 'rgba(38,217,109,0.24)',
+    borderColor: 'rgba(47,140,255,0.24)',
   },
   carSelectText: {
     color: TOOL_TEXT,
@@ -1787,7 +1787,7 @@ const styles = StyleSheet.create({
     gap: 5,
     backgroundColor: '#11181d',
     borderWidth: 1,
-    borderColor: 'rgba(38,217,109,0.30)',
+    borderColor: 'rgba(47,140,255,0.30)',
   },
   carModalOptions: { gap: 5 },
   carModalScroll: { flexShrink: 1, minHeight: 0 },
@@ -1809,7 +1809,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.08)',
   },
   carModalOptionSelected: {
-    backgroundColor: 'rgba(38,217,109,0.13)',
+    backgroundColor: 'rgba(47,140,255,0.13)',
     borderColor: TOOL_LINE,
   },
   carModalOptionText: {
@@ -1843,7 +1843,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(244,255,248,0.09)',
   },
   sectionButtonSelected: {
-    backgroundColor: 'rgba(38,217,109,0.12)',
+    backgroundColor: 'rgba(47,140,255,0.12)',
     borderColor: TOOL_LINE,
   },
   sectionNum: {
@@ -1868,7 +1868,7 @@ const styles = StyleSheet.create({
   },
   answerCard: {
     backgroundColor: TOOL_CARD_2,
-    borderColor: 'rgba(38,217,109,0.28)',
+    borderColor: 'rgba(47,140,255,0.28)',
   },
   answerHeading: {
     flexDirection: 'row',
@@ -1980,9 +1980,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 8,
     borderRadius: 8,
-    backgroundColor: 'rgba(38,217,109,0.08)',
+    backgroundColor: 'rgba(47,140,255,0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(38,217,109,0.18)',
+    borderColor: 'rgba(47,140,255,0.18)',
   },
   smallToggleText: {
     color: TOOL_GREEN,

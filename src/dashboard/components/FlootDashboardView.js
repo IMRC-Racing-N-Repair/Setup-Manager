@@ -3,19 +3,11 @@ import { Image } from 'expo-image';
 
 import { flootDashboardStyles as styles } from '../flootDashboard.styles';
 import { formatLastSync } from '../logic/formatters';
+import NewLookBottomNav from '../../navigation/NewLookBottomNav';
 
 function textValue(value, fallback = '—') {
   const next = String(value ?? '').trim();
   return next || fallback;
-}
-
-function NavItem({ label, glyph, active, onPress }) {
-  return (
-    <Pressable style={({ pressed }) => [styles.navItem, active && styles.navItemActive, pressed && styles.pressed]} onPress={onPress}>
-      <Text style={[styles.navGlyph, active && styles.navTextActive]}>{glyph}</Text>
-      <Text style={[styles.navLabel, active && styles.navTextActive]}>{label}</Text>
-    </Pressable>
-  );
 }
 
 function CountCell({ label, value, onPress }) {
@@ -126,12 +118,6 @@ export default function FlootDashboardView({
               <Text style={styles.chevronLarge}>›</Text>
             </Pressable>
 
-            <View style={styles.countRow}>
-              <CountCell label="VEHICLES" value={counts?.vehicles || 0} onPress={() => router.push('/vehicles')} />
-              <CountCell label="TRACKS" value={counts?.tracks || 0} onPress={() => router.push('/tracks')} />
-              <CountCell label="SETUPS" value={counts?.setups || 0} onPress={() => router.push('/setups')} />
-            </View>
-
             <Pressable style={({ pressed }) => [styles.primaryButton, pressed && styles.pressed]} onPress={onRaceDayPress}>
               <Text style={styles.primaryButtonText}>{raceDayReady ? 'OPEN RACEDAY' : 'START RACEDAY'}</Text>
               <Text style={styles.primaryButtonArrow}>›</Text>
@@ -142,12 +128,14 @@ export default function FlootDashboardView({
             <Text style={styles.microLabel}>QUICK ACTION</Text>
             <Text style={styles.sectionTitle}>New setup</Text>
             <Text style={styles.quickCopy}>Capture a baseline or record a track-side change.</Text>
-            <Pressable style={({ pressed }) => [styles.quickButton, pressed && styles.pressed]} onPress={() => router.push('/setups')}>
-              <Text style={styles.quickButtonText}>＋  CREATE SETUP</Text>
-            </Pressable>
-            <Pressable style={({ pressed }) => [styles.quickButton, styles.quickButtonOutline, pressed && styles.pressed]} onPress={() => router.push('/tools')}>
-              <Text style={styles.quickButtonText}>≡  TUNING TOOLS</Text>
-            </Pressable>
+            <View style={styles.quickActionsRow}>
+              <Pressable style={({ pressed }) => [styles.quickButton, pressed && styles.pressed]} onPress={() => router.push('/setups')}>
+                <Text style={styles.quickButtonText}>＋  CREATE</Text>
+              </Pressable>
+              <Pressable style={({ pressed }) => [styles.quickButton, styles.quickButtonOutline, pressed && styles.pressed]} onPress={() => router.push('/tools')}>
+                <Text style={styles.quickButtonText}>≡  TOOLS</Text>
+              </Pressable>
+            </View>
           </View>
         </View>
 
@@ -158,6 +146,11 @@ export default function FlootDashboardView({
               <Text style={styles.sectionTitle}>Recent vehicles</Text>
             </View>
             <Pressable onPress={() => router.push('/vehicles')}><Text style={styles.viewAll}>VIEW ALL  ›</Text></Pressable>
+          </View>
+          <View style={styles.garageMetrics}>
+            <CountCell label="VEHICLES" value={counts?.vehicles || 0} onPress={() => router.push('/vehicles')} />
+            <CountCell label="TRACKS" value={counts?.tracks || 0} onPress={() => router.push('/tracks')} />
+            <CountCell label="SETUPS" value={counts?.setups || 0} onPress={() => router.push('/setups')} />
           </View>
           <View style={styles.vehicleList}>
             {recentVehicles.length ? recentVehicles.map((vehicle, index) => (
@@ -193,12 +186,7 @@ export default function FlootDashboardView({
         <Text style={styles.footer}>v{version} · last sync {formatLastSync(lastSyncAt)}</Text>
       </ScrollView>
 
-      <View style={styles.bottomNav}>
-        <NavItem label="Home" glyph="⌂" active onPress={() => {}} />
-        <NavItem label="Garage" glyph="▱" onPress={() => router.push('/vehicles')} />
-        <NavItem label="RaceDay" glyph="⚑" onPress={onRaceDayPress} />
-        <NavItem label="Tools" glyph="⌁" onPress={() => router.push('/tools')} />
-      </View>
+      <NewLookBottomNav active="home" router={router} onRaceDay={onRaceDayPress} />
     </View>
   );
 }

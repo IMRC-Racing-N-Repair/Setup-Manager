@@ -60,9 +60,9 @@ export default StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
-    backgroundColor: 'rgba(38,217,109,0.10)',
+    backgroundColor: 'rgba(47,140,255,0.10)',
     borderWidth: 1,
-    borderColor: 'rgba(38,217,109,0.22)',
+    borderColor: 'rgba(47,140,255,0.22)',
   },
   titleBandShort: {
     minHeight: 36,

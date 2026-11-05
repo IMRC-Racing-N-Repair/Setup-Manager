@@ -8,23 +8,23 @@
 */
 
 export const VEHICLE_COLORS = {
-  accent: "#20C96B",
-  accentDark: "#0C8E47",
-  accentSoft: "rgba(32, 201, 107, 0.10)",
-  accentBorder: "rgba(32, 201, 107, 0.46)",
+  accent: "#2F8CFF",
+  accentDark: "#176BC7",
+  accentSoft: "rgba(47, 140, 255, 0.12)",
+  accentBorder: "rgba(47, 140, 255, 0.50)",
 
-  appBg: "#080D0A",
-  cardBg: "#121914",
-  cardBg2: "#101612",
-  inputBg: "#0B100D",
+  appBg: "#070B13",
+  cardBg: "#111B29",
+  cardBg2: "#0E1622",
+  inputBg: "#0A0F19",
 
-  text: "#F0F4F1",
-  textMuted: "#96A39B",
-  textFaint: "#6F7D74",
+  text: "#EEF5FF",
+  textMuted: "#9AA9BC",
+  textFaint: "#718198",
 
-  border: "#2A352E",
-  borderStrong: "#3B4940",
+  border: "#26364C",
+  borderStrong: "#3A506E",
 
   danger: "#FF5A5F",
-  success: "#20C96B",
+  success: "#28C77A",
 };

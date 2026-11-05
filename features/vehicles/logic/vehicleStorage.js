@@ -10,6 +10,10 @@ export async function markVehicleViewed(vehicleId) {
   await AsyncStorage.setItem(LAST_VIEWED_VEHICLE_KEY, id);
 }
 
+export async function getLastViewedVehicleId() {
+  return String(await AsyncStorage.getItem(LAST_VIEWED_VEHICLE_KEY) || '').trim();
+}
+
 export async function getVehicles() {
   try {
     const raw = await AsyncStorage.getItem(VEHICLES_STORAGE_KEY);

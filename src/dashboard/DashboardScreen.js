@@ -9,6 +9,7 @@ import { formatLastSync } from './logic/formatters';
 import { markCloudDirty } from '../../app/services/cloudSync';
 import { useAuthCloudSync } from './logic/useAuthCloudSync';
 import { useDashboardData } from './logic/useDashboardData';
+import { useDashboardRaceLive } from './logic/useDashboardRaceLive';
 import { useImportIntent } from './logic/useImportIntent';
 import { useRaceDayHome } from './logic/useRaceDayHome';
 import { useRecentChanges } from './logic/useRecentChanges';
@@ -354,9 +355,10 @@ export default function DashboardScreen({
       })()
     : null;
 
-  const { counts, vehicles, tracks, loadCounts } = useDashboardData();
+  const { counts, vehicles, tracks, lastViewedVehicle, loadCounts } = useDashboardData();
   const raceDay = useRaceDayHome({ router, onRefresh: loadCounts });
   const { raceDayReady, hasRaceDaySelections, syncRaceDayReady } = raceDay;
+  const raceLive = useDashboardRaceLive(raceDayReady);
   const recent = useRecentChanges({ raceDayReady, hasRaceDaySelections });
   const { refreshRecentChanges } = recent;
   const { sponsor } = useSponsorBanner();
@@ -556,7 +558,9 @@ export default function DashboardScreen({
         counts={counts}
         vehicles={vehicles}
         tracks={tracks}
+        lastViewedVehicle={lastViewedVehicle}
         raceDayReady={raceDayReady}
+        raceLive={raceLive}
         onRaceDayPress={raceDay.handleRaceDayPress}
         sponsor={sponsor}
         recentRows={recent.recentRows}

@@ -2,6 +2,13 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { normalizeVehicle, makeVehicleId } from "./vehicleDefaults";
 
 export const VEHICLES_STORAGE_KEY = "@vehicles";
+export const LAST_VIEWED_VEHICLE_KEY = "@lastViewedVehicleId_v1";
+
+export async function markVehicleViewed(vehicleId) {
+  const id = String(vehicleId || "").trim();
+  if (!id) return;
+  await AsyncStorage.setItem(LAST_VIEWED_VEHICLE_KEY, id);
+}
 
 export async function getVehicles() {
   try {
@@ -53,5 +60,9 @@ export async function deleteVehicle(vehicleId) {
   const vehicles = await getVehicles();
   const nextVehicles = vehicles.filter((vehicle) => vehicle.id !== vehicleId);
   await saveVehicles(nextVehicles);
+  const lastViewedId = await AsyncStorage.getItem(LAST_VIEWED_VEHICLE_KEY);
+  if (String(lastViewedId || "") === String(vehicleId || "")) {
+    await AsyncStorage.removeItem(LAST_VIEWED_VEHICLE_KEY);
+  }
   return nextVehicles;
 }

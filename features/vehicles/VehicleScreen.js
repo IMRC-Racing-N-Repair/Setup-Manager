@@ -18,6 +18,7 @@ import VehicleForm from "./components/VehicleForm";
 import {
   deleteVehicle,
   getVehicles,
+  markVehicleViewed,
   upsertVehicle,
 } from "./logic/vehicleStorage";
 import { VEHICLE_COLORS } from "./constants/vehicleColors";
@@ -78,6 +79,7 @@ export default function VehicleScreen() {
 
   function openEditForm(vehicle) {
     pendingViewSetupsRef.current = null;
+    markVehicleViewed(vehicle?.id).catch(() => {});
     setEditingVehicle(vehicle);
     setFormVisible(true);
   }
@@ -98,6 +100,7 @@ export default function VehicleScreen() {
 
   function handleViewSetups(vehicle) {
     pendingViewSetupsRef.current = vehicle;
+    markVehicleViewed(vehicle?.id).catch(() => {});
     setFormVisible(false);
     setEditingVehicle(null);
 

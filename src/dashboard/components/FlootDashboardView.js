@@ -27,7 +27,9 @@ export default function FlootDashboardView({
   counts,
   vehicles,
   tracks,
+  lastViewedVehicle,
   raceDayReady,
+  raceLive,
   onRaceDayPress,
   sponsor,
   recentRows,
@@ -36,8 +38,17 @@ export default function FlootDashboardView({
   lastSyncAt,
   isLandscape,
 }) {
-  const activeTrack = Array.isArray(tracks) && tracks.length ? tracks[0] : null;
-  const recentVehicles = (Array.isArray(vehicles) ? vehicles : []).slice(0, 3);
+  const activeTrack = raceLive?.selectedTrack || (Array.isArray(tracks) && tracks.length ? tracks[0] : null);
+  const viewedVehicle = lastViewedVehicle || (Array.isArray(vehicles) ? vehicles[0] : null);
+  const liveState = raceLive?.liveState || {};
+  const nextRace = raceLive?.nextRace || null;
+  const currentRaceNumber = textValue(liveState?.raceNumber);
+  const currentRaceTitle = raceDayReady
+    ? textValue(liveState?.className, liveState?.active ? 'Race in progress' : 'Waiting for track activity')
+    : 'Start a RaceDay';
+  const currentRaceMeta = raceDayReady
+    ? [liveState?.roundType, liveState?.heat, liveState?.raceStatus].filter(Boolean).join(' · ') || 'LiveRC updates will appear here'
+    : 'Choose a track and your race vehicles';
   const sponsorImage = sponsor?.logo || sponsor?.image || '';
   const syncColor = statusDotColor || '#6F7D74';
   const openSponsor = () => sponsor?.url && Linking.openURL(sponsor.url).catch(() => {});
@@ -68,17 +79,6 @@ export default function FlootDashboardView({
           </View>
         </View>
 
-        <Pressable style={({ pressed }) => [styles.trackStrip, pressed && styles.pressed]} onPress={() => router.push('/tracks')}>
-          <Text style={styles.trackGlyph}>⌖</Text>
-          <View style={styles.trackIdentity}>
-            <Text style={styles.trackName} numberOfLines={1}>{textValue(activeTrack?.name || activeTrack?.trackName, 'Select a track')}</Text>
-            <Text style={styles.trackMeta} numberOfLines={1}>
-              {activeTrack ? [activeTrack.surface, activeTrack.type || activeTrack.trackType].filter(Boolean).join(' · ') || 'Track details' : 'No track selected'}
-            </Text>
-          </View>
-          <Text style={styles.chevron}>›</Text>
-        </Pressable>
-
         <Pressable style={({ pressed }) => [styles.sponsorStrip, pressed && styles.pressed]} onPress={openSponsor}>
           {sponsorImage ? (
             <Image source={{ uri: sponsorImage }} contentFit="contain" cachePolicy="memory-disk" style={styles.sponsorLogo} />
@@ -92,12 +92,28 @@ export default function FlootDashboardView({
           <Text style={styles.sponsorVisit}>VISIT  ›</Text>
         </Pressable>
 
-        <View style={[styles.primaryGrid, isLandscape && styles.primaryGridLandscape]}>
-          <View style={[styles.racePanel, isLandscape && styles.racePanelLandscape]}>
+        <Pressable style={({ pressed }) => [styles.trackStrip, pressed && styles.pressed]} onPress={() => router.push('/tracks')}>
+          <Text style={styles.trackGlyph}>⌖</Text>
+          <View style={styles.trackIdentity}>
+            <Text style={styles.trackName} numberOfLines={1}>{textValue(activeTrack?.name || activeTrack?.trackName, 'Select a track')}</Text>
+            <Text style={styles.trackMeta} numberOfLines={1}>
+              {activeTrack ? [activeTrack.surface, activeTrack.type || activeTrack.trackType].filter(Boolean).join(' · ') || 'Track details' : 'No track selected'}
+            </Text>
+          </View>
+          {raceDayReady ? (
+            <View style={styles.trackLiveBadge}>
+              <View style={styles.liveDot} />
+              <Text style={styles.trackLiveText}>LIVE · RACE {currentRaceNumber}</Text>
+            </View>
+          ) : <Text style={styles.chevron}>›</Text>}
+        </Pressable>
+
+        <View style={styles.primaryGrid}>
+          <View style={styles.racePanel}>
             <View style={styles.sectionHeader}>
               <View>
-                <Text style={styles.microLabel}>{raceDayReady ? 'ACTIVE RACEDAY' : 'RACEDAY'}</Text>
-                <Text style={styles.sectionTitle}>{raceDayReady ? 'Race workspace ready' : 'Prepare for race day'}</Text>
+                <Text style={styles.microLabel}>{raceDayReady ? 'LIVE RACEDAY' : 'RACEDAY'}</Text>
+                <Text style={styles.sectionTitle}>{textValue(activeTrack?.name || activeTrack?.trackName, raceDayReady ? 'Live race workspace' : 'Prepare for race day')}</Text>
               </View>
               <View style={[styles.liveBadge, !raceDayReady && styles.idleBadge]}>
                 <View style={[styles.liveDot, !raceDayReady && styles.idleDot]} />
@@ -108,34 +124,34 @@ export default function FlootDashboardView({
             <Pressable style={({ pressed }) => [styles.raceLine, pressed && styles.pressed]} onPress={onRaceDayPress}>
               <View style={styles.raceBadge}>
                 <Text style={styles.raceBadgeTop}>RACE</Text>
-                <Text style={styles.raceBadgeValue}>{raceDayReady ? 'GO' : '—'}</Text>
+                <Text style={styles.raceBadgeValue}>{raceDayReady ? currentRaceNumber : '—'}</Text>
               </View>
               <View style={styles.raceMain}>
-                <Text style={styles.mutedLabel}>{raceDayReady ? 'CONTINUE' : 'START'}</Text>
-                <Text style={styles.raceMainTitle}>{raceDayReady ? 'Open RaceDay' : 'New RaceDay'}</Text>
-                <Text style={styles.raceMainMeta}>{textValue(activeTrack?.name, 'Choose track and vehicles')}</Text>
+                <Text style={styles.mutedLabel}>{raceDayReady ? 'CURRENT RACE' : 'START'}</Text>
+                <Text style={styles.raceMainTitle}>{currentRaceTitle}</Text>
+                <Text style={styles.raceMainMeta}>{currentRaceMeta}</Text>
               </View>
               <Text style={styles.chevronLarge}>›</Text>
             </Pressable>
+
+            <View style={styles.nextRaceBlock}>
+              <Text style={styles.microLabel}>YOUR NEXT RACE</Text>
+              <View style={styles.nextRaceRow}>
+                <View style={styles.nextRaceIdentity}>
+                  <Text style={styles.nextRaceVehicle} numberOfLines={1}>{nextRace?.vehicleName || (raceDayReady ? 'Waiting for lineup' : 'No active RaceDay')}</Text>
+                  <Text style={styles.nextRaceClass} numberOfLines={1}>{nextRace ? nextRace.className : 'Lineup details will appear after sync'}</Text>
+                </View>
+                <View style={styles.nextRaceNumberBox}>
+                  <Text style={styles.nextRaceNumberLabel}>RACE</Text>
+                  <Text style={styles.nextRaceNumber}>{nextRace?.raceNumber || '—'}</Text>
+                </View>
+              </View>
+            </View>
 
             <Pressable style={({ pressed }) => [styles.primaryButton, pressed && styles.pressed]} onPress={onRaceDayPress}>
               <Text style={styles.primaryButtonText}>{raceDayReady ? 'OPEN RACEDAY' : 'START RACEDAY'}</Text>
               <Text style={styles.primaryButtonArrow}>›</Text>
             </Pressable>
-          </View>
-
-          <View style={[styles.quickPanel, isLandscape && styles.quickPanelLandscape]}>
-            <Text style={styles.microLabel}>QUICK ACTION</Text>
-            <Text style={styles.sectionTitle}>New setup</Text>
-            <Text style={styles.quickCopy}>Capture a baseline or record a track-side change.</Text>
-            <View style={styles.quickActionsRow}>
-              <Pressable style={({ pressed }) => [styles.quickButton, pressed && styles.pressed]} onPress={() => router.push('/setups')}>
-                <Text style={styles.quickButtonText}>＋  CREATE</Text>
-              </Pressable>
-              <Pressable style={({ pressed }) => [styles.quickButton, styles.quickButtonOutline, pressed && styles.pressed]} onPress={() => router.push('/tools')}>
-                <Text style={styles.quickButtonText}>≡  TOOLS</Text>
-              </Pressable>
-            </View>
           </View>
         </View>
 
@@ -143,9 +159,9 @@ export default function FlootDashboardView({
           <View style={styles.sectionHeader}>
             <View>
               <Text style={styles.microLabel}>GARAGE</Text>
-              <Text style={styles.sectionTitle}>Recent vehicles</Text>
+              <Text style={styles.sectionTitle}>Last viewed vehicle</Text>
             </View>
-            <Pressable onPress={() => router.push('/vehicles')}><Text style={styles.viewAll}>VIEW ALL  ›</Text></Pressable>
+            <Pressable onPress={() => router.push('/garage')}><Text style={styles.viewAll}>OPEN GARAGE  ›</Text></Pressable>
           </View>
           <View style={styles.garageMetrics}>
             <CountCell label="VEHICLES" value={counts?.vehicles || 0} onPress={() => router.push('/vehicles')} />
@@ -153,19 +169,19 @@ export default function FlootDashboardView({
             <CountCell label="SETUPS" value={counts?.setups || 0} onPress={() => router.push('/setups')} />
           </View>
           <View style={styles.vehicleList}>
-            {recentVehicles.length ? recentVehicles.map((vehicle, index) => (
-              <Pressable key={String(vehicle?.id || index)} style={({ pressed }) => [styles.vehicleRow, pressed && styles.pressed]} onPress={() => router.push('/vehicles')}>
-                <Text style={styles.vehicleIndex}>{String(index + 1).padStart(2, '0')}</Text>
+            {viewedVehicle ? (
+              <Pressable key={String(viewedVehicle?.id || 'last-viewed')} style={({ pressed }) => [styles.vehicleRow, pressed && styles.pressed]} onPress={() => router.push('/vehicles')}>
+                <Text style={styles.vehicleIndex}>LAST</Text>
                 <View style={styles.vehicleIdentity}>
-                  <Text style={styles.vehicleName} numberOfLines={1}>{textValue(vehicle?.name, 'Unnamed vehicle')}</Text>
+                  <Text style={styles.vehicleName} numberOfLines={1}>{textValue(viewedVehicle?.name, 'Unnamed vehicle')}</Text>
                   <Text style={styles.vehicleMeta} numberOfLines={1}>
-                    {[vehicle?.chassisStyle, vehicle?.transponder ? `TX ${vehicle.transponder}` : ''].filter(Boolean).join(' · ') || 'Vehicle details'}
+                    {[viewedVehicle?.chassisStyle, viewedVehicle?.transponder ? `TX ${viewedVehicle.transponder}` : ''].filter(Boolean).join(' · ') || 'Vehicle details'}
                   </Text>
                 </View>
-                <Text style={[styles.vehicleStatus, isLandscape && styles.vehicleStatusLandscape]}>SETUP READY</Text>
+                <Text style={[styles.vehicleStatus, isLandscape && styles.vehicleStatusLandscape]}>LAST VIEWED</Text>
                 <Text style={styles.chevron}>›</Text>
               </Pressable>
-            )) : (
+            ) : (
               <Pressable style={styles.emptyVehicleRow} onPress={() => router.push('/vehicles')}>
                 <Text style={styles.emptyTitle}>No vehicles saved</Text>
                 <Text style={styles.emptyCopy}>Add your first vehicle to begin building setups.</Text>

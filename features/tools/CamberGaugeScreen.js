@@ -818,7 +818,7 @@ const styles = StyleSheet.create({
   tipLimitButton: {
     flex: 1,
     minHeight: 42,
-    borderRadius: 12,
+    borderRadius: 5,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(57,255,136,0.10)',
@@ -863,7 +863,7 @@ const styles = StyleSheet.create({
   calModal: {
     width: '100%',
     maxWidth: 430,
-    borderRadius: 20,
+    borderRadius: 8,
     padding: 16,
     backgroundColor: '#101915',
     borderWidth: 1,
@@ -888,7 +888,7 @@ const styles = StyleSheet.create({
   },
   modalStatusBox: {
     marginTop: 14,
-    borderRadius: 15,
+    borderRadius: 6,
     padding: 12,
     backgroundColor: 'rgba(255,255,255,0.055)',
     borderWidth: 1,

@@ -2,7 +2,7 @@
 
 import { Platform, StatusBar, StyleSheet } from 'react-native';
 
-export const TRACK_BLUE = '#1E8BFF';
+export const TRACK_BLUE = '#20C96B';
 
 const TRACK_SAFE_TOP = Platform.select({
   android: (StatusBar.currentHeight || 0) + 8,
@@ -17,33 +17,33 @@ const TRACK_SAFE_BOTTOM = Platform.select({
 });
 
 export const trackColors = {
-  background: '#070A12',
-  panel: '#0B1220',
-  panelSoft: '#101827',
-  card: '#121A2A',
-  border: '#263449',
-  text: '#F8FAFC',
-  muted: '#A9B6C7',
-  mutedDark: '#728096',
+  background: '#080D0A',
+  panel: '#101612',
+  panelSoft: '#121914',
+  card: '#172019',
+  border: '#2A352E',
+  text: '#F0F4F1',
+  muted: '#96A39B',
+  mutedDark: '#6F7D74',
   blue: TRACK_BLUE,
-  blueSoft: 'rgba(30, 139, 255, 0.16)',
-  bluePill: 'rgba(30, 139, 255, 0.20)',
-  blueBorder: 'rgba(30, 139, 255, 0.72)',
+  blueSoft: 'rgba(32, 201, 107, 0.10)',
+  bluePill: 'rgba(32, 201, 107, 0.14)',
+  blueBorder: 'rgba(32, 201, 107, 0.60)',
   danger: '#EF4444',
   dangerSoft: 'rgba(239, 68, 68, 0.14)',
-  overlay: 'rgba(0, 0, 0, 0.72)',
-  white: '#FFFFFF',
+  overlay: 'rgba(3, 7, 5, 0.82)',
+  white: '#F0F4F1',
 };
 
 const shadow = Platform.select({
   ios: {
     shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowOffset: { width: 0, height: 5 },
-    shadowRadius: 10,
+    shadowOpacity: 0.12,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 5,
   },
   android: {
-    elevation: 3,
+    elevation: 1,
   },
   default: {},
 });
@@ -108,7 +108,7 @@ export const trackStyles = StyleSheet.create({
 
   headerButton: {
     minHeight: 36,
-    borderRadius: 12,
+    borderRadius: 5,
     borderWidth: 1,
     borderColor: trackColors.border,
     backgroundColor: trackColors.panelSoft,
@@ -125,7 +125,7 @@ export const trackStyles = StyleSheet.create({
 
   headerImportButton: {
     minHeight: 36,
-    borderRadius: 12,
+    borderRadius: 5,
     borderWidth: 1,
     borderColor: 'rgba(34, 197, 94, 0.38)',
     backgroundColor: 'rgba(34, 197, 94, 0.14)',
@@ -142,7 +142,7 @@ export const trackStyles = StyleSheet.create({
 
   addButton: {
     minHeight: 40,
-    borderRadius: 14,
+    borderRadius: 6,
     backgroundColor: trackColors.blue,
     paddingHorizontal: 14,
     alignItems: 'center',
@@ -200,7 +200,7 @@ export const trackStyles = StyleSheet.create({
   emptyStateCard: {
     marginTop: 8,
     marginBottom: TRACK_SAFE_BOTTOM,
-    borderRadius: 22,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: trackColors.border,
     backgroundColor: trackColors.card,
@@ -251,7 +251,7 @@ export const trackStyles = StyleSheet.create({
 
   emptyAddButton: {
     minHeight: 42,
-    borderRadius: 13,
+    borderRadius: 5,
     backgroundColor: trackColors.blue,
     paddingHorizontal: 18,
     alignItems: 'center',
@@ -265,7 +265,7 @@ export const trackStyles = StyleSheet.create({
   },
 
   emptyCard: {
-    borderRadius: 18,
+    borderRadius: 8,
     padding: 15,
     borderWidth: 1,
     borderColor: trackColors.blueBorder,
@@ -289,7 +289,7 @@ export const trackStyles = StyleSheet.create({
   trackCard: {
     width: '100%',
     minHeight: 70,
-    borderRadius: 13,
+    borderRadius: 5,
     borderWidth: 1,
     borderColor: trackColors.border,
     backgroundColor: trackColors.card,
@@ -353,7 +353,7 @@ export const trackStyles = StyleSheet.create({
   cardRightPill: {
     width: 74,
     minHeight: 42,
-    borderRadius: 12,
+    borderRadius: 5,
     borderWidth: 1,
     borderColor: trackColors.blueBorder,
     backgroundColor: trackColors.bluePill,
@@ -471,7 +471,7 @@ export const trackStyles = StyleSheet.create({
 
   compactSection: {
     width: '100%',
-    borderRadius: 15,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: trackColors.border,
     backgroundColor: trackColors.panel,
@@ -510,7 +510,7 @@ export const trackStyles = StyleSheet.create({
     maxWidth: 560,
     height: '84%',
     maxHeight: '84%',
-    borderRadius: 22,
+    borderRadius: 8,
     position: 'relative',
     borderWidth: 1,
     borderColor: trackColors.border,
@@ -530,7 +530,7 @@ export const trackStyles = StyleSheet.create({
     maxHeight: '88%',
     alignSelf: 'center',
     maxWidth: 720,
-    borderRadius: 22,
+    borderRadius: 8,
   },
 
   sheetHandle: {
@@ -574,7 +574,7 @@ export const trackStyles = StyleSheet.create({
 
   sheetSmallButton: {
     minHeight: 36,
-    borderRadius: 13,
+    borderRadius: 5,
     borderWidth: 1,
     borderColor: trackColors.blueBorder,
     backgroundColor: trackColors.bluePill,
@@ -653,7 +653,7 @@ export const trackStyles = StyleSheet.create({
 
   sheetSection: {
     width: '100%',
-    borderRadius: 15,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: trackColors.border,
     backgroundColor: trackColors.panel,
@@ -675,7 +675,7 @@ export const trackStyles = StyleSheet.create({
 
   textInput: {
     minHeight: 40,
-    borderRadius: 12,
+    borderRadius: 5,
     borderWidth: 1,
     borderColor: trackColors.border,
     backgroundColor: trackColors.panel,
@@ -724,7 +724,7 @@ export const trackStyles = StyleSheet.create({
 
   dropdownButton: {
     minHeight: 40,
-    borderRadius: 12,
+    borderRadius: 5,
     borderWidth: 1,
     borderColor: trackColors.border,
     backgroundColor: trackColors.panel,
@@ -774,8 +774,8 @@ export const trackStyles = StyleSheet.create({
     maxWidth: 520,
     height: '86%',
     maxHeight: 620,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8,
     position: 'relative',
     borderWidth: 1,
     borderColor: trackColors.blueBorder,
@@ -800,7 +800,7 @@ export const trackStyles = StyleSheet.create({
   },
 
   dropdownCloseButton: {
-    borderRadius: 12,
+    borderRadius: 5,
     borderWidth: 1,
     borderColor: trackColors.border,
     backgroundColor: trackColors.panelSoft,
@@ -826,7 +826,7 @@ export const trackStyles = StyleSheet.create({
 
   dropdownOption: {
     minHeight: 44,
-    borderRadius: 13,
+    borderRadius: 5,
     borderWidth: 1,
     borderColor: trackColors.border,
     backgroundColor: trackColors.card,
@@ -864,7 +864,7 @@ export const trackStyles = StyleSheet.create({
   },
 
   importInfoBox: {
-    borderRadius: 15,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: trackColors.border,
     backgroundColor: trackColors.panel,
@@ -903,7 +903,7 @@ export const trackStyles = StyleSheet.create({
 
   primaryButton: {
     minHeight: 46,
-    borderRadius: 15,
+    borderRadius: 6,
     backgroundColor: trackColors.blue,
     alignItems: 'center',
     justifyContent: 'center',
@@ -918,7 +918,7 @@ export const trackStyles = StyleSheet.create({
 
   secondaryButton: {
     minHeight: 46,
-    borderRadius: 15,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: trackColors.blueBorder,
     backgroundColor: trackColors.blueSoft,
@@ -936,7 +936,7 @@ export const trackStyles = StyleSheet.create({
   submitTrackInlineButton: {
     width: '100%',
     minHeight: 38,
-    borderRadius: 13,
+    borderRadius: 5,
     borderWidth: 1,
     borderColor: trackColors.blueBorder,
     backgroundColor: trackColors.blueSoft,
@@ -954,7 +954,7 @@ export const trackStyles = StyleSheet.create({
   deleteButton: {
     width: '100%',
     minHeight: 38,
-    borderRadius: 13,
+    borderRadius: 5,
     borderWidth: 1,
     borderColor: 'rgba(239, 68, 68, 0.72)',
     backgroundColor: trackColors.dangerSoft,
@@ -998,7 +998,7 @@ export const trackStyles = StyleSheet.create({
     width: '100%',
     borderWidth: 1,
     borderColor: trackColors.border,
-    borderRadius: 18,
+    borderRadius: 8,
     padding: 10,
     backgroundColor: trackColors.background,
   },
@@ -1015,7 +1015,7 @@ export const trackStyles = StyleSheet.create({
   stationarySubmitButton: {
     flex: 1,
     minHeight: 36,
-    borderRadius: 13,
+    borderRadius: 5,
     borderWidth: 1,
     borderColor: trackColors.blueBorder,
     backgroundColor: trackColors.blueSoft,
@@ -1033,7 +1033,7 @@ export const trackStyles = StyleSheet.create({
   stationaryDeleteButton: {
     flex: 1,
     minHeight: 36,
-    borderRadius: 13,
+    borderRadius: 5,
     borderWidth: 1,
     borderColor: 'rgba(239, 68, 68, 0.65)',
     backgroundColor: 'rgba(239, 68, 68, 0.14)',
@@ -1064,7 +1064,7 @@ export const trackStyles = StyleSheet.create({
   cancelButton: {
     flex: 1,
     minHeight: 38,
-    borderRadius: 14,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: trackColors.border,
     backgroundColor: trackColors.panelSoft,
@@ -1081,7 +1081,7 @@ export const trackStyles = StyleSheet.create({
   saveButton: {
     flex: 1,
     minHeight: 38,
-    borderRadius: 14,
+    borderRadius: 6,
     backgroundColor: trackColors.blue,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1118,7 +1118,7 @@ export const trackStyles = StyleSheet.create({
     width: '100%',
     maxWidth: 560,
     maxHeight: '86%',
-    borderRadius: 22,
+    borderRadius: 8,
     position: 'relative',
     borderWidth: 1,
     borderColor: trackColors.blueBorder,
@@ -1167,7 +1167,7 @@ export const trackStyles = StyleSheet.create({
   importCloseButton: {
     width: 40,
     height: 40,
-    borderRadius: 14,
+    borderRadius: 6,
     backgroundColor: trackColors.panelSoft,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1190,7 +1190,7 @@ export const trackStyles = StyleSheet.create({
   importSearchInput: {
     flex: 1,
     minHeight: 43,
-    borderRadius: 13,
+    borderRadius: 5,
     borderWidth: 1,
     borderColor: trackColors.border,
     backgroundColor: trackColors.panel,
@@ -1202,7 +1202,7 @@ export const trackStyles = StyleSheet.create({
 
   importFilterButton: {
     minHeight: 43,
-    borderRadius: 13,
+    borderRadius: 5,
     borderWidth: 1,
     borderColor: trackColors.border,
     backgroundColor: trackColors.panelSoft,
@@ -1227,7 +1227,7 @@ export const trackStyles = StyleSheet.create({
   },
 
   importFilterPanel: {
-    borderRadius: 15,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: trackColors.border,
     backgroundColor: trackColors.panel,
@@ -1357,7 +1357,7 @@ export const trackStyles = StyleSheet.create({
   importVehicleCard: {
     width: '100%',
     minHeight: 66,
-    borderRadius: 13,
+    borderRadius: 5,
     borderWidth: 1,
     borderColor: trackColors.border,
     backgroundColor: trackColors.card,
@@ -1416,7 +1416,7 @@ export const trackStyles = StyleSheet.create({
   importCardRightPill: {
     width: 82,
     minHeight: 48,
-    borderRadius: 12,
+    borderRadius: 5,
     borderWidth: 1,
     borderColor: trackColors.blueBorder,
     backgroundColor: trackColors.bluePill,
@@ -1487,7 +1487,7 @@ export const trackStyles = StyleSheet.create({
 
   importRefreshButton: {
     minHeight: 43,
-    borderRadius: 14,
+    borderRadius: 6,
     backgroundColor: trackColors.panelSoft,
     borderWidth: 1,
     borderColor: trackColors.border,
@@ -1505,7 +1505,7 @@ export const trackStyles = StyleSheet.create({
   importSelectedButton: {
     flex: 1,
     minHeight: 43,
-    borderRadius: 14,
+    borderRadius: 6,
     backgroundColor: trackColors.blue,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1540,7 +1540,7 @@ export const trackStyles = StyleSheet.create({
     maxWidth: 560,
     minHeight: 0,
     overflow: 'hidden',
-    borderRadius: 22,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: trackColors.blueBorder,
     backgroundColor: trackColors.background,
@@ -1551,13 +1551,13 @@ export const trackStyles = StyleSheet.create({
   mergeEyebrow: { color: trackColors.blue, fontSize: 10, fontWeight: '900', letterSpacing: 1.5 },
   mergeTitle: { color: trackColors.text, fontSize: 22, lineHeight: 26, fontWeight: '900' },
   mergeDescription: { color: trackColors.muted, fontSize: 12, lineHeight: 16, marginTop: 3 },
-  mergeSourceBox: { flexShrink: 0, marginTop: 10, padding: 10, borderRadius: 14, borderWidth: 1, borderColor: trackColors.border, backgroundColor: trackColors.panel },
+  mergeSourceBox: { flexShrink: 0, marginTop: 10, padding: 10, borderRadius: 6, borderWidth: 1, borderColor: trackColors.border, backgroundColor: trackColors.panel },
   mergeSourceLabel: { color: trackColors.blue, fontSize: 9, fontWeight: '900', letterSpacing: 1.1 },
   mergeSourceTitle: { color: trackColors.text, fontSize: 14, fontWeight: '900', marginTop: 2 },
   mergeSourceText: { color: trackColors.muted, fontSize: 10, marginTop: 2 },
   mergeOptionsScroll: { flexShrink: 1, minHeight: 0, marginTop: 9 },
   mergeOptionsContent: { gap: 7, paddingBottom: 3 },
-  mergeTrackOption: { minHeight: 62, overflow: 'hidden', flexDirection: 'row', alignItems: 'center', gap: 9, borderRadius: 14, borderWidth: 1, borderColor: trackColors.border, backgroundColor: trackColors.card, paddingVertical: 8, paddingHorizontal: 10, paddingLeft: 14 },
+  mergeTrackOption: { minHeight: 62, overflow: 'hidden', flexDirection: 'row', alignItems: 'center', gap: 9, borderRadius: 6, borderWidth: 1, borderColor: trackColors.border, backgroundColor: trackColors.card, paddingVertical: 8, paddingHorizontal: 10, paddingLeft: 14 },
   mergeTrackOptionSelected: { borderColor: trackColors.blueBorder, backgroundColor: trackColors.blueSoft },
   mergeOptionBar: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 4 },
   mergeOptionTextWrap: { flex: 1, minWidth: 0 },
@@ -1567,17 +1567,17 @@ export const trackStyles = StyleSheet.create({
   cardStyleChipText: { fontSize: 9, fontWeight: '900' },
   cardSurfaceBrightText: { flex: 1, minWidth: 0, color: trackColors.muted, fontSize: 10, fontWeight: '800' },
   mergeOptionLocation: { color: trackColors.muted, fontSize: 10, marginTop: 3 },
-  mergeSelectPill: { minWidth: 54, minHeight: 32, borderRadius: 11, borderWidth: 1, borderColor: trackColors.border, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6 },
+  mergeSelectPill: { minWidth: 54, minHeight: 32, borderRadius: 4, borderWidth: 1, borderColor: trackColors.border, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6 },
   mergeSelectPillSelected: { borderColor: trackColors.blue, backgroundColor: trackColors.blueSoft },
   mergeSelectText: { color: trackColors.muted, fontSize: 9, fontWeight: '900' },
   mergeSelectTextSelected: { color: trackColors.blue },
-  mergeEmptyBox: { flexShrink: 1, minHeight: 90, marginTop: 10, alignItems: 'center', justifyContent: 'center', borderRadius: 14, borderWidth: 1, borderColor: trackColors.border, padding: 12 },
+  mergeEmptyBox: { flexShrink: 1, minHeight: 90, marginTop: 10, alignItems: 'center', justifyContent: 'center', borderRadius: 6, borderWidth: 1, borderColor: trackColors.border, padding: 12 },
   mergeEmptyTitle: { color: trackColors.text, fontSize: 15, fontWeight: '900' },
   mergeEmptyText: { color: trackColors.muted, fontSize: 11, textAlign: 'center', marginTop: 4 },
-  mergeWarningBox: { flexShrink: 0, marginTop: 9, padding: 8, borderRadius: 12, backgroundColor: trackColors.panel },
+  mergeWarningBox: { flexShrink: 0, marginTop: 9, padding: 8, borderRadius: 5, backgroundColor: trackColors.panel },
   mergeWarningText: { color: trackColors.muted, fontSize: 10, lineHeight: 14 },
   mergeFooterRow: { flexShrink: 0, flexDirection: 'row', gap: 9, marginTop: 9 },
-  mergeConfirmButton: { flex: 1, minHeight: 43, borderRadius: 14, backgroundColor: trackColors.blue, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 10 },
+  mergeConfirmButton: { flex: 1, minHeight: 43, borderRadius: 6, backgroundColor: trackColors.blue, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 10 },
   mergeConfirmText: { color: trackColors.white, fontSize: 13, fontWeight: '900' },
 
   popupScrollTab: {

@@ -1348,7 +1348,7 @@ function GearingRolloutFinder({ setup, fieldProps }) {
       </View>
 
       {finder.canBuild ? (
-        <View style={{ borderWidth: 1, borderColor: 'rgba(168,85,247,0.22)', borderRadius: 12, overflow: 'hidden', marginBottom: 8 }}>
+        <View style={{ borderWidth: 1, borderColor: 'rgba(168,85,247,0.22)', borderRadius: 5, overflow: 'hidden', marginBottom: 8 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(168,85,247,0.12)', borderBottomWidth: 1, borderBottomColor: 'rgba(168,85,247,0.18)' }}>
             <Text style={{ width: 38, color: '#c084fc', fontSize: 10, fontWeight: '900', textAlign: 'center', paddingVertical: 6 }}>P/S</Text>
             {finder.chart.spurs.map((spur) => (

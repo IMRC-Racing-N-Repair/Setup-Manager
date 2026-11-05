@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 10,
     paddingVertical: 7,
-    borderRadius: 11,
+    borderRadius: 4,
     borderWidth: 1,
     borderColor: raceDayColors.border,
     backgroundColor: raceDayColors.cardAlt,

@@ -30,7 +30,7 @@ const styles = StyleSheet.create({
   badge: {
     width: 54,
     minHeight: 42,
-    borderRadius: 12,
+    borderRadius: 5,
     backgroundColor: '#facc15',
     borderWidth: 1,
     borderColor: '#fde68a',
@@ -40,10 +40,10 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     marginRight: 10,
     shadowColor: '#facc15',
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
+    shadowOpacity: 0,
+    shadowRadius: 0,
     shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
+    elevation: 0,
   },
   label: {
     width: '100%',

@@ -38,7 +38,7 @@ export const vehicleStyles = StyleSheet.create({
   backButton: {
     minHeight: 34,
     paddingHorizontal: 10,
-    borderRadius: 11,
+    borderRadius: 4,
     borderWidth: 1,
     borderColor: VEHICLE_COLORS.border,
     backgroundColor: VEHICLE_COLORS.cardBg2,
@@ -82,15 +82,15 @@ export const vehicleStyles = StyleSheet.create({
   addButton: {
     minHeight: 40,
     paddingHorizontal: 13,
-    borderRadius: 13,
+    borderRadius: 5,
     backgroundColor: VEHICLE_COLORS.accent,
     alignItems: "center",
     justifyContent: "center",
     shadowColor: VEHICLE_COLORS.accent,
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.22,
-    shadowRadius: 10,
-    elevation: 4,
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 1,
   },
 
   addButtonText: {
@@ -131,7 +131,7 @@ export const vehicleStyles = StyleSheet.create({
   },
 
   card: {
-    borderRadius: 13,
+    borderRadius: 5,
     backgroundColor: VEHICLE_COLORS.cardBg,
     borderWidth: 1,
     borderColor: VEHICLE_COLORS.border,
@@ -202,7 +202,7 @@ export const vehicleStyles = StyleSheet.create({
     minWidth: 74,
     maxWidth: 102,
     minHeight: 38,
-    borderRadius: 11,
+    borderRadius: 4,
     borderWidth: 1,
     borderColor: VEHICLE_COLORS.accentBorder,
     backgroundColor: VEHICLE_COLORS.accentSoft,
@@ -233,7 +233,7 @@ export const vehicleStyles = StyleSheet.create({
 
   emptyCard: {
     marginTop: 8,
-    borderRadius: 22,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: VEHICLE_COLORS.border,
     backgroundColor: VEHICLE_COLORS.cardBg,
@@ -282,8 +282,8 @@ export const vehicleStyles = StyleSheet.create({
 
   formPanel: {
     maxHeight: "96%",
-    borderTopLeftRadius: 22,
-    borderTopRightRadius: 22,
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8,
     borderWidth: 1,
     borderColor: VEHICLE_COLORS.borderStrong,
     backgroundColor: VEHICLE_COLORS.appBg,
@@ -375,7 +375,7 @@ export const vehicleStyles = StyleSheet.create({
 
   input: {
     minHeight: 48,
-    borderRadius: 14,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: VEHICLE_COLORS.border,
     backgroundColor: VEHICLE_COLORS.inputBg,
@@ -387,7 +387,7 @@ export const vehicleStyles = StyleSheet.create({
 
   inputCompact: {
     minHeight: 42,
-    borderRadius: 12,
+    borderRadius: 5,
     borderWidth: 1,
     borderColor: VEHICLE_COLORS.border,
     backgroundColor: VEHICLE_COLORS.inputBg,
@@ -429,7 +429,7 @@ export const vehicleStyles = StyleSheet.create({
 
   pickerButton: {
     minHeight: 50,
-    borderRadius: 14,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: VEHICLE_COLORS.border,
     backgroundColor: VEHICLE_COLORS.inputBg,
@@ -442,7 +442,7 @@ export const vehicleStyles = StyleSheet.create({
 
   pickerButtonCompact: {
     minHeight: 42,
-    borderRadius: 12,
+    borderRadius: 5,
     borderWidth: 1,
     borderColor: VEHICLE_COLORS.border,
     backgroundColor: VEHICLE_COLORS.inputBg,
@@ -484,7 +484,7 @@ export const vehicleStyles = StyleSheet.create({
 
   viewSetupsButton: {
     minHeight: 56,
-    borderRadius: 16,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: VEHICLE_COLORS.accentBorder,
     backgroundColor: VEHICLE_COLORS.accentSoft,
@@ -496,7 +496,7 @@ export const vehicleStyles = StyleSheet.create({
 
   viewSetupsButtonCompact: {
     minHeight: 36,
-    borderRadius: 12,
+    borderRadius: 5,
     borderWidth: 1,
     borderColor: VEHICLE_COLORS.accentBorder,
     backgroundColor: VEHICLE_COLORS.accentSoft,
@@ -540,7 +540,7 @@ export const vehicleStyles = StyleSheet.create({
   formButton: {
     flex: 1,
     minHeight: 50,
-    borderRadius: 15,
+    borderRadius: 6,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
@@ -551,7 +551,7 @@ export const vehicleStyles = StyleSheet.create({
   formButtonCompact: {
     flex: 1,
     minHeight: 44,
-    borderRadius: 13,
+    borderRadius: 5,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
@@ -572,7 +572,7 @@ export const vehicleStyles = StyleSheet.create({
 
   formDeleteButton: {
     minHeight: 46,
-    borderRadius: 15,
+    borderRadius: 6,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
@@ -584,7 +584,7 @@ export const vehicleStyles = StyleSheet.create({
 
   formDeleteButtonCompact: {
     minHeight: 40,
-    borderRadius: 13,
+    borderRadius: 5,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
@@ -617,8 +617,8 @@ export const vehicleStyles = StyleSheet.create({
 
   pickerPanel: {
     height: "88%",
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
     backgroundColor: VEHICLE_COLORS.appBg,
     borderWidth: 1,
     borderColor: VEHICLE_COLORS.borderStrong,
@@ -648,7 +648,7 @@ export const vehicleStyles = StyleSheet.create({
   pickerClose: {
     minWidth: 44,
     minHeight: 38,
-    borderRadius: 13,
+    borderRadius: 5,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: VEHICLE_COLORS.cardBg,
@@ -665,7 +665,7 @@ export const vehicleStyles = StyleSheet.create({
   searchInput: {
     marginTop: 12,
     minHeight: 46,
-    borderRadius: 14,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: VEHICLE_COLORS.border,
     backgroundColor: VEHICLE_COLORS.inputBg,
@@ -694,7 +694,7 @@ export const vehicleStyles = StyleSheet.create({
     minHeight: 50,
     marginHorizontal: 16,
     marginBottom: 8,
-    borderRadius: 14,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: VEHICLE_COLORS.border,
     backgroundColor: VEHICLE_COLORS.cardBg,

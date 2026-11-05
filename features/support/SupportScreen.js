@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
   headerButton: {
     minWidth: 72,
     height: 38,
-    borderRadius: 14,
+    borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: PANEL,
@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
     gap: 11,
   },
   heroCard: {
-    borderRadius: 20,
+    borderRadius: 8,
     padding: 15,
     backgroundColor: PANEL,
     borderWidth: 1,
@@ -275,7 +275,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   card: {
-    borderRadius: 18,
+    borderRadius: 8,
     padding: 13,
     backgroundColor: CARD,
     borderWidth: 1,
@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
   cardButton: {
     minWidth: 112,
     height: 40,
-    borderRadius: 14,
+    borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: SUPPORT_ACCENT,

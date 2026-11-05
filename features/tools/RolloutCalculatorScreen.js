@@ -326,12 +326,12 @@ const styles = StyleSheet.create({
   findChartButton: {
     width: 112,
     minHeight: 32,
-    borderRadius: 10,
+    borderRadius: 4,
   },
   hideChartButton: {
     width: 55,
     minHeight: 32,
-    borderRadius: 10,
+    borderRadius: 4,
   },
   compactInputWrap: { marginBottom: 5 },
   compactLabel: {
@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
   },
   compactInputRow: {
     minHeight: 32,
-    borderRadius: 10,
+    borderRadius: 4,
     borderWidth: 1,
     borderColor: 'rgba(244,255,248,0.13)',
     backgroundColor: 'rgba(255,255,255,0.045)',

@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
   findButton: {
     marginTop: 9,
     minHeight: 38,
-    borderRadius: 14,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: raceDayColors.accent,
     backgroundColor: raceDayColors.accentSoft,
@@ -332,7 +332,7 @@ const styles = StyleSheet.create({
   },
   emptyBox: {
     minHeight: 110,
-    borderRadius: 16,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: raceDayColors.border,
     backgroundColor: raceDayColors.card,
@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
   },
   dayRow: {
     minHeight: 48,
-    borderRadius: 15,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: raceDayColors.border,
     backgroundColor: raceDayColors.card,
@@ -383,7 +383,7 @@ const styles = StyleSheet.create({
     color: raceDayColors.text,
   },
   selectedSummary: {
-    borderRadius: 15,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: raceDayColors.border,
     backgroundColor: raceDayColors.cardAlt,
@@ -396,7 +396,7 @@ const styles = StyleSheet.create({
   },
   monthButton: {
     minHeight: 36,
-    borderRadius: 13,
+    borderRadius: 5,
     borderWidth: 1,
     borderColor: raceDayColors.border,
     backgroundColor: raceDayColors.cardAlt,
@@ -419,7 +419,7 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   monthMenu: {
-    borderRadius: 13,
+    borderRadius: 5,
     borderWidth: 1,
     borderColor: raceDayColors.border,
     backgroundColor: raceDayColors.card,

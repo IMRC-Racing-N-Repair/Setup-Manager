@@ -56,7 +56,7 @@ export default StyleSheet.create({
 
   titleBand: {
     minHeight: 42,
-    borderRadius: 14,
+    borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
@@ -67,12 +67,12 @@ export default StyleSheet.create({
   titleBandShort: {
     minHeight: 36,
     marginBottom: 6,
-    borderRadius: 13,
+    borderRadius: 5,
   },
   titleBandTiny: {
     minHeight: 30,
     marginBottom: 4,
-    borderRadius: 11,
+    borderRadius: 4,
   },
   titleBandText: {
     color: '#35ff86',
@@ -133,7 +133,7 @@ export default StyleSheet.create({
   scalePad: {
     width: '31%',
     minHeight: 74,
-    borderRadius: 13,
+    borderRadius: 5,
     paddingHorizontal: 7,
     paddingTop: 5,
     paddingBottom: 5,
@@ -146,14 +146,14 @@ export default StyleSheet.create({
     paddingHorizontal: 6,
     paddingTop: 4,
     paddingBottom: 4,
-    borderRadius: 12,
+    borderRadius: 5,
   },
   scalePadTiny: {
     minHeight: 60,
     paddingHorizontal: 5,
     paddingTop: 3,
     paddingBottom: 3,
-    borderRadius: 11,
+    borderRadius: 4,
   },
   scaleLabel: {
     color: 'rgba(226,232,244,0.72)',
@@ -337,7 +337,7 @@ export default StyleSheet.create({
   carBody: {
     width: 35,
     height: 56,
-    borderRadius: 13,
+    borderRadius: 5,
     borderWidth: 1.1,
     borderColor: 'rgba(226,232,244,0.28)',
     backgroundColor: 'rgba(255,255,255,0.02)',
@@ -345,12 +345,12 @@ export default StyleSheet.create({
   carBodyShort: {
     width: 31,
     height: 48,
-    borderRadius: 12,
+    borderRadius: 5,
   },
   carBodyTiny: {
     width: 26,
     height: 38,
-    borderRadius: 10,
+    borderRadius: 4,
   },
   carAxle: {
     position: 'absolute',
@@ -397,7 +397,7 @@ export default StyleSheet.create({
   showUnitButton: {
     minWidth: 96,
     minHeight: 36,
-    borderRadius: 11,
+    borderRadius: 4,
     paddingHorizontal: 10,
     alignItems: 'center',
     justifyContent: 'center',
@@ -408,7 +408,7 @@ export default StyleSheet.create({
   showUnitButtonShort: {
     minWidth: 88,
     minHeight: 32,
-    borderRadius: 10,
+    borderRadius: 4,
   },
   showUnitButtonTiny: {
     minWidth: 78,
@@ -522,7 +522,7 @@ export default StyleSheet.create({
   },
   targetInputShell: {
     minHeight: 34,
-    borderRadius: 10,
+    borderRadius: 4,
     paddingHorizontal: 9,
     flexDirection: 'row',
     alignItems: 'center',

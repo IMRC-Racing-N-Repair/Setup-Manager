@@ -9,7 +9,7 @@ export const vehicleKeyboardStyles = StyleSheet.create({
   },
 
   formPanelStable: {
-    borderRadius: 22,
+    borderRadius: 8,
     overflow: "hidden",
   },
 
@@ -29,7 +29,7 @@ export const vehicleKeyboardStyles = StyleSheet.create({
     minHeight: 36,
     minWidth: 70,
     paddingHorizontal: 10,
-    borderRadius: 12,
+    borderRadius: 5,
     borderWidth: 1,
     borderColor: VEHICLE_COLORS.border,
     backgroundColor: VEHICLE_COLORS.cardBg2,
@@ -75,7 +75,7 @@ export const vehicleKeyboardStyles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingTop: 9,
     paddingBottom: 10,
-    borderRadius: 18,
+    borderRadius: 8,
     backgroundColor: VEHICLE_COLORS.appBg,
     borderWidth: 1,
     borderColor: VEHICLE_COLORS.borderStrong,
@@ -90,7 +90,7 @@ export const vehicleKeyboardStyles = StyleSheet.create({
   viewSetupsActionButton: {
     flex: 1,
     minHeight: 38,
-    borderRadius: 12,
+    borderRadius: 5,
     borderWidth: 1,
     borderColor: VEHICLE_COLORS.accentBorder,
     backgroundColor: VEHICLE_COLORS.accentSoft,
@@ -108,7 +108,7 @@ export const vehicleKeyboardStyles = StyleSheet.create({
   deleteActionButton: {
     flex: 1,
     minHeight: 38,
-    borderRadius: 12,
+    borderRadius: 5,
     borderWidth: 1,
     borderColor: "rgba(255, 90, 95, 0.55)",
     backgroundColor: "rgba(255, 90, 95, 0.12)",

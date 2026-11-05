@@ -1782,7 +1782,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.72)',
   },
   carModalPanel: {
-    borderRadius: 14,
+    borderRadius: 6,
     padding: 10,
     gap: 5,
     backgroundColor: '#11181d',

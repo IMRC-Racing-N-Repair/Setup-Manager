@@ -18,18 +18,18 @@ import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import StableSafeAreaView from '../../src/layout/StableSafeAreaView';
 
-export const TOOL_GREEN = '#26d96d';
-export const TOOL_GREEN_DARK = '#0f2d1d';
-export const TOOL_BG = '#07090c';
-export const TOOL_PANEL = '#0d1117';
-export const TOOL_CARD = '#10161d';
-export const TOOL_CARD_2 = '#141c24';
-export const TOOL_LINE = 'rgba(38,217,109,0.30)';
-export const TOOL_LINE_SOFT = 'rgba(255,255,255,0.08)';
-export const TOOL_TEXT = '#f4fff8';
-export const TOOL_MUTED = 'rgba(244,255,248,0.66)';
-export const TOOL_WARN = '#ffd66b';
-export const TOOL_RED = '#ff6868';
+export const TOOL_GREEN = '#20C96B';
+export const TOOL_GREEN_DARK = '#0C2717';
+export const TOOL_BG = '#080D0A';
+export const TOOL_PANEL = '#101612';
+export const TOOL_CARD = '#121914';
+export const TOOL_CARD_2 = '#172019';
+export const TOOL_LINE = 'rgba(32,201,107,0.36)';
+export const TOOL_LINE_SOFT = '#2A352E';
+export const TOOL_TEXT = '#F0F4F1';
+export const TOOL_MUTED = '#96A39B';
+export const TOOL_WARN = '#F1BD2B';
+export const TOOL_RED = '#E65C5C';
 
 export function goBack(props) {
   if (typeof props?.onBack === 'function') props.onBack();
@@ -246,14 +246,14 @@ export const styles = StyleSheet.create({
     borderBottomColor: TOOL_LINE_SOFT,
   },
   headerAccent: {
-    height: 2,
+    height: 0,
     backgroundColor: TOOL_GREEN,
     opacity: 0.95,
   },
   header: {
-    minHeight: 48,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    minHeight: 58,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: TOOL_PANEL,
@@ -261,12 +261,12 @@ export const styles = StyleSheet.create({
   backButton: {
     width: 70,
     minHeight: 34,
-    borderRadius: 11,
+    borderRadius: 4,
     justifyContent: 'center',
     paddingHorizontal: 8,
-    backgroundColor: 'rgba(38,217,109,0.08)',
+    backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: 'rgba(38,217,109,0.16)',
+    borderColor: TOOL_LINE_SOFT,
   },
   backText: {
     color: TOOL_GREEN,
@@ -275,12 +275,12 @@ export const styles = StyleSheet.create({
   },
   headerTitleWrap: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: 'flex-start',
     paddingHorizontal: 6,
   },
   title: {
     color: TOOL_TEXT,
-    fontSize: 17,
+    fontSize: 21,
     fontWeight: '900',
     letterSpacing: 0.1,
   },
@@ -306,17 +306,17 @@ export const styles = StyleSheet.create({
     backgroundColor: TOOL_CARD,
     borderColor: TOOL_LINE_SOFT,
     borderWidth: 1,
-    borderRadius: 13,
-    padding: 9,
+    borderRadius: 6,
+    padding: 12,
     shadowColor: '#000',
-    shadowOpacity: 0.16,
+    shadowOpacity: 0.08,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 5,
-    elevation: 2,
+    elevation: 1,
   },
   cardCompact: {
     padding: 8,
-    borderRadius: 12,
+    borderRadius: 5,
   },
   sectionTitleRow: {
     flexDirection: 'row',
@@ -338,7 +338,7 @@ export const styles = StyleSheet.create({
   },
   button: {
     minHeight: 38,
-    borderRadius: 12,
+    borderRadius: 5,
     backgroundColor: TOOL_GREEN,
     alignItems: 'center',
     justifyContent: 'center',
@@ -366,7 +366,7 @@ export const styles = StyleSheet.create({
   disabledText: { color: TOOL_MUTED },
   tinyButton: {
     minHeight: 30,
-    borderRadius: 10,
+    borderRadius: 4,
     paddingHorizontal: 9,
     alignItems: 'center',
     justifyContent: 'center',
@@ -390,7 +390,7 @@ export const styles = StyleSheet.create({
   },
   inputRow: {
     minHeight: 38,
-    borderRadius: 11,
+    borderRadius: 4,
     borderWidth: 1,
     borderColor: 'rgba(244,255,248,0.13)',
     backgroundColor: 'rgba(255,255,255,0.045)',
@@ -420,7 +420,7 @@ export const styles = StyleSheet.create({
   segmented: {
     flexDirection: 'row',
     backgroundColor: 'rgba(255,255,255,0.045)',
-    borderRadius: 11,
+    borderRadius: 4,
     borderWidth: 1,
     borderColor: 'rgba(244,255,248,0.10)',
     padding: 2,
@@ -430,7 +430,7 @@ export const styles = StyleSheet.create({
   segment: {
     flex: 1,
     minHeight: 30,
-    borderRadius: 9,
+    borderRadius: 3,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 4,

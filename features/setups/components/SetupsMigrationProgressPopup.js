@@ -95,7 +95,7 @@ export default function SetupsMigrationProgressPopup() {
             backgroundColor: CARD,
             borderColor: isError ? RED : PURPLE,
             borderWidth: 1,
-            borderRadius: 20,
+            borderRadius: 8,
             padding: 16,
             shadowColor: '#000',
             shadowOpacity: 0.35,
@@ -109,7 +109,7 @@ export default function SetupsMigrationProgressPopup() {
               style={{
                 width: 42,
                 height: 42,
-                borderRadius: 15,
+                borderRadius: 6,
                 backgroundColor: isDone ? 'rgba(34,197,94,0.16)' : 'rgba(139,92,246,0.16)',
                 borderWidth: 1,
                 borderColor: isDone ? GREEN : isError ? RED : PURPLE,
@@ -139,7 +139,7 @@ export default function SetupsMigrationProgressPopup() {
             style={{
               marginTop: 14,
               padding: 10,
-              borderRadius: 14,
+              borderRadius: 6,
               backgroundColor: '#090B10',
               borderWidth: 1,
               borderColor: BORDER,
@@ -164,7 +164,7 @@ export default function SetupsMigrationProgressPopup() {
                 backgroundColor: PURPLE,
                 paddingHorizontal: 16,
                 paddingVertical: 10,
-                borderRadius: 14,
+                borderRadius: 6,
               }}
             >
               <Text style={{ color: TEXT, fontSize: 13, fontWeight: '900' }}>OK</Text>

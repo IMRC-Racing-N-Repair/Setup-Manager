@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
   sortButton: {
     flex: 1,
     minHeight: 30,
-    borderRadius: 10,
+    borderRadius: 4,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
     paddingBottom: 4,
   },
   sessionCard: {
-    borderRadius: 14,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: raceDayColors.border,
     backgroundColor: raceDayColors.card,
@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
   },
   detailStatBox: {
     width: '48%',
-    borderRadius: 10,
+    borderRadius: 4,
     borderWidth: 1,
     borderColor: raceDayColors.border,
     backgroundColor: raceDayColors.cardAlt,
@@ -310,7 +310,7 @@ const styles = StyleSheet.create({
   },
   lapBox: {
     marginTop: 8,
-    borderRadius: 10,
+    borderRadius: 4,
     borderWidth: 1,
     borderColor: raceDayColors.border,
     backgroundColor: raceDayColors.cardAlt,

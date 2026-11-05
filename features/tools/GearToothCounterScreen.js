@@ -1019,7 +1019,7 @@ const styles = StyleSheet.create({
   },
   photoWrap: {
     height: 170,
-    borderRadius: 10,
+    borderRadius: 4,
     backgroundColor: 'rgba(255,255,255,0.04)',
     borderWidth: 1,
     borderColor: TOOL_LINE_SOFT,
@@ -1266,7 +1266,7 @@ const styles = StyleSheet.create({
   counter: {
     width: 64,
     minHeight: 50,
-    borderRadius: 10,
+    borderRadius: 4,
     overflow: 'hidden',
     color: TOOL_GREEN,
     backgroundColor: 'rgba(38,217,109,0.08)',

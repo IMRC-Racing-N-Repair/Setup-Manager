@@ -103,7 +103,7 @@ const localStyles = StyleSheet.create({
     backgroundColor: raceDayColors.cardAlt,
     borderWidth: 1,
     borderColor: raceDayColors.border,
-    borderRadius: 16,
+    borderRadius: 6,
     padding: 12,
     gap: 10,
   },
@@ -115,7 +115,7 @@ const localStyles = StyleSheet.create({
   input: {
     minHeight: 112,
     maxHeight: 150,
-    borderRadius: 14,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: raceDayColors.border,
     backgroundColor: raceDayColors.input,

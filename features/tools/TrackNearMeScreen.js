@@ -1038,7 +1038,7 @@ const styles = StyleSheet.create({
   warning: { color: '#ffd46b' },
 
   currentLocationBox: {
-    borderRadius: 12,
+    borderRadius: 5,
     paddingHorizontal: 10,
     paddingVertical: 7,
     backgroundColor: 'rgba(57,255,136,0.08)',
@@ -1066,7 +1066,7 @@ const styles = StyleSheet.create({
   dropdownFilter: {
     flex: 1,
     minHeight: 43,
-    borderRadius: 12,
+    borderRadius: 5,
     paddingHorizontal: 9,
     paddingVertical: 6,
     flexDirection: 'row',
@@ -1084,7 +1084,7 @@ const styles = StyleSheet.create({
   emptyTitle: { color: TOOL_TEXT, fontSize: 15, fontWeight: '900' },
   emptyText: { color: TOOL_MUTED, fontSize: 12, fontWeight: '700', lineHeight: 17 },
 
-  cardPressable: { borderRadius: 15 },
+  cardPressable: { borderRadius: 6 },
   pressed: { opacity: 0.9, transform: [{ scale: 0.99 }] },
   trackCard: {
     position: 'relative',
@@ -1104,7 +1104,7 @@ const styles = StyleSheet.create({
   trackDetails: { color: TOOL_GREEN, fontSize: 11, lineHeight: 12, fontWeight: '900', marginTop: 3 },
   distanceBox: {
     minWidth: 66,
-    borderRadius: 10,
+    borderRadius: 4,
     paddingHorizontal: 7,
     paddingVertical: 3,
     alignItems: 'center',
@@ -1116,7 +1116,7 @@ const styles = StyleSheet.create({
   liveButton: {
     minHeight: 27,
     minWidth: 70,
-    borderRadius: 10,
+    borderRadius: 4,
     paddingHorizontal: 9,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1143,7 +1143,7 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 420,
     maxHeight: '78%',
-    borderRadius: 18,
+    borderRadius: 8,
     padding: 14,
     backgroundColor: '#101915',
     borderWidth: 1,
@@ -1154,7 +1154,7 @@ const styles = StyleSheet.create({
   filterOptionScroll: { flex: 1, minHeight: 0 },
   filterOption: {
     minHeight: 40,
-    borderRadius: 12,
+    borderRadius: 5,
     paddingHorizontal: 12,
     flexDirection: 'row',
     alignItems: 'center',
@@ -1172,7 +1172,7 @@ const styles = StyleSheet.create({
   zipModal: {
     width: '100%',
     maxWidth: 420,
-    borderRadius: 18,
+    borderRadius: 8,
     padding: 16,
     backgroundColor: '#101915',
     borderWidth: 1,
@@ -1182,7 +1182,7 @@ const styles = StyleSheet.create({
   zipModalText: { color: TOOL_MUTED, fontSize: 13, fontWeight: '700', lineHeight: 18, textAlign: 'center', marginTop: 8 },
   zipInputRow: {
     marginTop: 14,
-    borderRadius: 12,
+    borderRadius: 5,
     borderWidth: 1,
     borderColor: TOOL_LINE,
     backgroundColor: 'rgba(255,255,255,0.055)',

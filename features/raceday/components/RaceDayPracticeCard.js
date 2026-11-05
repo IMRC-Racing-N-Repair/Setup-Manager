@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
   wrenchButton: {
     minHeight: 32,
     paddingHorizontal: 10,
-    borderRadius: 12,
+    borderRadius: 5,
     borderWidth: 1,
     borderColor: raceDayColors.border,
     backgroundColor: raceDayColors.cardAlt,
@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
   statBox: {
     flex: 1,
     minHeight: 48,
-    borderRadius: 14,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: raceDayColors.border,
     backgroundColor: raceDayColors.cardAlt,
@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
   },
   emptyPracticeBox: {
     marginTop: 12,
-    borderRadius: 14,
+    borderRadius: 6,
     borderWidth: 1,
     borderStyle: 'dashed',
     borderColor: raceDayColors.border,
@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
   sessionsButton: {
     marginTop: 12,
     minHeight: 38,
-    borderRadius: 14,
+    borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,

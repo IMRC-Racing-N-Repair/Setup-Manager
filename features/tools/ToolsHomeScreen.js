@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
   },
   card: {
     minHeight: 72,
-    borderRadius: 14,
+    borderRadius: 6,
     paddingHorizontal: 10,
     paddingVertical: 8,
     flexDirection: 'row',
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
   iconBubble: {
     width: 36,
     height: 36,
-    borderRadius: 12,
+    borderRadius: 5,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(38,217,109,0.12)',

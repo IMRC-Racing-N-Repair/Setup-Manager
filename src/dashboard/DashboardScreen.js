@@ -25,6 +25,7 @@ import RecentChangesCard from './components/RecentChangesCard';
 import SponsorBanner from './components/SponsorBanner';
 import SponsorStartupModal from './modals/SponsorStartupModal';
 import StatsRow from './components/StatsRow';
+import FlootDashboardView from './components/FlootDashboardView';
 
 let sponsorPopupShownThisLaunch = false;
 
@@ -353,7 +354,7 @@ export default function DashboardScreen({
       })()
     : null;
 
-  const { counts, loadCounts } = useDashboardData();
+  const { counts, vehicles, tracks, loadCounts } = useDashboardData();
   const raceDay = useRaceDayHome({ router, onRefresh: loadCounts });
   const { raceDayReady, hasRaceDaySelections, syncRaceDayReady } = raceDay;
   const recent = useRecentChanges({ raceDayReady, hasRaceDaySelections });
@@ -547,67 +548,23 @@ export default function DashboardScreen({
 
   return (
     <StableSafeAreaView style={styles.safe}>
-      {isLandscape ? (
-        <View style={[styles.landscapeRoot, landscapeSizing?.root]}>
-          <View style={[styles.landscapeLeft, landscapeSizing?.left]}>
-            <ScrollView
-              style={styles.landscapeLeftScroll}
-              contentContainerStyle={styles.landscapeLeftContent}
-              showsVerticalScrollIndicator={false}
-            >
-              {landscapeLeftContent}
-            </ScrollView>
-            <View style={styles.landscapeFooterBlock}>
-              <BottomActions
-                router={router}
-                style={landscapeSizing?.bottomActions}
-                buttonStyle={landscapeSizing?.bottomButton}
-              />
-              <Text style={[styles.footerText, landscapeSizing?.footerText]}>
-                v{auth.version} · last sync {formatLastSync(dashboardLastSyncAt)}
-              </Text>
-            </View>
-          </View>
-
-          <ScrollView
-            style={[styles.landscapeRight, landscapeSizing?.right]}
-            contentContainerStyle={styles.landscapeRightContent}
-            showsVerticalScrollIndicator={false}
-          >
-            {landscapeRightContent}
-          </ScrollView>
-        </View>
-      ) : (
-        <View style={[styles.portraitRootFixed, portraitSizing?.root]}>
-          <ScrollView
-            style={styles.portraitMainScroll}
-            contentContainerStyle={[styles.portraitMainContent, portraitSizing?.content]}
-            showsVerticalScrollIndicator={false}
-          >
-            <DashboardHeader
-              userName={auth.userFirstName}
-              statusDotColor={dashboardStatusDotColor}
-              onAuthPress={handleDashboardAuthPress}
-              onAuthLongPress={auth.handleAuthLongPress}
-              style={portraitSizing?.header}
-              authPillStyle={portraitSizing?.authPill}
-            />
-
-            {mainContent}
-
-            <View style={styles.portraitBottomSpacer} />
-          </ScrollView>
-
-          <View style={[styles.portraitBottomFixed, portraitSizing?.bottomFixed]}>
-            <BottomActions
-              router={router}
-              style={portraitSizing?.bottomActions}
-              buttonStyle={portraitSizing?.bottomButton}
-            />
-            <Footer version={auth.version} lastSyncAt={dashboardLastSyncAt} style={portraitSizing?.footerText} />
-          </View>
-        </View>
-      )}
+      <FlootDashboardView
+        userName={auth.userFirstName}
+        statusDotColor={dashboardStatusDotColor}
+        onAuthPress={handleDashboardAuthPress}
+        onAuthLongPress={auth.handleAuthLongPress}
+        counts={counts}
+        vehicles={vehicles}
+        tracks={tracks}
+        raceDayReady={raceDayReady}
+        onRaceDayPress={raceDay.handleRaceDayPress}
+        sponsor={sponsor}
+        recentRows={recent.recentRows}
+        router={router}
+        version={auth.version}
+        lastSyncAt={dashboardLastSyncAt}
+        isLandscape={isLandscape}
+      />
 
       <RaceDayStartModal
         visible={raceDay.modals.showStartModal}

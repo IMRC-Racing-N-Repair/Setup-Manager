@@ -6,6 +6,9 @@ import { safeParse } from './formatters';
 
 export function useDashboardData() {
   const [counts, setCounts] = useState({ vehicles: 0, tracks: 0, setups: 0 });
+  const [vehicles, setVehicles] = useState([]);
+  const [tracks, setTracks] = useState([]);
+  const [setups, setSetups] = useState([]);
 
   const loadCounts = useCallback(async () => {
     const [vehiclesRaw, tracksRaw, setupsRaw] = await Promise.all([
@@ -16,12 +19,18 @@ export function useDashboardData() {
     const vehicles = safeParse(vehiclesRaw, []);
     const tracks = safeParse(tracksRaw, []);
     const setups = safeParse(setupsRaw, []);
+    const vehicleList = Array.isArray(vehicles) ? vehicles : [];
+    const trackList = Array.isArray(tracks) ? tracks : [];
+    const setupList = Array.isArray(setups) ? setups : [];
+    setVehicles(vehicleList);
+    setTracks(trackList);
+    setSetups(setupList);
     setCounts({
-      vehicles: Array.isArray(vehicles) ? vehicles.length : 0,
-      tracks: Array.isArray(tracks) ? tracks.length : 0,
-      setups: Array.isArray(setups) ? setups.length : 0,
+      vehicles: vehicleList.length,
+      tracks: trackList.length,
+      setups: setupList.length,
     });
   }, []);
 
-  return { counts, loadCounts };
+  return { counts, vehicles, tracks, setups, loadCounts };
 }

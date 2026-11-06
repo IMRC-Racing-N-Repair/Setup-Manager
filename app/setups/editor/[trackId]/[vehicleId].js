@@ -273,7 +273,7 @@ function getEditorLayoutMetrics({ height, width, topInset = 0, bottomInset = 0, 
       marginTop: v(2, 0),
     },
     bottomBar: {
-      bottom: Math.max(0, navHeight - Number(bottomInset || 0)),
+      bottom: navHeight + Number(bottomInset || 0),
       paddingTop: tabletLandscape ? 4 : v(5, 2),
       paddingBottom: tabletLandscape ? 4 : Math.max(4, (mapScale < 0.78 ? 3 : 4)),
     },
@@ -893,7 +893,7 @@ export default function SetupEditorScreen() {
           onDismiss={finishExportDismissal}
         />
       </KeyboardAvoidingView>
-      <NewLookBottomNav active="garage" router={router} />
+      <NewLookBottomNav active="garage" router={router} bottomOffset={insets.bottom} />
     </StableSafeAreaView>
   );
 }

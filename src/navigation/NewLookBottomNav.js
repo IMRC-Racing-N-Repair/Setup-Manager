@@ -9,13 +9,13 @@ const items = [
   { key: 'tools', label: 'Tools', glyph: '⌁', route: '/tools' },
 ];
 
-export default function NewLookBottomNav({ active = 'home', router, onRaceDay }) {
+export default function NewLookBottomNav({ active = 'home', router, onRaceDay, bottomOffset = 0 }) {
   const { width, height } = useWindowDimensions();
   const compact = height < 620 || width > height;
   const tabletLandscape = width >= 700 && width > height;
 
   return (
-    <View style={[styles.bottomNav, compact && styles.bottomNavCompact, tabletLandscape && styles.bottomNavTabletLandscape]}>
+    <View style={[styles.bottomNav, compact && styles.bottomNavCompact, tabletLandscape && styles.bottomNavTabletLandscape, { bottom: Math.max(0, Number(bottomOffset) || 0) }]}>
       {items.map((item) => (
         <Pressable
           key={item.key}

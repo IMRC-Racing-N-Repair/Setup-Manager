@@ -579,7 +579,7 @@ export default function RaceDayDashboardScreen() {
             <Text style={raceDayStyles.loadingShellText}>Checking RaceDay, vehicles, and saved race information…</Text>
           </View>
         </View>
-        <NewLookBottomNav active="raceday" router={router} />
+        <NewLookBottomNav active="raceday" router={router} bottomOffset={insets.bottom} />
       </View>
     );
   }
@@ -594,7 +594,7 @@ export default function RaceDayDashboardScreen() {
           </View>
         </View>
         <RaceDayBottomActions docked tabletLandscape={isTabletLandscape} primaryLabel="Select Track" onPrimaryPress={() => router.replace('/raceday/select-track')} />
-        <NewLookBottomNav active="raceday" router={router} />
+        <NewLookBottomNav active="raceday" router={router} bottomOffset={insets.bottom} />
       </View>
     );
   }
@@ -613,7 +613,7 @@ export default function RaceDayDashboardScreen() {
           topOffset={false}
         />
 
-        <ScrollView contentContainerStyle={[raceDayStyles.scrollContent, isTabletLandscape && raceDayStyles.scrollContentTabletLandscape]} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={[raceDayStyles.scrollContent, isTabletLandscape && raceDayStyles.scrollContentTabletLandscape, { paddingBottom: 142 + insets.bottom }]} showsVerticalScrollIndicator={false}>
           <RaceDayModeToggle mode={dashboardMode} onChange={handleDashboardModeChange} />
 
           {dashboardMode === 'practice' ? (
@@ -800,7 +800,7 @@ export default function RaceDayDashboardScreen() {
       />
 
       <RaceDayAutoSyncOverlay visible={autoSyncing} progress={autoSyncProgress} onCancel={cancelAutoSync} />
-      <NewLookBottomNav active="raceday" router={router} />
+      <NewLookBottomNav active="raceday" router={router} bottomOffset={insets.bottom} />
     </View>
   );
 }

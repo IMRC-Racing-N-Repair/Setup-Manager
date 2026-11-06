@@ -273,7 +273,7 @@ function getEditorLayoutMetrics({ height, width, topInset = 0, bottomInset = 0, 
       marginTop: v(2, 0),
     },
     bottomBar: {
-      bottom: navHeight,
+      bottom: Math.max(0, navHeight - Number(bottomInset || 0)),
       paddingTop: tabletLandscape ? 4 : v(5, 2),
       paddingBottom: tabletLandscape ? 4 : Math.max(4, (mapScale < 0.78 ? 3 : 4)),
     },

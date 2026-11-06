@@ -800,7 +800,7 @@ export default function SetupsIndexScreen() {
           onBack={handleSafeBack}
           rightLabel="+ ADD"
           onRightPress={() => selectedVehicleId
-            ? router.push(`/setups/select-track?vehicleId=${encodeURIComponent(selectedVehicleId)}`)
+            ? router.push(`/setups/select-track?vehicleId=${encodeURIComponent(selectedVehicleId)}&returnTo=setups`)
             : router.push('/setups/select-vehicle')}
         />
 
@@ -869,7 +869,7 @@ export default function SetupsIndexScreen() {
 
             <View style={setupBrowserStyles.sectionHeading}>
               <View><Text style={setupBrowserStyles.kicker}>SAVED TRACKS</Text><Text style={setupBrowserStyles.sectionTitle}>Tracks & setups</Text></View>
-              <Pressable style={setupBrowserStyles.addSetupButton} onPress={() => router.push(`/setups/select-track?vehicleId=${encodeURIComponent(selectedVehicleId)}`)}>
+              <Pressable style={setupBrowserStyles.addSetupButton} onPress={() => router.push(`/setups/select-track?vehicleId=${encodeURIComponent(selectedVehicleId)}&returnTo=setups`)}>
                 <Text style={setupBrowserStyles.addSetupText}>+ ADD SETUP</Text>
               </Pressable>
             </View>
@@ -883,13 +883,13 @@ export default function SetupsIndexScreen() {
               <View style={setupBrowserStyles.trackList}>
                 {selectedVehicleTrackRows.map((row) => (
                   <View key={`${row.trackId}_${row.vehicleId}`} style={setupBrowserStyles.trackRow}>
-                    <Pressable style={({ pressed }) => [setupBrowserStyles.trackIdentity, pressed && setupBrowserStyles.pressed]} onPress={() => router.push(`/setups/editor/${row.trackId}/${row.vehicleId}`)}>
+                    <Pressable style={({ pressed }) => [setupBrowserStyles.trackIdentity, pressed && setupBrowserStyles.pressed]} onPress={() => router.push(`/setups/editor/${row.trackId}/${row.vehicleId}?returnTo=setups&returnVehicleId=${encodeURIComponent(row.vehicleId)}`)}>
                       <Text style={setupBrowserStyles.trackName} numberOfLines={1}>{getTrackDisplayName(row.track)}</Text>
                       <Text style={setupBrowserStyles.trackMeta} numberOfLines={1}>{getTrackTypeDisplay(row.track)}</Text>
                       <Text style={setupBrowserStyles.trackStatus}>Saved {formatDate(row.setup?.savedAt || row.setup?.updatedAt)}</Text>
                     </Pressable>
                     <Pressable style={setupBrowserStyles.copyButton} onPress={() => openCopyPrompt(row)}><Text style={setupBrowserStyles.copyText}>COPY</Text></Pressable>
-                    <Pressable style={setupBrowserStyles.openButton} onPress={() => router.push(`/setups/editor/${row.trackId}/${row.vehicleId}`)}><Text style={setupBrowserStyles.openText}>OPEN</Text></Pressable>
+                    <Pressable style={setupBrowserStyles.openButton} onPress={() => router.push(`/setups/editor/${row.trackId}/${row.vehicleId}?returnTo=setups&returnVehicleId=${encodeURIComponent(row.vehicleId)}`)}><Text style={setupBrowserStyles.openText}>OPEN</Text></Pressable>
                   </View>
                 ))}
               </View>

@@ -753,7 +753,7 @@ export const setupStyles = StyleSheet.create({
   referenceTileWide: {
     flex: 1,
     minHeight: 52,
-    borderRadius: 6,
+    borderRadius: 0,
     borderColor: setupColors.borderSoft,
     borderWidth: 1,
     backgroundColor: setupColors.panel,
@@ -774,7 +774,7 @@ export const setupStyles = StyleSheet.create({
   rolloutTile: {
     width: isNarrow ? 92 : 106,
     minHeight: 52,
-    borderRadius: 6,
+    borderRadius: 0,
     borderColor: setupColors.purple,
     borderWidth: 1,
     backgroundColor: setupColors.panel,
@@ -873,7 +873,7 @@ export const setupStyles = StyleSheet.create({
   crossWeightCenter: {
     width: isNarrow ? 124 : 142,
     minHeight: 60,
-    borderRadius: 5,
+    borderRadius: 0,
     borderColor: setupColors.borderSoft,
     borderWidth: 1,
     backgroundColor: setupColors.panel,
@@ -909,7 +909,7 @@ export const setupStyles = StyleSheet.create({
   electronicsSideButton: {
     width: isNarrow ? 92 : 104,
     minHeight: 108,
-    borderRadius: 6,
+    borderRadius: 0,
     borderColor: setupColors.borderSoft,
     borderWidth: 1,
     backgroundColor: setupColors.panel,
@@ -924,7 +924,7 @@ export const setupStyles = StyleSheet.create({
   centerDiffSideButton: {
     width: isNarrow ? 92 : 104,
     minHeight: 108,
-    borderRadius: 6,
+    borderRadius: 0,
     borderColor: setupColors.borderSoft,
     borderWidth: 1,
     backgroundColor: setupColors.panel,
@@ -957,7 +957,7 @@ export const setupStyles = StyleSheet.create({
     flex: 1,
     alignSelf: 'center',
     minHeight: 58,
-    borderRadius: 6,
+    borderRadius: 0,
     borderColor: setupColors.borderSoft,
     borderWidth: 1,
     backgroundColor: setupColors.panel,
@@ -973,7 +973,7 @@ export const setupStyles = StyleSheet.create({
     flex: 1,
     alignSelf: 'center',
     minHeight: 58,
-    borderRadius: 6,
+    borderRadius: 0,
     borderColor: setupColors.borderSoft,
     borderWidth: 1,
     backgroundColor: setupColors.panel,
@@ -1013,7 +1013,7 @@ export const setupStyles = StyleSheet.create({
   gearBulkhead: {
     width: isNarrow ? 128 : 148,
     minHeight: 72,
-    borderRadius: 6,
+    borderRadius: 0,
     borderColor: setupColors.borderSoft,
     borderWidth: 1,
     backgroundColor: setupColors.panel,
@@ -1081,7 +1081,7 @@ export const setupStyles = StyleSheet.create({
   cornerHotspot: {
     width: isNarrow ? 110 : 126,
     minHeight: isNarrow ? 160 : 174,
-    borderRadius: 6,
+    borderRadius: 0,
     borderColor: setupColors.borderSoft,
     borderWidth: 1,
     backgroundColor: setupColors.panel,
@@ -1151,7 +1151,7 @@ export const setupStyles = StyleSheet.create({
   mapActionButton: {
     flex: 1,
     minHeight: 60,
-    borderRadius: 6,
+    borderRadius: 0,
     borderWidth: 1,
     borderLeftWidth: 4,
     borderColor: setupColors.borderSoft,

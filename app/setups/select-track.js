@@ -7,7 +7,7 @@ import { GaragePickerScreen, GarageTrackChoice } from '../../src/garage/GaragePi
 
 export default function SetupSelectTrackScreen() {
   const router = useRouter();
-  const { vehicleId } = useLocalSearchParams();
+  const { vehicleId, returnTo } = useLocalSearchParams();
   const [tracks, setTracks] = useState([]);
   const [vehicleName, setVehicleName] = useState('Selected vehicle');
   const [loading, setLoading] = useState(true);
@@ -27,7 +27,8 @@ export default function SetupSelectTrackScreen() {
 
   const goBack = () => {
     if (typeof router.canGoBack === 'function' && router.canGoBack()) router.back();
-    else router.replace('/garage');
+    else if (String(returnTo || '') === 'setups') router.replace(`/setups?vehicleId=${encodeURIComponent(String(vehicleId || ''))}`);
+    else router.replace(`/garage?vehicleId=${encodeURIComponent(String(vehicleId || ''))}`);
   };
 
   return (
@@ -46,7 +47,7 @@ export default function SetupSelectTrackScreen() {
             key={trackId}
             track={track}
             actionLabel="SETUP"
-            onPress={() => router.push(`/setups/editor/${encodeURIComponent(trackId)}/${encodeURIComponent(String(vehicleId))}`)}
+            onPress={() => router.push(`/setups/editor/${encodeURIComponent(trackId)}/${encodeURIComponent(String(vehicleId))}?returnTo=${String(returnTo || '') === 'setups' ? 'setups' : 'garage'}&returnVehicleId=${encodeURIComponent(String(vehicleId || ''))}`)}
           />
         );
       })}

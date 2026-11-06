@@ -24,7 +24,7 @@ export default function SetupSelectVehicleScreen() {
 
   const goBack = () => {
     if (typeof router.canGoBack === 'function' && router.canGoBack()) router.back();
-    else router.replace('/garage');
+    else router.replace('/setups');
   };
 
   return (
@@ -42,7 +42,7 @@ export default function SetupSelectVehicleScreen() {
           <GarageVehicleChoice
             key={vehicleId}
             vehicle={vehicle}
-            onPress={() => router.push(`/setups/select-track?vehicleId=${encodeURIComponent(vehicleId)}`)}
+            onPress={() => router.push(`/setups/select-track?vehicleId=${encodeURIComponent(vehicleId)}&returnTo=setups`)}
           />
         );
       })}

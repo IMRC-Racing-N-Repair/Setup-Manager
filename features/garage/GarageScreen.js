@@ -1,7 +1,7 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 
 import {
   getLastViewedVehicleId,
@@ -46,6 +46,7 @@ function savedLabel(setup) {
 
 export default function GarageScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
   const { width, height } = useWindowDimensions();
   const isTabletLandscape = width >= 700 && width > height;
   const [loading, setLoading] = useState(true);
@@ -82,6 +83,13 @@ export default function GarageScreen() {
   }, []);
 
   useFocusEffect(useCallback(() => { loadGarage(); }, [loadGarage]));
+
+  useEffect(() => {
+    const requestedVehicleId = clean(params?.vehicleId);
+    if (!requestedVehicleId || !vehicles.some((vehicle) => clean(vehicle?.id || vehicle?.vehicleId) === requestedVehicleId)) return;
+    setSelectedVehicleId(requestedVehicleId);
+    setShowVehicleTracks(true);
+  }, [params?.vehicleId, vehicles]);
 
   const selectedVehicle = useMemo(
     () => vehicles.find((vehicle) => clean(vehicle?.id || vehicle?.vehicleId) === clean(selectedVehicleId)) || null,
@@ -128,21 +136,16 @@ export default function GarageScreen() {
 
   const openVehicleTrack = useCallback((trackId) => {
     if (!selectedVehicleId || !trackId) return;
-    router.push(`/setups/editor/${encodeURIComponent(trackId)}/${encodeURIComponent(selectedVehicleId)}`);
+    router.push(`/setups/editor/${encodeURIComponent(trackId)}/${encodeURIComponent(selectedVehicleId)}?returnTo=garage&returnVehicleId=${encodeURIComponent(selectedVehicleId)}`);
   }, [router, selectedVehicleId]);
 
   const addSetup = useCallback(() => {
     if (!selectedVehicleId) return;
-    router.push(`/setups/select-track?vehicleId=${encodeURIComponent(selectedVehicleId)}`);
+    router.push(`/setups/select-track?vehicleId=${encodeURIComponent(selectedVehicleId)}&returnTo=garage`);
   }, [router, selectedVehicleId]);
 
   const addTrack = useCallback(() => {
     router.push({ pathname: '/tracks', params: { addTrack: '1' } });
-  }, [router]);
-
-  const editTrack = useCallback((trackId) => {
-    if (!trackId) return;
-    router.push({ pathname: '/tracks', params: { editTrackId: trackId } });
   }, [router]);
 
   const handleHeaderAction = useCallback(() => {
@@ -256,9 +259,6 @@ export default function GarageScreen() {
                       <Text style={styles.trackMeta} numberOfLines={1}>{trackMeta(track)}</Text>
                       <Text style={[styles.trackStatus, styles.trackStatusSaved]}>{savedLabel(setup)}</Text>
                     </Pressable>
-                    <Pressable style={styles.trackEditAction} onPress={() => editTrack(trackId)}>
-                      <Text style={styles.trackEditActionText}>EDIT</Text>
-                    </Pressable>
                     <Pressable style={[styles.trackAction, styles.trackActionSaved]} onPress={() => openVehicleTrack(trackId)}>
                       <Text style={[styles.trackActionText, styles.trackActionTextSaved]}>OPEN</Text>
                     </Pressable>
@@ -335,8 +335,6 @@ const styles = StyleSheet.create({
   trackActionSaved: { borderColor: AppColors.primary, backgroundColor: AppColors.primarySoft },
   trackActionText: { color: AppColors.text, fontSize: 8, fontWeight: '900', letterSpacing: 0.35 },
   trackActionTextSaved: { color: AppColors.primary },
-  trackEditAction: { minWidth: 44, minHeight: 31, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6, borderWidth: 1, borderColor: AppColors.borderStrong, backgroundColor: AppColors.surface },
-  trackEditActionText: { color: AppColors.mutedText, fontSize: 7, fontWeight: '900', letterSpacing: 0.35 },
   emptyPanel: { marginTop: 18, padding: 14, borderWidth: 1, borderColor: AppColors.border, backgroundColor: AppColors.card },
   emptyTracks: { paddingVertical: 18 },
   emptyTitle: { color: AppColors.textStrong, fontSize: 15, fontWeight: '900' },

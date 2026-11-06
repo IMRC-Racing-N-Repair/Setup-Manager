@@ -123,16 +123,23 @@ function getEditorLayoutMetrics({ height, width, topInset = 0, bottomInset = 0, 
       marginTop: v(3, 0),
       marginBottom: 0,
     },
+    topActionButton: {
+      minWidth: narrow ? 52 : 60,
+      paddingHorizontal: narrow ? 8 : 10,
+      borderRadius: 0,
+    },
     referenceTileWide: {
       minHeight: v(50, 38),
       maxHeight: v(56, 42),
       paddingVertical: v(7, 4),
+      borderRadius: 0,
     },
     rolloutTile: {
       width: w(narrow ? 92 : 106, 84),
       minHeight: v(50, 38),
       maxHeight: v(56, 42),
       paddingVertical: v(7, 4),
+      borderRadius: 0,
     },
     rolloutValue: {
       fontSize: font(19, 14),
@@ -172,6 +179,7 @@ function getEditorLayoutMetrics({ height, width, topInset = 0, bottomInset = 0, 
       paddingVertical: v(9, 5),
       paddingLeft: w(12, 8),
       paddingRight: w(8, 6),
+      borderRadius: 0,
     },
     tireShape: {
       width: w(62, 48),
@@ -184,6 +192,7 @@ function getEditorLayoutMetrics({ height, width, topInset = 0, bottomInset = 0, 
       maxHeight: sideHeight,
       paddingVertical: v(7, 4),
       paddingLeft: w(13, 9),
+      borderRadius: 0,
     },
     sideSpacer: {
       width: sideButtonWidth,
@@ -197,6 +206,7 @@ function getEditorLayoutMetrics({ height, width, topInset = 0, bottomInset = 0, 
       paddingVertical: v(7, 4),
       paddingLeft: w(13, 9),
       paddingRight: w(11, 8),
+      borderRadius: 0,
     },
     crossWeightValue: {
       fontSize: font(17, 13),
@@ -206,6 +216,7 @@ function getEditorLayoutMetrics({ height, width, topInset = 0, bottomInset = 0, 
       minHeight: frontRearHeight,
       maxHeight: frontRearHeight,
       paddingVertical: v(7, 4),
+      borderRadius: 0,
     },
     rearAreaWrap: {
       gap: rowGap,
@@ -224,6 +235,7 @@ function getEditorLayoutMetrics({ height, width, topInset = 0, bottomInset = 0, 
       paddingVertical: v(8, 4),
       paddingLeft: w(16, 11),
       paddingRight: w(11, 8),
+      borderRadius: 0,
     },
     rearPodBetweenWheels: {
       minHeight: frontRearHeight,
@@ -261,6 +273,7 @@ function getEditorLayoutMetrics({ height, width, topInset = 0, bottomInset = 0, 
     mapActionButton: {
       minHeight: v(56, 42),
       paddingVertical: v(7, 4),
+      borderRadius: 0,
     },
     mapActionValue: {
       fontSize: font(15, 12),
@@ -326,14 +339,28 @@ export default function SetupEditorScreen() {
   const insets = useSafeAreaInsets();
   const dimensions = useWindowDimensions();
   const router = useRouter();
+  const params = useLocalSearchParams();
+  const returnTo = String(params.returnTo || '');
+  const returnVehicleId = String(params.returnVehicleId || params.vehicleId || '');
   const handleSafeBack = useCallback(() => {
+    if (returnTo === 'garage') {
+      router.replace(returnVehicleId ? `/garage?vehicleId=${encodeURIComponent(returnVehicleId)}` : '/garage');
+      return;
+    }
+    if (returnTo === 'setups') {
+      router.replace(returnVehicleId ? `/setups?vehicleId=${encodeURIComponent(returnVehicleId)}` : '/setups');
+      return;
+    }
+    if (returnTo === 'raceday') {
+      router.replace('/raceday/dashboard');
+      return;
+    }
     if (typeof router.canGoBack === 'function' && router.canGoBack()) {
       router.back();
       return;
     }
     router.replace('/setups');
-  }, [router]);
-  const params = useLocalSearchParams();
+  }, [returnTo, returnVehicleId, router]);
   const trackId = String(params.trackId || '');
   const vehicleId = String(params.vehicleId || '');
   const setupId = params.setupId ? String(params.setupId) : null;
@@ -769,6 +796,8 @@ export default function SetupEditorScreen() {
             <AppScreenHeader
               title={title}
               subtitle={subtitle}
+              kicker="IMRC SETUP"
+              titleStyle={layoutMetrics.editorTitle}
               onBack={() => requestLeaveEditor()}
               right={<View style={setupStyles.headerActionRow}>
                 <Pressable
@@ -778,6 +807,7 @@ export default function SetupEditorScreen() {
                     setupStyles.button,
                     setupStyles.buttonSecondary,
                     setupStyles.topActionButton,
+                    layoutMetrics.topActionButton,
                     !setup && setupStyles.buttonDisabled,
                     pressed && setupStyles.cardPressed,
                   ]}
@@ -791,6 +821,7 @@ export default function SetupEditorScreen() {
                   style={({ pressed }) => [
                     setupStyles.button,
                     setupStyles.topActionButton,
+                    layoutMetrics.topActionButton,
                     (!editable || saving) && setupStyles.buttonDisabled,
                     pressed && setupStyles.cardPressed,
                   ]}

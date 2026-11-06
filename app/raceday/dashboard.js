@@ -462,7 +462,7 @@ export default function RaceDayDashboardScreen() {
     const trackId = active?.trackId || track?.id || track?.trackId;
     const vehicleId = vehicle?.id || vehicle?.vehicleId;
     if (!trackId || !vehicleId) return;
-    router.push(`/setups/editor/${trackId}/${vehicleId}`);
+    router.push(`/setups/editor/${trackId}/${vehicleId}?returnTo=raceday`);
   }
 
   function confirmEndRaceDay() {

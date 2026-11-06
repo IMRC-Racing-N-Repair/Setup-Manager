@@ -36,7 +36,7 @@ import { getTrackDisplayName, getTrackLiveRcUrl, getVehicleDisplayName, normaliz
 import { syncLiveRcRaceDay } from '../../features/raceday/lib/liverc/liveRcSyncRunner';
 import { syncLiveRcPracticeDay } from '../../features/raceday/lib/liverc/liveRcPracticeSyncRunner';
 import { findEventByUrl } from '../../features/raceday/lib/liverc/liveRcEventFinder';
-import { raceDayColors, raceDayStyles } from '../../features/raceday/styles/raceDayStyles';
+import { raceDayStyles } from '../../features/raceday/styles/raceDayStyles';
 
 function getStoredEventTitle(raceDay = {}) {
   return (
@@ -520,7 +520,7 @@ export default function RaceDayDashboardScreen() {
     return (
       <View style={raceDayStyles.screen}>
         <View style={raceDayStyles.container}>
-          <RaceDayHeader title="RaceDay" subtitle="Loading" onLeftPress={handleBack} leftLabel="‹ Back" />
+          <RaceDayHeader title="RaceDay" subtitle="Loading" onLeftPress={handleBack} leftLabel="‹ BACK" />
           <View style={raceDayStyles.empty}><ActivityIndicator /></View>
         </View>
       </View>
@@ -531,7 +531,7 @@ export default function RaceDayDashboardScreen() {
     return (
       <View style={raceDayStyles.screen}>
         <View style={raceDayStyles.container}>
-          <RaceDayHeader title="RaceDay" subtitle="No active session" onLeftPress={handleBack} leftLabel="‹ Back" />
+          <RaceDayHeader title="RaceDay" subtitle="No active session" onLeftPress={handleBack} leftLabel="‹ BACK" />
           <View style={raceDayStyles.empty}>
             <Text style={raceDayStyles.emptyText}>No active Race Day was found. Start Race Day from the Dashboard.</Text>
           </View>
@@ -547,9 +547,9 @@ export default function RaceDayDashboardScreen() {
         <RaceDayHeader
           title="RaceDay"
           subtitle={trackName}
-          leftLabel="‹ Back"
+          leftLabel="‹ BACK"
           onLeftPress={handleBack}
-          rightLabel="End"
+          rightLabel="END"
           rightTone="danger"
           onRightPress={confirmEndRaceDay}
         />
@@ -571,10 +571,9 @@ export default function RaceDayDashboardScreen() {
             </RaceDayPracticeTrackCard>
           ) : (
             <View style={raceDayStyles.trackCard}>
-              <View style={raceDayStyles.trackCardTopAccent} />
-              <View style={raceDayStyles.raceDayTrackCardLayout}>
+              <View style={raceDayStyles.trackCardHeader}>
                 <View style={raceDayStyles.flex1}>
-                  <Text style={raceDayStyles.trackCardEyebrow}>Track &amp; Live</Text>
+                  <Text style={raceDayStyles.trackCardEyebrow}>Live RaceDay</Text>
                   <Text style={raceDayStyles.cardTitle}>{trackName}</Text>
                   <Text style={raceDayStyles.cardSub}>
                     {new Date(active.startedAt || Date.now()).toLocaleDateString()} • {vehicles.length} vehicle{vehicles.length === 1 ? '' : 's'}
@@ -584,24 +583,34 @@ export default function RaceDayDashboardScreen() {
                   ) : null}
                 </View>
 
-                <View style={raceDayStyles.raceDayTrackCardActions}>
-                  <TouchableOpacity style={raceDayStyles.changeEventButton} onPress={() => setSyncOpen(true)} activeOpacity={0.82}>
-                    <Text style={raceDayStyles.changeEventButtonText}>{hasLiveRcEvent ? 'Change Event' : 'Choose Event'}</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[raceDayStyles.pill, { borderColor: raceDayColors.blue }, syncing && { opacity: 0.55 }]}
-                    onPress={handleSyncPress}
-                    disabled={syncing}
-                    activeOpacity={0.82}
-                  >
-                    {syncing ? (
-                      <ActivityIndicator size="small" />
-                    ) : (
-                      <Text style={[raceDayStyles.pillText, { color: raceDayColors.text }]}>{hasLiveRcEvent ? 'Re-Sync' : 'Sync'}</Text>
-                    )}
-                  </TouchableOpacity>
+                <View style={raceDayStyles.trackLiveBadge}>
+                  <View style={raceDayStyles.trackLiveDot} />
+                  <Text style={raceDayStyles.trackLiveBadgeText}>LIVE</Text>
                 </View>
+              </View>
+
+              <View style={raceDayStyles.trackNavigationRow}>
+                <TouchableOpacity style={raceDayStyles.trackNavigationButton} onPress={() => setSyncOpen(true)} activeOpacity={0.82}>
+                  <View>
+                    <Text style={raceDayStyles.trackNavigationLabel}>EVENT</Text>
+                    <Text style={raceDayStyles.trackNavigationText}>{hasLiveRcEvent ? 'Change Event' : 'Choose Event'}</Text>
+                  </View>
+                  <Text style={raceDayStyles.trackNavigationArrow}>›</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[raceDayStyles.trackSyncButton, syncing && { opacity: 0.55 }]}
+                  onPress={handleSyncPress}
+                  disabled={syncing}
+                  activeOpacity={0.82}
+                >
+                  {syncing ? <ActivityIndicator size="small" /> : (
+                    <>
+                      <Text style={raceDayStyles.trackNavigationLabel}>LIVERC</Text>
+                      <Text style={raceDayStyles.trackSyncText}>{hasLiveRcEvent ? 'RE-SYNC' : 'SYNC'}</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
               </View>
               <RaceDayLiveHeader liveState={liveRcState} embedded />
             </View>

@@ -6,7 +6,7 @@ import { raceDayStyles } from '../styles/raceDayStyles';
 export default function RaceDayHeader({
   title = 'RaceDay',
   subtitle,
-  leftLabel = '‹ Back',
+  leftLabel = '‹ BACK',
   rightLabel,
   onLeftPress,
   onRightPress,

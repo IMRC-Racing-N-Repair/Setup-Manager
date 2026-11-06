@@ -1,6 +1,6 @@
 import React from 'react';
 import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
-import { raceDayColors, raceDayStyles } from '../styles/raceDayStyles';
+import { raceDayStyles } from '../styles/raceDayStyles';
 
 export default function RaceDayPracticeTrackCard({
   raceDay,
@@ -17,10 +17,9 @@ export default function RaceDayPracticeTrackCard({
 
   return (
     <View style={raceDayStyles.trackCard}>
-      <View style={raceDayStyles.trackCardTopAccent} />
-      <View style={raceDayStyles.raceDayTrackCardLayout}>
+      <View style={raceDayStyles.trackCardHeader}>
         <View style={raceDayStyles.flex1}>
-          <Text style={raceDayStyles.trackCardEyebrow}>Track &amp; Live</Text>
+          <Text style={raceDayStyles.trackCardEyebrow}>Live Practice</Text>
           <Text style={raceDayStyles.cardTitle}>{trackName}</Text>
           <Text style={raceDayStyles.cardSub} numberOfLines={1}>
             {startedLabel} • {vehicleCount} vehicle{vehicleCount === 1 ? '' : 's'}
@@ -30,28 +29,34 @@ export default function RaceDayPracticeTrackCard({
           </Text>
         </View>
 
-        <View style={raceDayStyles.raceDayTrackCardActions}>
-          <TouchableOpacity
-            style={raceDayStyles.changeEventButton}
-            onPress={onSelectPracticeDay}
-            activeOpacity={0.82}
-          >
-            <Text style={raceDayStyles.changeEventButtonText}>Change Date</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[raceDayStyles.pill, { borderColor: raceDayColors.accent }, refreshing && { opacity: 0.55 }]}
-            onPress={onRefreshPractice}
-            disabled={refreshing}
-            activeOpacity={0.82}
-          >
-            {refreshing ? (
-              <ActivityIndicator size="small" />
-            ) : (
-              <Text style={[raceDayStyles.pillText, { color: raceDayColors.text }]}>Refresh</Text>
-            )}
-          </TouchableOpacity>
+        <View style={raceDayStyles.trackLiveBadge}>
+          <View style={raceDayStyles.trackLiveDot} />
+          <Text style={raceDayStyles.trackLiveBadgeText}>LIVE</Text>
         </View>
+      </View>
+
+      <View style={raceDayStyles.trackNavigationRow}>
+        <TouchableOpacity style={raceDayStyles.trackNavigationButton} onPress={onSelectPracticeDay} activeOpacity={0.82}>
+          <View>
+            <Text style={raceDayStyles.trackNavigationLabel}>PRACTICE DATE</Text>
+            <Text style={raceDayStyles.trackNavigationText}>Change Date</Text>
+          </View>
+          <Text style={raceDayStyles.trackNavigationArrow}>›</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[raceDayStyles.trackSyncButton, refreshing && { opacity: 0.55 }]}
+          onPress={onRefreshPractice}
+          disabled={refreshing}
+          activeOpacity={0.82}
+        >
+          {refreshing ? <ActivityIndicator size="small" /> : (
+            <>
+              <Text style={raceDayStyles.trackNavigationLabel}>PRACTICE</Text>
+              <Text style={raceDayStyles.trackSyncText}>REFRESH</Text>
+            </>
+          )}
+        </TouchableOpacity>
       </View>
       {children}
     </View>

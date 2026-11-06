@@ -43,7 +43,7 @@ export const raceDayStyles = StyleSheet.create({
     paddingBottom: 142,
   },
   scrollContentTabletLandscape: {
-    paddingBottom: 142,
+    paddingBottom: 166,
   },
   vehicleGridTabletLandscape: {
     width: '100%',
@@ -488,10 +488,10 @@ export const raceDayStyles = StyleSheet.create({
     gap: 1,
   },
   actionNavRowTabletLandscape: {
-    minHeight: 54,
+    minHeight: 76,
   },
   actionNavItemTabletLandscape: {
-    minHeight: 50,
+    minHeight: 72,
     gap: 1,
   },
   actionNavItemDisabled: {

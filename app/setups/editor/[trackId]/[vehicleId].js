@@ -277,8 +277,11 @@ function getEditorLayoutMetrics({ height, width, topInset = 0, bottomInset = 0, 
       paddingTop: tabletLandscape ? 4 : v(5, 2),
       paddingBottom: tabletLandscape ? 4 : Math.max(4, (mapScale < 0.78 ? 3 : 4)),
     },
+    bottomActionRow: {
+      minHeight: tabletLandscape ? 76 : 54,
+    },
     mapActionButton: {
-      minHeight: tabletLandscape ? 50 : v(50, 44),
+      minHeight: tabletLandscape ? 72 : v(50, 44),
       paddingVertical: tabletLandscape ? 4 : v(5, 4),
       borderRadius: 0,
     },
@@ -1061,7 +1064,7 @@ function FixedBottomActions({ setup, historyCount, onOpenPanel, bottomInset = 0,
 
   return (
     <View style={[setupStyles.editorBottomBar, layoutMetrics?.bottomBar || { paddingBottom: Math.max(24, bottomInset + 16) }]}>
-      <View style={setupStyles.editorBottomActionRow}>
+      <View style={[setupStyles.editorBottomActionRow, layoutMetrics?.bottomActionRow]}>
         {actions.map((action) => (
           <MapAction
             key={action.key}

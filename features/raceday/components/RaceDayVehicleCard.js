@@ -119,23 +119,29 @@ export default function RaceDayVehicleCard({
   );
 
   return (
-    <View style={[raceDayStyles.card, raceDayStyles.dashboardCardCompact]}>
+    <View style={raceDayStyles.raceVehicleCard}>
       <View style={raceDayStyles.cardAccent} />
 
-      <View style={raceDayStyles.rowBetween}>
-        <View style={[raceDayStyles.flex1, { flexDirection: 'row', alignItems: 'center', minWidth: 0 }]}>
+      <View style={raceDayStyles.raceVehicleHeader}>
+        <View style={raceDayStyles.raceVehicleMain}>
           <RaceDayLineupBadge lineup={displayLineup} />
-          <View style={raceDayStyles.flex1}>
+          <View style={raceDayStyles.raceVehicleIdentity}>
             <Text style={raceDayStyles.cardTitle}>{title}</Text>
-            <Text style={raceDayStyles.cardSub}>
-              {vehicle?.manufacturer || vehicle?.model ? [vehicle.manufacturer, vehicle.model].filter(Boolean).join(' ') : 'Race vehicle'}
-              {transponder ? ` • TX ${transponder}` : ''}
+            <Text style={raceDayStyles.raceVehicleMeta} numberOfLines={1}>
+              {vehicle?.manufacturer || vehicle?.model ? [vehicle.manufacturer, vehicle.model].filter(Boolean).join(' ') : 'Manufacturer / Model not set'}
             </Text>
+            <Text style={raceDayStyles.raceVehicleDetail} numberOfLines={1}>{vehicle?.chassisStyle || 'Chassis style not set'}</Text>
           </View>
         </View>
-        <TouchableOpacity style={[raceDayStyles.smallButton, { borderColor: raceDayColors.accent }]} onPress={onOpenSetup} activeOpacity={0.82}>
-          <Text style={raceDayStyles.smallButtonText}>Wrench</Text>
-        </TouchableOpacity>
+        <View style={raceDayStyles.raceVehicleActions}>
+          <View style={raceDayStyles.raceVehicleTxBox}>
+            <Text style={raceDayStyles.raceVehicleTxLabel}>TX</Text>
+            <Text style={raceDayStyles.raceVehicleTxValue} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.76}>{transponder || '—'}</Text>
+          </View>
+          <TouchableOpacity style={raceDayStyles.raceVehicleWrench} onPress={onOpenSetup} activeOpacity={0.82}>
+            <Text style={raceDayStyles.raceVehicleWrenchText}>WRENCH</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {raceRuns.length ? (

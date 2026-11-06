@@ -13,11 +13,16 @@ export default function RaceDayBottomActions({
   primaryDisabled = false,
   secondaryDisabled = false,
   tertiaryDisabled = false,
+  docked = false,
 }) {
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={[raceDayStyles.bottomBar, { paddingBottom: Math.max(insets.bottom, 12) }]}> 
+    <View style={[
+      raceDayStyles.bottomBar,
+      docked && raceDayStyles.bottomBarDocked,
+      { paddingBottom: docked ? 7 : Math.max(insets.bottom, 12) },
+    ]}>
       <View style={raceDayStyles.bottomRow}>
         {secondaryLabel ? (
           <TouchableOpacity

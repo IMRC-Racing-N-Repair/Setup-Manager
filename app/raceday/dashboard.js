@@ -641,6 +641,7 @@ export default function RaceDayDashboardScreen() {
       </View>
 
       <RaceDayBottomActions
+        docked
         secondaryLabel="Notes"
         onSecondaryPress={() => setNotesOpen(true)}
         tertiaryLabel="Changes"

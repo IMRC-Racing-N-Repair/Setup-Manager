@@ -17,12 +17,34 @@ export default function RaceDayBottomActions({
 }) {
   const insets = useSafeAreaInsets();
 
+  if (docked) {
+    const actions = [
+      secondaryLabel ? { key: 'notes', glyph: '▤', label: secondaryLabel, onPress: onSecondaryPress, disabled: secondaryDisabled } : null,
+      tertiaryLabel ? { key: 'changes', glyph: '↻', label: tertiaryLabel, onPress: onTertiaryPress, disabled: tertiaryDisabled } : null,
+      primaryLabel ? { key: 'add', glyph: '＋', label: primaryLabel, onPress: onPrimaryPress, disabled: primaryDisabled, primary: true } : null,
+    ].filter(Boolean);
+
+    return (
+      <View style={[raceDayStyles.bottomBar, raceDayStyles.bottomBarDocked]}>
+        <View style={raceDayStyles.actionNavRow}>
+          {actions.map((action) => (
+            <TouchableOpacity
+              key={action.key}
+              style={[raceDayStyles.actionNavItem, action.disabled && raceDayStyles.actionNavItemDisabled]}
+              onPress={action.disabled ? undefined : action.onPress}
+              activeOpacity={0.72}
+            >
+              <Text style={[raceDayStyles.actionNavGlyph, action.primary && raceDayStyles.actionNavPrimary]}>{action.glyph}</Text>
+              <Text style={[raceDayStyles.actionNavLabel, action.primary && raceDayStyles.actionNavPrimary]} numberOfLines={1}>{action.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+    );
+  }
+
   return (
-    <View style={[
-      raceDayStyles.bottomBar,
-      docked && raceDayStyles.bottomBarDocked,
-      { paddingBottom: docked ? 7 : Math.max(insets.bottom, 12) },
-    ]}>
+    <View style={[raceDayStyles.bottomBar, { paddingBottom: Math.max(insets.bottom, 12) }]}>
       <View style={raceDayStyles.bottomRow}>
         {secondaryLabel ? (
           <TouchableOpacity

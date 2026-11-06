@@ -1,10 +1,25 @@
 import React, { useMemo } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import { buildCompareRows } from '../lib/raceDayCompare';
-import { getVehicleDisplayName, getVehicleTransponder } from '../lib/raceDayModel';
+import { getVehicleDisplayName } from '../lib/raceDayModel';
 import { pickPreferredLineup } from '../lib/raceDayLineupPriority';
 import RaceDayLineupBadge from './RaceDayLineupBadge';
-import { raceDayColors, raceDayStyles } from '../styles/raceDayStyles';
+import { raceDayStyles } from '../styles/raceDayStyles';
+
+function WrenchIcon() {
+  return (
+    <Svg width={19} height={19} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M22.7 19.1 13.6 10a6.1 6.1 0 0 0-7.5-7.8l3.5 3.5-3.9 3.9-3.5-3.5A6.1 6.1 0 0 0 10 13.6l9.1 9.1a1 1 0 0 0 1.4 0l2.2-2.2a1 1 0 0 0 0-1.4Z"
+        stroke="#2F8CFF"
+        strokeWidth={1.8}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
 
 function RaceRunStat({ label, value }) {
   return (
@@ -105,7 +120,6 @@ export default function RaceDayVehicleCard({
   onOpenSetup,
 }) {
   const title = getVehicleDisplayName(vehicle);
-  const transponder = getVehicleTransponder(vehicle);
   const raceRuns = useMemo(() => {
     const list = Array.isArray(runsForVehicle) && runsForVehicle.length
       ? runsForVehicle
@@ -130,15 +144,11 @@ export default function RaceDayVehicleCard({
             <Text style={raceDayStyles.raceVehicleMeta} numberOfLines={1}>
               {vehicle?.manufacturer || vehicle?.model ? [vehicle.manufacturer, vehicle.model].filter(Boolean).join(' ') : 'Manufacturer / Model not set'}
             </Text>
-            <Text style={raceDayStyles.raceVehicleDetail} numberOfLines={1}>{vehicle?.chassisStyle || 'Chassis style not set'}</Text>
           </View>
         </View>
         <View style={raceDayStyles.raceVehicleActions}>
-          <View style={raceDayStyles.raceVehicleTxBox}>
-            <Text style={raceDayStyles.raceVehicleTxLabel}>TX</Text>
-            <Text style={raceDayStyles.raceVehicleTxValue} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.76}>{transponder || '—'}</Text>
-          </View>
           <TouchableOpacity style={raceDayStyles.raceVehicleWrench} onPress={onOpenSetup} activeOpacity={0.82}>
+            <WrenchIcon />
             <Text style={raceDayStyles.raceVehicleWrenchText}>WRENCH</Text>
           </TouchableOpacity>
         </View>

@@ -262,7 +262,11 @@ export default function TracksScreen() {
   }
 
   function goBack() {
-    router.back();
+    if (typeof router.canGoBack === 'function' && router.canGoBack()) {
+      router.back();
+      return;
+    }
+    router.replace('/garage');
   }
 
   return (
@@ -290,7 +294,7 @@ export default function TracksScreen() {
             </Pressable>
 
             <View style={styles.headerTitleWrap}>
-              <Text style={styles.appLabel}>IMRC SETUP MANAGER</Text>
+              <Text style={styles.appLabel}>IMRC GARAGE</Text>
               <Text style={styles.pageTitle}>Tracks</Text>
             </View>
 
@@ -305,11 +309,8 @@ export default function TracksScreen() {
             </Pressable>
           </View>
 
-          <Text style={styles.pageSubtitle}>
-            Saved tracks are the foundation for Setups and Race Day. Add the track name, type, surface, location, and LiveRC info.
-          </Text>
-
-          <View style={styles.headerToolsRow}>
+          <View style={styles.subHeaderRow}>
+            <Text style={styles.pageSubtitle}>Saved tracks are used for Setups and Race Day.</Text>
             <View style={styles.savedCountPill}>
               <Text style={styles.savedCountText}>
                 {loading
@@ -317,7 +318,9 @@ export default function TracksScreen() {
                   : `${tracks.length} saved ${tracks.length === 1 ? 'track' : 'tracks'}`}
               </Text>
             </View>
+          </View>
 
+          <View style={styles.headerToolsRow}>
             <Pressable
               onPress={openImportSheet}
               style={({ pressed }) => [

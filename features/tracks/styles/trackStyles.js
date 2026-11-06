@@ -68,7 +68,7 @@ export const trackStyles = StyleSheet.create({
   },
 
   vehicleLikeHeader: {
-    marginBottom: 9,
+    marginBottom: 7,
   },
 
   headerTopRow: {
@@ -87,39 +87,51 @@ export const trackStyles = StyleSheet.create({
     color: trackColors.blue,
     fontSize: 10,
     fontWeight: '900',
-    letterSpacing: 2,
+    lineHeight: 12,
+    letterSpacing: 1.2,
     textTransform: 'uppercase',
-    marginBottom: 2,
+    marginBottom: 0,
   },
 
   pageTitle: {
     color: trackColors.text,
-    fontSize: 25,
-    lineHeight: 28,
+    fontSize: 22,
+    lineHeight: 26,
     fontWeight: '900',
   },
 
   pageSubtitle: {
+    flex: 1,
     color: trackColors.muted,
     fontSize: 12,
     lineHeight: 16,
-    marginTop: 6,
+    fontWeight: '700',
+  },
+
+  subHeaderRow: {
+    paddingTop: 8,
+    paddingBottom: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
   },
 
   headerButton: {
-    minHeight: 36,
+    minHeight: 38,
+    minWidth: 72,
     borderRadius: 5,
     borderWidth: 1,
     borderColor: trackColors.border,
     backgroundColor: trackColors.panelSoft,
-    paddingHorizontal: 10,
+    paddingHorizontal: 11,
     alignItems: 'center',
     justifyContent: 'center',
   },
 
   headerButtonText: {
     color: trackColors.text,
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '900',
   },
 
@@ -141,10 +153,11 @@ export const trackStyles = StyleSheet.create({
   },
 
   addButton: {
-    minHeight: 40,
-    borderRadius: 6,
+    minHeight: 38,
+    minWidth: 72,
+    borderRadius: 5,
     backgroundColor: trackColors.blue,
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -160,17 +173,17 @@ export const trackStyles = StyleSheet.create({
     alignItems: 'center',
     flexWrap: 'wrap',
     gap: 7,
-    marginTop: 10,
+    justifyContent: 'flex-end',
+    marginTop: 1,
   },
 
   savedCountPill: {
-    minHeight: 28,
-    minWidth: 112,
     borderRadius: 999,
     borderWidth: 1,
     borderColor: trackColors.blueBorder,
     backgroundColor: 'rgba(30, 139, 255, 0.08)',
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -187,7 +200,7 @@ export const trackStyles = StyleSheet.create({
 
   listContent: {
     paddingBottom: TRACK_SAFE_BOTTOM + 26,
-    gap: 8,
+    gap: 7,
   },
 
   listContentLandscape: {
@@ -288,7 +301,7 @@ export const trackStyles = StyleSheet.create({
 
   trackCard: {
     width: '100%',
-    minHeight: 70,
+    minHeight: 68,
     borderRadius: 5,
     borderWidth: 1,
     borderColor: trackColors.border,

@@ -123,13 +123,25 @@ export default function GarageScreen() {
     router.push(`/setups/select-track?vehicleId=${encodeURIComponent(selectedVehicleId)}`);
   }, [router, selectedVehicleId]);
 
+  const goBack = useCallback(() => {
+    if (showVehicleTracks) {
+      setShowVehicleTracks(false);
+      return;
+    }
+    if (typeof router.canGoBack === 'function' && router.canGoBack()) {
+      router.back();
+      return;
+    }
+    router.replace('/');
+  }, [router, showVehicleTracks]);
+
   return (
     <StableSafeAreaView style={styles.safe}>
       <StatusBar style="light" />
       <View style={styles.root}>
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <View style={styles.header}>
-            <Pressable style={styles.backButton} onPress={() => router.replace('/')}><Text style={styles.backText}>‹ HOME</Text></Pressable>
+            <Pressable style={styles.backButton} onPress={goBack}><Text style={styles.backText}>‹ BACK</Text></Pressable>
             <View style={styles.headerText}>
               <Text style={styles.kicker}>IMRC GARAGE</Text>
               <Text style={styles.title}>Garage</Text>
@@ -176,13 +188,6 @@ export default function GarageScreen() {
             </>
           ) : (
             <>
-              <View style={styles.vehicleViewHeader}>
-                <Pressable style={styles.changeVehicleButton} onPress={() => setShowVehicleTracks(false)}>
-                  <Text style={styles.changeVehicleText}>‹ CHANGE VEHICLE</Text>
-                </Pressable>
-                <Text style={styles.sectionCount}>{vehicles.length} VEHICLES</Text>
-              </View>
-
               <View style={styles.selectedSummary}>
                 <View style={styles.selectedSummaryText}>
                   <Text style={styles.kicker}>SELECTED VEHICLE</Text>
@@ -252,9 +257,6 @@ const styles = StyleSheet.create({
   vehicleName: { color: AppColors.textStrong, fontSize: 14, fontWeight: '900' },
   vehicleMeta: { marginTop: 2, color: AppColors.mutedText, fontSize: 9 },
   chevron: { color: AppColors.primary, fontSize: 21 },
-  vehicleViewHeader: { minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, borderBottomWidth: 1, borderBottomColor: AppColors.border },
-  changeVehicleButton: { minHeight: 32, justifyContent: 'center', paddingHorizontal: 9, borderWidth: 1, borderColor: AppColors.borderStrong, backgroundColor: AppColors.surface },
-  changeVehicleText: { color: AppColors.primary, fontSize: 8, fontWeight: '900', letterSpacing: 0.45 },
   selectedSummary: { minHeight: 66, flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 12, paddingLeft: 11, borderLeftWidth: 2, borderLeftColor: AppColors.primary, backgroundColor: AppColors.card },
   selectedSummaryText: { flex: 1, minWidth: 0 },
   selectedVehicleName: { marginTop: 2, color: AppColors.textStrong, fontSize: 17, fontWeight: '900' },

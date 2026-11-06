@@ -77,6 +77,14 @@ export default function VehicleScreen() {
     setFormVisible(true);
   }
 
+  const handleBack = useCallback(() => {
+    if (typeof router.canGoBack === "function" && router.canGoBack()) {
+      router.back();
+      return;
+    }
+    router.replace("/garage");
+  }, []);
+
   function openEditForm(vehicle) {
     pendingViewSetupsRef.current = null;
     markVehicleViewed(vehicle?.id).catch(() => {});
@@ -150,12 +158,12 @@ export default function VehicleScreen() {
         ]}
       >
         <View style={modernStyles.headerBar}>
-          <Pressable style={modernStyles.headerSideButton} onPress={() => router.back()}>
+          <Pressable style={modernStyles.headerSideButton} onPress={handleBack}>
             <Text style={modernStyles.headerSideButtonText}>‹ Back</Text>
           </Pressable>
 
           <View style={modernStyles.headerTitleBlock}>
-            <Text style={modernStyles.headerKicker}>Vehicle</Text>
+            <Text style={modernStyles.headerKicker}>IMRC Garage</Text>
             <Text style={modernStyles.headerTitle}>Vehicles</Text>
           </View>
 

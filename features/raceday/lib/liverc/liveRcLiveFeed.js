@@ -22,6 +22,7 @@ export const EMPTY_LIVE_RC_STATE = Object.freeze({
   roundType: '',
   heat: '',
   raceStatus: '',
+  eventId: '',
   eventName: '',
   drivers: [],
   updatedAt: null,
@@ -336,6 +337,7 @@ export class LiveRcLiveFeed {
       const bootstrap = parseLiveRcScoringBootstrap(scoringHtml);
       if (!bootstrap.room) throw new Error('LiveRC track ID was not found.');
       this.room = bootstrap.room;
+      this._setState({ eventId: bootstrap.eventId });
       this._setDebug({
         trackId: bootstrap.accountId,
         room: bootstrap.room,

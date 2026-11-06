@@ -10,6 +10,9 @@ export default function RaceDayPracticeTrackCard({
   onSelectPracticeDay,
   onRefreshPractice,
   refreshing = false,
+  liveEnabled = true,
+  liveMatched = false,
+  onToggleLive,
   children,
 }) {
   const startedLabel = raceDay?.startedAt ? new Date(raceDay.startedAt).toLocaleDateString() : new Date().toLocaleDateString();
@@ -29,10 +32,16 @@ export default function RaceDayPracticeTrackCard({
           </Text>
         </View>
 
-        <View style={raceDayStyles.trackLiveBadge}>
-          <View style={raceDayStyles.trackLiveDot} />
-          <Text style={raceDayStyles.trackLiveBadgeText}>LIVE</Text>
-        </View>
+        <TouchableOpacity
+          style={[raceDayStyles.trackLiveBadge, (!liveEnabled || !liveMatched) && raceDayStyles.trackLiveBadgeInactive]}
+          onPress={onToggleLive}
+          activeOpacity={0.76}
+        >
+          <View style={[raceDayStyles.trackLiveDot, (!liveEnabled || !liveMatched) && raceDayStyles.trackLiveDotInactive]} />
+          <Text style={[raceDayStyles.trackLiveBadgeText, (!liveEnabled || !liveMatched) && raceDayStyles.trackLiveBadgeTextInactive]}>
+            {!liveEnabled ? 'LIVE OFF' : liveMatched ? 'LIVE' : 'WAITING'}
+          </Text>
+        </TouchableOpacity>
       </View>
 
       <View style={raceDayStyles.trackNavigationRow}>

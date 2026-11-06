@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ActivityIndicator, Alert, Platform, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import RaceDayHeader from '../../features/raceday/components/RaceDayHeader';
 import RaceDayVehicleCard from '../../features/raceday/components/RaceDayVehicleCard';
 import RaceDayBottomActions from '../../features/raceday/components/RaceDayBottomActions';
@@ -38,6 +40,16 @@ import { syncLiveRcPracticeDay } from '../../features/raceday/lib/liverc/liveRcP
 import { findEventByUrl } from '../../features/raceday/lib/liverc/liveRcEventFinder';
 import { raceDayStyles } from '../../features/raceday/styles/raceDayStyles';
 
+const LIVE_FEED_ENABLED_KEY = '@raceDayLiveFeedEnabled_v1';
+
+function normalizeEventName(value = '') {
+  return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+function getEventId(value = '') {
+  return String(value || '').match(/[?&]id=(\d+)/i)?.[1] || '';
+}
+
 function getStoredEventTitle(raceDay = {}) {
   return (
     raceDay?.eventTitle ||
@@ -69,6 +81,7 @@ function getEventIdLabel(eventUrl = '') {
 
 export default function RaceDayDashboardScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(true);
   const [active, setActive] = useState(null);
   const [track, setTrack] = useState(null);
@@ -90,6 +103,8 @@ export default function RaceDayDashboardScreen() {
   const [selectedPracticeDayLabel, setSelectedPracticeDayLabel] = useState('');
   const [practiceRefreshing, setPracticeRefreshing] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [liveEnabled, setLiveEnabled] = useState(true);
+  const [livePreferenceLoaded, setLivePreferenceLoaded] = useState(false);
   const [autoSyncing, setAutoSyncing] = useState(false);
   const [autoSyncProgress, setAutoSyncProgress] = useState([]);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
@@ -111,14 +126,44 @@ export default function RaceDayDashboardScreen() {
     syncDismissResolverRef.current?.();
   }, []);
 
+  useEffect(() => {
+    let mounted = true;
+    AsyncStorage.getItem(LIVE_FEED_ENABLED_KEY)
+      .then((value) => {
+        if (mounted) setLiveEnabled(value !== '0');
+      })
+      .finally(() => {
+        if (mounted) setLivePreferenceLoaded(true);
+      });
+    return () => { mounted = false; };
+  }, []);
+
   const trackName = getTrackDisplayName(track || {});
   const hasLiveRcEvent = Boolean(active?.eventUrl);
-  const eventDateLabel = getStoredEventDateLabel(active);
+  const eventTitleLabel = getStoredEventTitle(active) || getEventIdLabel(active?.eventUrl) || 'No event selected';
   // Older RaceDay sessions may have an event URL without a separately saved
   // track URL. The live feed only needs the LiveRC origin, so the event URL is
   // a valid fallback and keeps those existing sessions connected.
   const liveRcSiteUrl = active?.siteUrl || getTrackLiveRcUrl(track || {}) || active?.eventUrl || '';
-  const liveRcState = useLiveRcLiveFeed(liveRcSiteUrl, Boolean(active?.trackId));
+  const liveRcState = useLiveRcLiveFeed(liveRcSiteUrl, Boolean(active?.trackId) && liveEnabled && livePreferenceLoaded);
+  const selectedEventId = getEventId(active?.eventUrl);
+  const liveEventId = String(liveRcState?.eventId || '');
+  const selectedEventName = normalizeEventName(eventTitleLabel);
+  const liveEventName = normalizeEventName(liveRcState?.eventName);
+  const liveMatchesSelectedEvent = Boolean(
+    liveEnabled && hasLiveRcEvent && (
+      (selectedEventId && liveEventId && selectedEventId === liveEventId) ||
+      (!liveEventId && selectedEventName && liveEventName && selectedEventName === liveEventName)
+    )
+  );
+
+  const toggleLiveFeed = useCallback(() => {
+    setLiveEnabled((current) => {
+      const next = !current;
+      AsyncStorage.setItem(LIVE_FEED_ENABLED_KEY, next ? '1' : '0').catch(() => {});
+      return next;
+    });
+  }, []);
 
   const latestRunsByVehicle = useMemo(() => {
     const map = new Map();
@@ -519,8 +564,8 @@ export default function RaceDayDashboardScreen() {
   if (loading) {
     return (
       <View style={raceDayStyles.screen}>
-        <View style={raceDayStyles.container}>
-          <RaceDayHeader title="RaceDay" subtitle="Loading" onLeftPress={handleBack} leftLabel="‹ BACK" />
+        <View style={[raceDayStyles.container, { paddingTop: insets.top }]}>
+          <RaceDayHeader title="RaceDay" subtitle="Loading" onLeftPress={handleBack} leftLabel="‹ BACK" topOffset={false} />
           <View style={raceDayStyles.empty}><ActivityIndicator /></View>
         </View>
       </View>
@@ -530,8 +575,8 @@ export default function RaceDayDashboardScreen() {
   if (!active?.trackId) {
     return (
       <View style={raceDayStyles.screen}>
-        <View style={raceDayStyles.container}>
-          <RaceDayHeader title="RaceDay" subtitle="No active session" onLeftPress={handleBack} leftLabel="‹ BACK" />
+        <View style={[raceDayStyles.container, { paddingTop: insets.top }]}>
+          <RaceDayHeader title="RaceDay" subtitle="No active session" onLeftPress={handleBack} leftLabel="‹ BACK" topOffset={false} />
           <View style={raceDayStyles.empty}>
             <Text style={raceDayStyles.emptyText}>No active Race Day was found. Start Race Day from the Dashboard.</Text>
           </View>
@@ -543,7 +588,7 @@ export default function RaceDayDashboardScreen() {
 
   return (
     <View style={raceDayStyles.screen}>
-      <View style={raceDayStyles.container}>
+      <View style={[raceDayStyles.container, { paddingTop: insets.top }]}>
         <RaceDayHeader
           title="RaceDay"
           subtitle={trackName}
@@ -552,6 +597,7 @@ export default function RaceDayDashboardScreen() {
           rightLabel="END"
           rightTone="danger"
           onRightPress={confirmEndRaceDay}
+          topOffset={false}
         />
 
         <ScrollView contentContainerStyle={raceDayStyles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -566,8 +612,11 @@ export default function RaceDayDashboardScreen() {
               onSelectPracticeDay={() => setPracticeDayPickerOpen(true)}
               onRefreshPractice={refreshPracticeSummaries}
               refreshing={practiceRefreshing}
+              liveEnabled={liveEnabled}
+              liveMatched={liveMatchesSelectedEvent}
+              onToggleLive={toggleLiveFeed}
             >
-              <RaceDayLiveHeader liveState={liveRcState} embedded />
+              {liveMatchesSelectedEvent ? <RaceDayLiveHeader liveState={liveRcState} embedded /> : null}
             </RaceDayPracticeTrackCard>
           ) : (
             <View style={raceDayStyles.trackCard}>
@@ -575,18 +624,19 @@ export default function RaceDayDashboardScreen() {
                 <View style={raceDayStyles.flex1}>
                   <Text style={raceDayStyles.trackCardEyebrow}>Live RaceDay</Text>
                   <Text style={raceDayStyles.cardTitle}>{trackName}</Text>
-                  <Text style={raceDayStyles.cardSub}>
-                    {new Date(active.startedAt || Date.now()).toLocaleDateString()} • {vehicles.length} vehicle{vehicles.length === 1 ? '' : 's'}
-                  </Text>
-                  {hasLiveRcEvent && eventDateLabel ? (
-                    <Text style={raceDayStyles.dashboardEventDate} numberOfLines={1}>{eventDateLabel}</Text>
-                  ) : null}
+                  <Text style={raceDayStyles.cardSub} numberOfLines={1}>{eventTitleLabel}</Text>
                 </View>
 
-                <View style={raceDayStyles.trackLiveBadge}>
-                  <View style={raceDayStyles.trackLiveDot} />
-                  <Text style={raceDayStyles.trackLiveBadgeText}>LIVE</Text>
-                </View>
+                <TouchableOpacity
+                  style={[raceDayStyles.trackLiveBadge, (!liveEnabled || !liveMatchesSelectedEvent) && raceDayStyles.trackLiveBadgeInactive]}
+                  onPress={toggleLiveFeed}
+                  activeOpacity={0.76}
+                >
+                  <View style={[raceDayStyles.trackLiveDot, (!liveEnabled || !liveMatchesSelectedEvent) && raceDayStyles.trackLiveDotInactive]} />
+                  <Text style={[raceDayStyles.trackLiveBadgeText, (!liveEnabled || !liveMatchesSelectedEvent) && raceDayStyles.trackLiveBadgeTextInactive]}>
+                    {!liveEnabled ? 'LIVE OFF' : liveMatchesSelectedEvent ? 'LIVE' : 'WAITING'}
+                  </Text>
+                </TouchableOpacity>
               </View>
 
               <View style={raceDayStyles.trackNavigationRow}>
@@ -612,7 +662,7 @@ export default function RaceDayDashboardScreen() {
                   )}
                 </TouchableOpacity>
               </View>
-              <RaceDayLiveHeader liveState={liveRcState} embedded />
+              {liveMatchesSelectedEvent ? <RaceDayLiveHeader liveState={liveRcState} embedded /> : null}
             </View>
           )}
 

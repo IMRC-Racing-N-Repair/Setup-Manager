@@ -60,7 +60,7 @@ export const appScreenHeaderStyles = styles;
 
 const styles = StyleSheet.create({
   header: {
-    minHeight: 72,
+    minHeight: 70,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
@@ -69,8 +69,8 @@ const styles = StyleSheet.create({
     backgroundColor: AppColors.background,
   },
   backButton: {
-    width: 68,
-    minHeight: 40,
+    width: 64,
+    minHeight: 34,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: 0.45,
   },
-  sideSpacer: { width: 68, minHeight: 40 },
+  sideSpacer: { width: 64, minHeight: 34 },
   titleBlock: { flex: 1, minWidth: 0, justifyContent: 'center' },
   kicker: {
     color: AppColors.primary,
@@ -102,8 +102,8 @@ const styles = StyleSheet.create({
   },
   subtitle: { marginTop: 1, color: AppColors.mutedText, fontSize: 10, lineHeight: 13 },
   actionButton: {
-    minWidth: 68,
-    minHeight: 40,
+    minWidth: 64,
+    minHeight: 34,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 9,

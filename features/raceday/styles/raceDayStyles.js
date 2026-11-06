@@ -231,18 +231,24 @@ export const raceDayStyles = StyleSheet.create({
     borderColor: 'rgba(47,140,255,0.48)',
     backgroundColor: 'rgba(47,140,255,0.10)',
   },
+  trackLiveBadgeInactive: {
+    borderColor: raceDayColors.border,
+    backgroundColor: raceDayColors.panel,
+  },
   trackLiveDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
     backgroundColor: raceDayColors.accent,
   },
+  trackLiveDotInactive: { backgroundColor: raceDayColors.faint },
   trackLiveBadgeText: {
     color: raceDayColors.accent,
     fontSize: 8,
     fontWeight: '900',
     letterSpacing: 0.7,
   },
+  trackLiveBadgeTextInactive: { color: raceDayColors.muted },
   selectedCard: {
     borderColor: raceDayColors.accentBorder,
     backgroundColor: raceDayColors.accentSoft,

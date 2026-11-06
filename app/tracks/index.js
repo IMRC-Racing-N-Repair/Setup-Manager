@@ -12,7 +12,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import TrackEditSheet from '../../features/tracks/components/TrackEditSheet';
@@ -63,6 +63,7 @@ const NEW_TRACK = {
 
 export default function TracksScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
 
@@ -76,6 +77,7 @@ export default function TracksScreen() {
   const pendingImportActionRef = useRef(null);
   const editDismissTimerRef = useRef(null);
   const importDismissTimerRef = useRef(null);
+  const handledRouteActionRef = useRef('');
 
   const isLandscape = width > height;
   const isNew = !editingTrack?.id;
@@ -97,6 +99,24 @@ export default function TracksScreen() {
       loadTracks();
     }, [loadTracks])
   );
+
+  useEffect(() => {
+    const editTrackId = clean(params?.editTrackId);
+    const wantsAdd = String(params?.addTrack || '') === '1';
+    const actionKey = editTrackId ? `edit:${editTrackId}` : wantsAdd ? 'add' : '';
+    if (!actionKey || handledRouteActionRef.current === actionKey || loading) return;
+
+    if (editTrackId) {
+      const track = tracks.find((item) => clean(item?.id) === editTrackId);
+      if (!track) return;
+      handledRouteActionRef.current = actionKey;
+      openTrack(track);
+      return;
+    }
+
+    handledRouteActionRef.current = actionKey;
+    addTrack();
+  }, [loading, params?.addTrack, params?.editTrackId, tracks]);
 
   function openTrack(track) {
     pendingEditActionRef.current = null;

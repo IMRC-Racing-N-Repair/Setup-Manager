@@ -30,7 +30,8 @@ export default function SponsorStartupModal({ visible, sponsor, onClose }) {
             {sponsorImage ? (
               <Image
                 source={{ uri: sponsorImage }}
-                contentFit="contain"
+                contentFit="cover"
+                contentPosition="center"
                 cachePolicy="memory-disk"
                 transition={120}
                 style={[styles.sponsorImage, { height: artworkHeight }]}

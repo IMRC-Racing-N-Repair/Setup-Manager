@@ -24,10 +24,6 @@ function vehicleMeta(vehicle) {
   return clean(vehicle?.chassisStyle || vehicle?.vehicleStyle) || 'Vehicle details';
 }
 
-function vehicleTx(vehicle) {
-  return clean(vehicle?.transponder || vehicle?.transponderNumber || vehicle?.transponderId) || '—';
-}
-
 function trackMeta(track) {
   return [track?.surface, track?.type || track?.trackType, track?.direction]
     .filter(Boolean)
@@ -90,6 +86,18 @@ export default function GarageScreen() {
     [selectedVehicleId, vehicles],
   );
 
+  const vehicleSetupCounts = useMemo(() => {
+    const trackIdsByVehicle = new Map();
+    setups.forEach((setup) => {
+      const vehicleId = clean(setup?.vehicleId);
+      const trackId = clean(setup?.trackId);
+      if (!vehicleId || !trackId) return;
+      if (!trackIdsByVehicle.has(vehicleId)) trackIdsByVehicle.set(vehicleId, new Set());
+      trackIdsByVehicle.get(vehicleId).add(trackId);
+    });
+    return trackIdsByVehicle;
+  }, [setups]);
+
   const trackRows = useMemo(() => {
     const vehicleId = clean(selectedVehicleId);
     return tracks.map((track) => {
@@ -125,6 +133,15 @@ export default function GarageScreen() {
     if (!selectedVehicleId) return;
     router.push(`/setups/select-track?vehicleId=${encodeURIComponent(selectedVehicleId)}`);
   }, [router, selectedVehicleId]);
+
+  const addTrack = useCallback(() => {
+    router.push({ pathname: '/tracks', params: { addTrack: '1' } });
+  }, [router]);
+
+  const editTrack = useCallback((trackId) => {
+    if (!trackId) return;
+    router.push({ pathname: '/tracks', params: { editTrackId: trackId } });
+  }, [router]);
 
   const handleHeaderAction = useCallback(() => {
     if (showVehicleTracks && selectedVehicleId) {
@@ -183,6 +200,7 @@ export default function GarageScreen() {
               <View style={styles.vehicleList}>
                 {vehicles.map((vehicle) => {
                   const id = clean(vehicle?.id || vehicle?.vehicleId);
+                  const setupCount = vehicleSetupCounts.get(id)?.size || 0;
                   return (
                     <Pressable key={id} style={({ pressed }) => [styles.vehicleRow, pressed && styles.pressed]} onPress={() => selectVehicle(vehicle)}>
                       <Text style={styles.vehicleNumber}>{String(vehicles.indexOf(vehicle) + 1).padStart(2, '0')}</Text>
@@ -190,9 +208,9 @@ export default function GarageScreen() {
                         <Text style={styles.vehicleName} numberOfLines={1}>{vehicle?.name || 'Unnamed vehicle'}</Text>
                         <Text style={styles.vehicleMeta} numberOfLines={1}>{vehicleMeta(vehicle)}</Text>
                       </View>
-                      <View style={styles.txBox}>
-                        <Text style={styles.txLabel}>TX</Text>
-                        <Text style={styles.txValue} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>{vehicleTx(vehicle)}</Text>
+                      <View style={styles.setupBadge}>
+                        <Text style={styles.setupBadgeValue}>{setupCount}</Text>
+                        <Text style={styles.setupBadgeLabel}>SETUPS</Text>
                       </View>
                       <Text style={styles.chevron}>›</Text>
                     </Pressable>
@@ -211,25 +229,38 @@ export default function GarageScreen() {
                 <View style={styles.setupCountBox}><Text style={styles.setupCountValue}>{selectedSetupCount}</Text><Text style={styles.setupCountLabel}>SETUPS</Text></View>
               </View>
 
+              <View style={styles.manageRow}>
+                <Pressable style={({ pressed }) => [styles.manageButton, pressed && styles.pressed]} onPress={() => router.push('/tracks')}>
+                  <Text style={styles.manageButtonText}>ALL TRACKS</Text>
+                </Pressable>
+                <Pressable style={({ pressed }) => [styles.manageButton, pressed && styles.pressed]} onPress={addTrack}>
+                  <Text style={styles.manageButtonText}>+ ADD TRACK</Text>
+                </Pressable>
+                <Pressable style={({ pressed }) => [styles.manageButton, styles.manageButtonPrimary, pressed && styles.pressed]} onPress={addSetup}>
+                  <Text style={[styles.manageButtonText, styles.manageButtonTextPrimary]}>+ ADD SETUP</Text>
+                </Pressable>
+              </View>
+
               <View style={styles.sectionHeading}>
                 <View><Text style={styles.kicker}>SELECT TRACK</Text><Text style={styles.sectionTitle}>Tracks & setups</Text></View>
-                <Pressable style={[styles.addSetupButton, !tracks.length && styles.disabledButton]} onPress={tracks.length ? addSetup : () => router.push('/tracks')}>
-                  <Text style={styles.addSetupText}>{tracks.length ? '+ ADD SETUP' : '+ ADD TRACK'}</Text>
-                </Pressable>
+                <Text style={styles.sectionCount}>{selectedSetupCount} SAVED</Text>
               </View>
 
               <View style={styles.trackList}>
                 {trackRows.map(({ track, trackId, setup }) => (
-                  <Pressable key={trackId} style={({ pressed }) => [styles.trackRow, setup && styles.trackRowWithSetup, pressed && styles.pressed]} onPress={() => openVehicleTrack(trackId)}>
-                    <View style={styles.trackIdentity}>
+                  <View key={trackId} style={[styles.trackRow, styles.trackRowWithSetup]}>
+                    <Pressable style={({ pressed }) => [styles.trackIdentity, pressed && styles.pressed]} onPress={() => openVehicleTrack(trackId)}>
                       <Text style={styles.trackName} numberOfLines={1}>{getTrackDisplayName(track)}</Text>
                       <Text style={styles.trackMeta} numberOfLines={1}>{trackMeta(track)}</Text>
-                      <Text style={[styles.trackStatus, setup && styles.trackStatusSaved]}>{setup ? savedLabel(setup) : 'No setup for this car'}</Text>
-                    </View>
-                    <View style={[styles.trackAction, setup && styles.trackActionSaved]}>
-                      <Text style={[styles.trackActionText, setup && styles.trackActionTextSaved]}>{setup ? 'OPEN' : '+ SETUP'}</Text>
-                    </View>
-                  </Pressable>
+                      <Text style={[styles.trackStatus, styles.trackStatusSaved]}>{savedLabel(setup)}</Text>
+                    </Pressable>
+                    <Pressable style={styles.trackEditAction} onPress={() => editTrack(trackId)}>
+                      <Text style={styles.trackEditActionText}>EDIT</Text>
+                    </Pressable>
+                    <Pressable style={[styles.trackAction, styles.trackActionSaved]} onPress={() => openVehicleTrack(trackId)}>
+                      <Text style={[styles.trackActionText, styles.trackActionTextSaved]}>OPEN</Text>
+                    </Pressable>
+                  </View>
                 ))}
                 {!trackRows.length ? (
                   <View style={styles.emptyTracks}>
@@ -270,9 +301,9 @@ const styles = StyleSheet.create({
   vehicleIdentity: { flex: 1, minWidth: 0 },
   vehicleName: { color: AppColors.textStrong, fontSize: 14, fontWeight: '900' },
   vehicleMeta: { marginTop: 2, color: AppColors.mutedText, fontSize: 9 },
-  txBox: { width: 62, height: 29, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5, borderWidth: 1, borderColor: 'rgba(47,140,255,0.70)', backgroundColor: 'rgba(47,140,255,0.12)' },
-  txLabel: { color: AppColors.primary, fontSize: 6, lineHeight: 7, fontWeight: '900', letterSpacing: 0.5 },
-  txValue: { width: '100%', color: AppColors.textStrong, fontSize: 9, lineHeight: 11, fontWeight: '900', textAlign: 'center' },
+  setupBadge: { width: 54, height: 29, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(47,140,255,0.70)', backgroundColor: 'rgba(47,140,255,0.12)' },
+  setupBadgeValue: { color: AppColors.textStrong, fontSize: 10, lineHeight: 11, fontWeight: '900' },
+  setupBadgeLabel: { color: AppColors.primary, fontSize: 5, lineHeight: 6, fontWeight: '900', letterSpacing: 0.4 },
   chevron: { color: AppColors.primary, fontSize: 21 },
   selectedSummary: { minHeight: 66, flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 12, paddingLeft: 11, borderLeftWidth: 2, borderLeftColor: AppColors.primary, backgroundColor: AppColors.card },
   selectedSummaryText: { flex: 1, minWidth: 0 },
@@ -281,6 +312,11 @@ const styles = StyleSheet.create({
   setupCountBox: { minWidth: 62, alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center', borderLeftWidth: 1, borderLeftColor: AppColors.border },
   setupCountValue: { color: AppColors.primary, fontSize: 21, fontWeight: '900' },
   setupCountLabel: { marginTop: 1, color: AppColors.mutedText, fontSize: 7, fontWeight: '900', letterSpacing: 0.6 },
+  manageRow: { minHeight: 46, flexDirection: 'row', alignItems: 'center', gap: 6, borderBottomWidth: 1, borderBottomColor: AppColors.border },
+  manageButton: { flex: 1, minHeight: 30, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5, borderWidth: 1, borderColor: AppColors.borderStrong, backgroundColor: AppColors.surface },
+  manageButtonPrimary: { borderColor: AppColors.primary, backgroundColor: AppColors.primarySoft },
+  manageButtonText: { color: AppColors.mutedText, fontSize: 7, fontWeight: '900', letterSpacing: 0.3, textAlign: 'center' },
+  manageButtonTextPrimary: { color: AppColors.primary },
   addSetupButton: { minHeight: 34, justifyContent: 'center', paddingHorizontal: 10, backgroundColor: AppColors.primary },
   addSetupText: { color: '#FFFFFF', fontSize: 9, fontWeight: '900', letterSpacing: 0.4 },
   disabledButton: { backgroundColor: AppColors.surface, borderWidth: 1, borderColor: AppColors.borderStrong },
@@ -296,6 +332,8 @@ const styles = StyleSheet.create({
   trackActionSaved: { borderColor: AppColors.primary, backgroundColor: AppColors.primarySoft },
   trackActionText: { color: AppColors.text, fontSize: 8, fontWeight: '900', letterSpacing: 0.35 },
   trackActionTextSaved: { color: AppColors.primary },
+  trackEditAction: { minWidth: 44, minHeight: 31, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6, borderWidth: 1, borderColor: AppColors.borderStrong, backgroundColor: AppColors.surface },
+  trackEditActionText: { color: AppColors.mutedText, fontSize: 7, fontWeight: '900', letterSpacing: 0.35 },
   emptyPanel: { marginTop: 18, padding: 14, borderWidth: 1, borderColor: AppColors.border, backgroundColor: AppColors.card },
   emptyTracks: { paddingVertical: 18 },
   emptyTitle: { color: AppColors.textStrong, fontSize: 15, fontWeight: '900' },

@@ -77,7 +77,10 @@ export default function FlootDashboardView({
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.topbar}>
           <View style={styles.titleBlock}>
-            <Text style={styles.eyebrow}>IMRC SETUP MANAGER</Text>
+            <View style={styles.eyebrowRow}>
+              <Text style={styles.eyebrow}>IMRC SETUP MANAGER</Text>
+              {!!version && <Text style={styles.versionText}>v{version}</Text>}
+            </View>
             <Text style={styles.pageTitle}>Race workspace</Text>
           </View>
           <View style={styles.topActions}>

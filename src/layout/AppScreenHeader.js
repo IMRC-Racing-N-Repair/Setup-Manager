@@ -1,6 +1,7 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Constants from 'expo-constants';
 
 import { AppColors } from '../theme/colors';
 
@@ -17,6 +18,7 @@ export default function AppScreenHeader({
   applyTopInset = false,
   style,
   titleStyle,
+  version = Constants.expoConfig?.version || '',
 }) {
   const insets = useSafeAreaInsets();
   const showRightAction = Boolean(rightLabel && onRightPress);
@@ -30,7 +32,14 @@ export default function AppScreenHeader({
       ) : <View style={styles.sideSpacer} />}
 
       <View style={styles.titleBlock}>
-        {!!kicker && <Text style={styles.kicker} numberOfLines={1}>{String(kicker).toUpperCase()}</Text>}
+        {!!kicker && (
+          <View style={styles.kickerRow}>
+            <Text style={styles.kicker} numberOfLines={1}>{String(kicker).toUpperCase()}</Text>
+            {String(kicker).toUpperCase().includes('SETUP MANAGER') && version ? (
+              <Text style={styles.versionText}>v{version}</Text>
+            ) : null}
+          </View>
+        )}
         <Text style={[styles.title, titleStyle]} numberOfLines={1}>{title}</Text>
         {!!subtitle && <Text style={styles.subtitle} numberOfLines={1}>{subtitle}</Text>}
       </View>
@@ -85,12 +94,21 @@ const styles = StyleSheet.create({
   },
   sideSpacer: { width: 64, minHeight: 34 },
   titleBlock: { flex: 1, minWidth: 0, justifyContent: 'center' },
+  kickerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   kicker: {
+    flexShrink: 1,
     color: AppColors.primary,
     fontSize: 9,
     lineHeight: 12,
     fontWeight: '900',
     letterSpacing: 1.4,
+  },
+  versionText: {
+    color: AppColors.subtleText,
+    fontSize: 7,
+    lineHeight: 10,
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
   title: {
     marginTop: 1,

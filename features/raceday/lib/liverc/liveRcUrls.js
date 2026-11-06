@@ -1,3 +1,5 @@
+import { normalizeLiveRcOrigin } from '../../../../src/utils/liveRcUrl';
+
 export function ensureProtocol(url = '') {
   const trimmed = String(url || '').trim();
   if (!trimmed) return '';
@@ -14,14 +16,7 @@ export function stripTrailingSlash(url = '') {
 }
 
 export function getLiveRcOrigin(input = '') {
-  const withProtocol = ensureProtocol(input);
-  if (!withProtocol) return '';
-  try {
-    return new URL(withProtocol).origin;
-  } catch {
-    const host = withProtocol.replace(/^https?:\/\//i, '').split('/')[0];
-    return host ? `https://${host}` : '';
-  }
+  return normalizeLiveRcOrigin(input);
 }
 
 export function normalizeLiveRcSiteUrl(input = '') {

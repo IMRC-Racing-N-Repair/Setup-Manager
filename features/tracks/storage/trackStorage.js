@@ -1,6 +1,7 @@
 // features/tracks/storage/trackStorage.js
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { normalizeLiveRcOrigin } from '../../../src/utils/liveRcUrl';
 
 export const TRACKS_STORAGE_KEY = '@tracks';
 
@@ -74,7 +75,7 @@ export function normalizeTrack(track = {}) {
     cityState: clean(track.cityState) || [city, state].filter(Boolean).join(', '),
     zipCode: clean(track.zipCode || track.zip || track.postalCode),
 
-    liveRcUrl: clean(
+    liveRcUrl: normalizeLiveRcOrigin(
       track.liveRcUrl ||
         track.livercUrl ||
         track.liveRCUrl ||
@@ -111,6 +112,11 @@ export function validateTrack(track = {}) {
 
   if (!clean(track.trackType)) {
     errors.trackType = 'Track Type is required.';
+  }
+
+  const liveRcUrl = clean(track.liveRcUrl || track.livercUrl || track.liveRCUrl || track.liveRc || track.liverc);
+  if (liveRcUrl && !normalizeLiveRcOrigin(liveRcUrl)) {
+    errors.liveRcUrl = 'Enter a LiveRC address ending in liverc.com.';
   }
 
   return {

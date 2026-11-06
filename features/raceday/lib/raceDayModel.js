@@ -1,3 +1,5 @@
+import { normalizeLiveRcOrigin } from '../../../src/utils/liveRcUrl';
+
 export const RACE_DAY_KEYS = {
   STARTED: '@raceDayStarted_v1',
   READY: '@raceDayReady_v1',
@@ -115,7 +117,7 @@ export function getTrackDisplayName(track = {}) {
 }
 
 export function getTrackLiveRcUrl(track = {}) {
-  return (
+  return normalizeLiveRcOrigin(
     track.liveRcUrl ||
     track.livercUrl ||
     track.liveRCUrl ||
@@ -123,5 +125,5 @@ export function getTrackLiveRcUrl(track = {}) {
     track.liverc ||
     track.resultsUrl ||
     ''
-  ).toString().trim();
+  );
 }

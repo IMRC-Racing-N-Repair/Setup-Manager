@@ -18,6 +18,7 @@ import { TrackTypeButton, TrackTypeOverlay } from './TrackTypeDropdown';
 import { trackStyles as styles } from '../styles/trackStyles';
 import { validateTrack } from '../storage/trackStorage';
 import { useSafeAreaLayout } from '../../../src/layout/safeAreaLayout';
+import { normalizeLiveRcOrigin } from '../../../src/utils/liveRcUrl';
 
 const EMPTY_TRACK = {
   trackName: '',
@@ -142,6 +143,12 @@ export default function TrackEditSheet({
         [key]: undefined,
       }));
     }
+  }
+
+  function normalizeLiveRcField() {
+    getInputFocusProps('liveRcUrl').onBlur();
+    const normalized = normalizeLiveRcOrigin(track.liveRcUrl);
+    if (normalized) updateField('liveRcUrl', normalized);
   }
 
   function handleSave() {
@@ -423,14 +430,16 @@ export default function TrackEditSheet({
                   {...getInputFocusProps('liveRcUrl')}
                   value={track.liveRcUrl}
                   onChangeText={value => updateField('liveRcUrl', value)}
+                  onBlur={normalizeLiveRcField}
                   placeholder="https://thestable.liverc.com/"
                   placeholderTextColor="#8B96AA"
-                  style={styles.textInput}
+                  style={[styles.textInput, errors.liveRcUrl && styles.inputError]}
                   autoCapitalize="none"
                   autoCorrect={false}
                   keyboardType="url"
                   returnKeyType="next"
                 />
+                {errors.liveRcUrl ? <Text style={styles.errorText}>{errors.liveRcUrl}</Text> : null}
               </View>
 
               <View style={styles.sheetSection}>

@@ -19,6 +19,7 @@ import { validateTrack } from '../storage/trackStorage';
 import { openTrackSubmissionEmail } from '../utils/trackSubmitEmail';
 import { trackStyles as styles } from '../styles/trackStyles';
 import AppScreenHeader from '../../../src/layout/AppScreenHeader';
+import { normalizeLiveRcOrigin } from '../../../src/utils/liveRcUrl';
 
 const EMPTY_SUBMISSION = {
   trackName: '',
@@ -66,6 +67,11 @@ export default function TrackSubmitForm({ initialTrack, onCancel }) {
     if (errors[key]) {
       setErrors(current => ({ ...current, [key]: undefined }));
     }
+  }
+
+  function normalizeLiveRcField() {
+    const normalized = normalizeLiveRcOrigin(track.liveRcUrl);
+    if (normalized) updateField('liveRcUrl', normalized);
   }
 
   async function handleSubmit() {
@@ -159,13 +165,15 @@ export default function TrackSubmitForm({ initialTrack, onCancel }) {
             <TextInput
               value={track.liveRcUrl}
               onChangeText={value => updateField('liveRcUrl', value)}
+              onBlur={normalizeLiveRcField}
               placeholder="https://thestable.liverc.com/"
               placeholderTextColor="#64748B"
-              style={styles.textInput}
+              style={[styles.textInput, errors.liveRcUrl && styles.inputError]}
               autoCapitalize="none"
               autoCorrect={false}
               keyboardType="url"
             />
+            {errors.liveRcUrl ? <Text style={styles.errorText}>{errors.liveRcUrl}</Text> : null}
           </View>
 
           <View style={styles.compactSection}>

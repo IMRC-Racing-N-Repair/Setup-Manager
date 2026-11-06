@@ -1,4 +1,4 @@
-const LIVERC_HOST_HINT = 'liverc.com';
+import { normalizeLiveRcOrigin } from '../../../../src/utils/liveRcUrl';
 
 function cleanUrl(value = '') {
   return String(value || '').trim();
@@ -32,25 +32,7 @@ export function normalizePracticeDayKey(value = '') {
 }
 
 export function normalizeLiveRcPracticeSiteUrl(value = '') {
-  let url = cleanUrl(value);
-  if (!url) return '';
-
-  if (!/^https?:\/\//i.test(url)) {
-    url = `https://${url}`;
-  }
-
-  url = url.replace(/^http:\/\//i, 'https://');
-
-  try {
-    const parsed = new URL(url);
-    const host = parsed.host;
-    if (!host) return '';
-    return `https://${host}`;
-  } catch (error) {
-    const hostOnly = url.replace(/^https:\/\//i, '').split('/')[0];
-    if (!hostOnly || !hostOnly.includes('.')) return '';
-    return `https://${hostOnly}`;
-  }
+  return normalizeLiveRcOrigin(value);
 }
 
 export function getPracticeUrl(siteUrl = '') {
@@ -115,6 +97,5 @@ export function getPracticeDayUrl(day = {}, siteUrl = '') {
 }
 
 export function looksLikeLiveRcPracticeSite(value = '') {
-  const normalized = normalizeLiveRcPracticeSiteUrl(value);
-  return Boolean(normalized && normalized.includes(LIVERC_HOST_HINT));
+  return Boolean(normalizeLiveRcPracticeSiteUrl(value));
 }

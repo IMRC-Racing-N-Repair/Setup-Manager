@@ -20,6 +20,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Platform } from "react-native";
 import { db } from "./firebaseClient";
 import { doc, getDoc, writeBatch, serverTimestamp } from "firebase/firestore";
+import { normalizeLiveRcOrigin } from "../../src/utils/liveRcUrl";
 
 // -----------------------------------------------------------------------------
 // Static + dynamic sync model
@@ -986,10 +987,7 @@ function makeStableId(prefix, item) {
 }
 
 function normalizeUrl(value) {
-  const raw = cleanText(value);
-  if (!raw) return "";
-  if (/^https?:\/\//i.test(raw)) return raw;
-  return `https://${raw}`;
+  return normalizeLiveRcOrigin(value);
 }
 
 function normalizeItemForV2(item, type, fallbackKey = "") {
@@ -1017,7 +1015,9 @@ function normalizeItemForV2(item, type, fallbackKey = "") {
     base.trackName = firstNonEmpty(base.trackName, base.name, base.title, base.label, "Track");
     base.trackType = firstNonEmpty(base.trackType, base.type, base.layoutType);
     base.surface = firstNonEmpty(base.surface, base.trackSurface);
-    base.livercUrl = normalizeUrl(firstNonEmpty(base.livercUrl, base.liveRcUrl, base.liveRCUrl, base.liverc, base.url));
+    const liveRcUrl = normalizeUrl(firstNonEmpty(base.liveRcUrl, base.livercUrl, base.liveRCUrl, base.liverc, base.url));
+    base.liveRcUrl = liveRcUrl;
+    base.livercUrl = liveRcUrl;
   }
 
   if (type === "setup" || type === "setupVersion") {

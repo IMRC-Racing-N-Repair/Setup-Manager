@@ -10,6 +10,7 @@ import {
   normalizeIdList,
   getTrackLiveRcUrl,
 } from './raceDayModel';
+import { normalizeLiveRcOrigin } from '../../../src/utils/liveRcUrl';
 
 const VEHICLES_KEY = '@vehicles';
 const TRACKS_KEY = '@tracks';
@@ -171,6 +172,7 @@ export async function getVehiclesByIds(vehicleIds = []) {
 }
 
 export async function saveTrackLiveRcUrl(trackId, liveRcUrl) {
+  const normalizedLiveRcUrl = normalizeLiveRcOrigin(liveRcUrl);
   const id = normalizeId(trackId);
   const tracks = await getTracks();
   const nextTracks = tracks.map((track) => {
@@ -178,7 +180,7 @@ export async function saveTrackLiveRcUrl(trackId, liveRcUrl) {
     if (thisId !== id) return track;
     return {
       ...track,
-      liveRcUrl,
+      liveRcUrl: normalizedLiveRcUrl,
       updatedAt: new Date().toISOString(),
       dirty: true,
     };

@@ -1,3 +1,5 @@
+import { normalizeLiveRcOrigin } from '../../../../src/utils/liveRcUrl';
+
 // Keep the explicit default port: this exactly matches LiveRC's own 0.9.16
 // client and is significant to its legacy session routing.
 const LIVE_DATA_ORIGIN = 'https://livedata.liveracemedia.com:443';
@@ -34,15 +36,7 @@ function clean(value = '') {
 }
 
 function getOrigin(input = '') {
-  const trimmed = clean(input);
-  if (!trimmed) return '';
-  const withProtocol = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
-  try {
-    return new URL(withProtocol).origin;
-  } catch {
-    const host = withProtocol.replace(/^https?:\/\//i, '').split('/')[0];
-    return host ? `https://${host}` : '';
-  }
+  return normalizeLiveRcOrigin(input);
 }
 
 export function getLiveRcScoringUrl(siteUrl = '') {

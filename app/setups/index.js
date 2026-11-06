@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Modal, Platform, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Modal, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import StableSafeAreaView from '../../src/layout/StableSafeAreaView';
 import AppScreenHeader from '../../src/layout/AppScreenHeader';
@@ -21,6 +21,8 @@ import {
 } from '../../features/setups/lib/setupModel';
 import { setupColors, setupStyles } from '../../features/setups/styles/setupStyles';
 import { useSafeAreaLayout } from '../../src/layout/safeAreaLayout';
+import NewLookBottomNav from '../../src/navigation/NewLookBottomNav';
+import { AppColors } from '../../src/theme/colors';
 import {
   consumePendingIncomingImrcImport,
   importPreparedSetupBundle,
@@ -412,6 +414,7 @@ export default function SetupsIndexScreen() {
   const [vehicles, setVehicles] = useState([]);
   const [tracks, setTracks] = useState([]);
   const [lastViewedSetup, setLastViewedSetupState] = useState(null);
+  const [selectedVehicleId, setSelectedVehicleId] = useState(null);
   const [selectedTrackId, setSelectedTrackId] = useState(null);
   const [transferBusy, setTransferBusy] = useState(false);
   const [pendingImport, setPendingImport] = useState(null);
@@ -631,6 +634,7 @@ export default function SetupsIndexScreen() {
 
       const result = await importPreparedSetupToTarget(pendingImport, { vehicle, track });
       await load();
+      setSelectedVehicleId(String(getEntityId(vehicle)));
       setSelectedTrackId(String(getEntityId(track)));
       queueModalFeedback({
         title: 'Setup Imported',
@@ -650,6 +654,34 @@ export default function SetupsIndexScreen() {
     () => tracks.find((track) => getEntityId(track) === String(selectedTrackId)) || null,
     [selectedTrackId, tracks]
   );
+
+  const selectedVehicle = useMemo(
+    () => vehicles.find((vehicle) => String(getEntityId(vehicle)) === String(selectedVehicleId)) || null,
+    [selectedVehicleId, vehicles]
+  );
+
+  useEffect(() => {
+    const requestedVehicleId = String(params?.vehicleId || '').trim();
+    if (!requestedVehicleId || !vehicles.some((vehicle) => String(getEntityId(vehicle)) === requestedVehicleId)) return;
+    setSelectedVehicleId(requestedVehicleId);
+  }, [params?.vehicleId, vehicles]);
+
+  const vehicleSetupRows = useMemo(() => vehicles.map((vehicle) => {
+    const vehicleId = String(getEntityId(vehicle));
+    const vehicleSetups = setups.filter((setup) => String(setup?.vehicleId) === vehicleId);
+    const trackIds = new Set(vehicleSetups.map((setup) => String(setup?.trackId || '')).filter(Boolean));
+    return { vehicle, vehicleId, setupCount: trackIds.size };
+  }), [setups, vehicles]);
+
+  const selectedVehicleTrackRows = useMemo(() => {
+    if (!selectedVehicle) return [];
+    const vehicleId = String(getEntityId(selectedVehicle));
+    return tracks.map((track) => {
+      const trackId = String(getEntityId(track));
+      const setup = getLatestSetupForVehicleTrack(setups, vehicleId, trackId);
+      return { track, trackId, vehicleId, setup };
+    }).filter((row) => Boolean(row.setup)).sort((a, b) => setupTimeValue(b.setup) - setupTimeValue(a.setup));
+  }, [selectedVehicle, setups, tracks]);
 
   const lastOpened = useMemo(
     () => buildLastOpenedSetup({ lastViewedSetup, setups, tracks, vehicles }),
@@ -746,199 +778,127 @@ export default function SetupsIndexScreen() {
     : `${setups.length} saved setup${setups.length === 1 ? '' : 's'}`;
 
   const handleSafeBack = useCallback(() => {
+    if (selectedVehicleId) {
+      setSelectedVehicleId(null);
+      return;
+    }
     if (typeof router.canGoBack === 'function' && router.canGoBack()) {
       router.back();
       return;
     }
     router.replace('/');
-  }, [router]);
+  }, [router, selectedVehicleId]);
 
   return (
     <StableSafeAreaView edges={['top', 'bottom']} style={setupStyles.safe}>
-      <View style={setupStyles.pageHeader}>
+      <View style={setupBrowserStyles.headerWrap}>
         <AppScreenHeader
           title="Setups"
+          kicker="IMRC GARAGE"
           onBack={handleSafeBack}
-          right={<View style={setupStyles.topButtonCluster}>
-            <Pressable
-              disabled={transferBusy}
-              onPress={handleImportSetups}
-              style={({ pressed }) => [
-                setupStyles.button,
-                setupStyles.buttonSecondary,
-                setupStyles.topMiniActionButton,
-                transferBusy && setupStyles.buttonDisabled,
-                pressed && setupStyles.cardPressed,
-              ]}
-            >
-              <Text style={setupStyles.buttonSecondaryText}>Import</Text>
-            </Pressable>
-            <Pressable
-              disabled={!canCreate}
-              onPress={() => router.push('/setups/select-vehicle')}
-              style={({ pressed }) => [
-                setupStyles.button,
-                setupStyles.topActionButton,
-                !canCreate && setupStyles.buttonDisabled,
-                pressed && setupStyles.cardPressed,
-              ]}
-            >
-              <Text style={setupStyles.buttonText}>+ Add</Text>
-            </Pressable>
-          </View>}
+          rightLabel="+ ADD"
+          onRightPress={() => selectedVehicleId
+            ? router.push(`/setups/select-track?vehicleId=${encodeURIComponent(selectedVehicleId)}`)
+            : router.push('/setups/select-vehicle')}
         />
 
-        <Text style={setupStyles.subtitle}>
-          Pick a Track first, then pick the Car setup you want to create, edit, copy, or import for that track.
-        </Text>
-
-        <View style={setupStyles.countBadge}>
-          <Text style={setupStyles.countBadgeText}>{savedLabel}</Text>
+        <View style={setupBrowserStyles.introRow}>
+          <Text style={setupBrowserStyles.introText} numberOfLines={2}>
+            {selectedVehicle ? `Saved track setups for ${getVehicleDisplayName(selectedVehicle)}.` : 'Choose a vehicle to view its saved track setups.'}
+          </Text>
+          <Pressable
+            disabled={transferBusy}
+            onPress={handleImportSetups}
+            style={({ pressed }) => [setupBrowserStyles.importButton, transferBusy && setupStyles.buttonDisabled, pressed && setupBrowserStyles.pressed]}
+          >
+            <Text style={setupBrowserStyles.importText}>IMPORT</Text>
+          </Pressable>
         </View>
       </View>
 
       <ScrollView
         style={setupStyles.scroll}
-        contentContainerStyle={setupStyles.scrollContent}
+        contentContainerStyle={setupBrowserStyles.scrollContent}
         keyboardShouldPersistTaps="handled"
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={setupColors.purple} />}
       >
         {loading ? (
-          <View style={[setupStyles.card, setupStyles.loadingCard]}>
-            <ActivityIndicator color={setupColors.purple} />
-            <Text style={setupStyles.emptyText}>Loading setups…</Text>
+          <View style={setupBrowserStyles.loadingCard}>
+            <ActivityIndicator color={AppColors.primary} />
+            <Text style={setupBrowserStyles.emptyCopy}>Loading setups…</Text>
           </View>
         ) : (
           <>
         {!canCreate ? (
-          <View style={setupStyles.card}>
-            <Text style={setupStyles.emptyText}>Add at least one vehicle and one track before creating or importing setup sheets.</Text>
+          <View style={setupBrowserStyles.emptyPanel}>
+            <Text style={setupBrowserStyles.emptyTitle}>Vehicles and tracks required</Text>
+            <Text style={setupBrowserStyles.emptyCopy}>Add at least one vehicle and one track before creating setup sheets.</Text>
           </View>
-        ) : null}
-
-        {lastOpened ? (
-          <View style={[setupStyles.card, setupStyles.cardList]}>
-            <View style={setupStyles.cardAccent} />
-            <View style={setupStyles.headerRow}>
-              <View style={setupStyles.headerTextWrap}>
-                <Text style={setupStyles.eyebrow}>LAST OPENED SETUP</Text>
-                <Text style={setupStyles.cardTitle}>{lastOpened.vehicleName}</Text>
-                <Text style={setupStyles.cardSubtitle}>{lastOpened.trackName}</Text>
-                <Text style={setupStyles.cardMeta}>Latest {formatDate(lastOpened.savedAt)}</Text>
-              </View>
-              <Pressable
-                onPress={() => router.push(`/setups/editor/${lastOpened.trackId}/${lastOpened.vehicleId}`)}
-                style={({ pressed }) => [setupStyles.button, setupStyles.topActionButton, pressed && setupStyles.cardPressed]}
-              >
-                <Text style={setupStyles.buttonText}>Open</Text>
-              </Pressable>
-            </View>
-          </View>
-        ) : null}
-
-        {!selectedTrack ? (
+        ) : !selectedVehicle ? (
           <>
-            <View style={setupStyles.listTitleRow}>
-              <Text style={setupStyles.listTitle}>Tracks</Text>
-              <Text style={setupStyles.listHint}>Pick track first</Text>
+            <View style={setupBrowserStyles.sectionHeading}>
+              <View><Text style={setupBrowserStyles.kicker}>SETUP VEHICLES</Text><Text style={setupBrowserStyles.sectionTitle}>Select vehicle</Text></View>
+              <Text style={setupBrowserStyles.sectionCount}>{setups.length} SAVED SETUPS</Text>
             </View>
-
-            {!tracksWithStats.length ? (
-              <View style={setupStyles.card}>
-                <Text style={setupStyles.emptyText}>No tracks found yet. Add a track before creating setup sheets.</Text>
-              </View>
-            ) : (
-              tracksWithStats.map(({ track, trackId, vehicleCount, setupCount, latestSaved }) => {
-                const subtitleParts = [
-                  vehicleCount ? plural(vehicleCount, 'car with setup', 'cars with setups') : 'No saved car setups yet',
-                  setupCount ? `${plural(setupCount, 'version', 'versions')} saved` : null,
-                  latestSaved ? `Latest ${formatDate(latestSaved)}` : null,
-                ].filter(Boolean);
-
-                return (
-                  <SelectorCard
-                    key={trackId}
-                    title={getTrackDisplayName(track)}
-                    subtitle={subtitleParts.join(' • ')}
-                    meta={getTrackTypeDisplay(track)}
-                    onPress={() => setSelectedTrackId(trackId)}
-                  />
-                );
-              })
-            )}
+            <View style={setupBrowserStyles.vehicleList}>
+              {vehicleSetupRows.map(({ vehicle, vehicleId, setupCount }, index) => (
+                <Pressable key={vehicleId} style={({ pressed }) => [setupBrowserStyles.vehicleRow, pressed && setupBrowserStyles.pressed]} onPress={() => setSelectedVehicleId(vehicleId)}>
+                  <Text style={setupBrowserStyles.vehicleNumber}>{String(index + 1).padStart(2, '0')}</Text>
+                  <View style={setupBrowserStyles.vehicleIdentity}>
+                    <Text style={setupBrowserStyles.vehicleName} numberOfLines={1}>{getVehicleDisplayName(vehicle)}</Text>
+                    <Text style={setupBrowserStyles.vehicleMeta} numberOfLines={1}>{vehicle?.chassisStyle || vehicle?.vehicleStyle || 'Vehicle details'}</Text>
+                  </View>
+                  <View style={setupBrowserStyles.setupBadge}><Text style={setupBrowserStyles.setupBadgeValue}>{setupCount}</Text><Text style={setupBrowserStyles.setupBadgeLabel}>SETUPS</Text></View>
+                  <Text style={setupBrowserStyles.chevron}>›</Text>
+                </Pressable>
+              ))}
+            </View>
           </>
         ) : (
           <>
-            <View style={setupStyles.listTitleRow}>
-              <Text style={setupStyles.listTitle}>Cars</Text>
-              <Text style={setupStyles.listHint}>{getTrackDisplayName(selectedTrack)}</Text>
-            </View>
-
-            <View style={[setupStyles.card, setupStyles.cardList]}>
-              <View style={setupStyles.cardAccent} />
-              <View style={setupStyles.headerRow}>
-                <View style={setupStyles.headerTextWrap}>
-                  <Text style={setupStyles.cardTitle}>{getTrackDisplayName(selectedTrack)}</Text>
-                  <Text style={setupStyles.cardSubtitle}>Showing saved car setups for this track only.</Text>
-                </View>
-                <Pressable
-                  onPress={() => setSelectedTrackId(null)}
-                  style={({ pressed }) => [setupStyles.button, setupStyles.buttonSecondary, pressed && setupStyles.cardPressed]}
-                >
-                  <Text style={setupStyles.buttonSecondaryText}>Change</Text>
-                </Pressable>
+            <View style={setupBrowserStyles.selectedSummary}>
+              <View style={setupBrowserStyles.selectedSummaryText}>
+                <Text style={setupBrowserStyles.kicker}>SELECTED VEHICLE</Text>
+                <Text style={setupBrowserStyles.selectedVehicleName} numberOfLines={1}>{getVehicleDisplayName(selectedVehicle)}</Text>
+                <Text style={setupBrowserStyles.selectedVehicleMeta} numberOfLines={1}>{selectedVehicle?.chassisStyle || selectedVehicle?.vehicleStyle || 'Vehicle details'}</Text>
               </View>
+              <View style={setupBrowserStyles.setupCountBox}><Text style={setupBrowserStyles.setupCountValue}>{selectedVehicleTrackRows.length}</Text><Text style={setupBrowserStyles.setupCountLabel}>SETUPS</Text></View>
             </View>
 
-            {!carRows.length ? (
-              <View style={setupStyles.card}>
-                <Text style={setupStyles.emptyText}>No saved car setups for this track yet. Use + Add or Import to create the first one.</Text>
+            <View style={setupBrowserStyles.sectionHeading}>
+              <View><Text style={setupBrowserStyles.kicker}>SAVED TRACKS</Text><Text style={setupBrowserStyles.sectionTitle}>Tracks & setups</Text></View>
+              <Pressable style={setupBrowserStyles.addSetupButton} onPress={() => router.push(`/setups/select-track?vehicleId=${encodeURIComponent(selectedVehicleId)}`)}>
+                <Text style={setupBrowserStyles.addSetupText}>+ ADD SETUP</Text>
+              </Pressable>
+            </View>
+
+            {!selectedVehicleTrackRows.length ? (
+              <View style={setupBrowserStyles.emptyPanel}>
+                <Text style={setupBrowserStyles.emptyTitle}>No setups for this vehicle</Text>
+                <Text style={setupBrowserStyles.emptyCopy}>Use Add Setup to choose a track and create this car’s first setup.</Text>
               </View>
             ) : (
-              carRows.map((row) => {
-                const { vehicle, vehicleId, trackId, setup } = row;
-                const title = getVehicleDisplayName(vehicle || setup);
-                const subtitle = `Latest saved ${formatDate(setup.savedAt || setup.updatedAt)}`;
-
-                return (
-                  <View key={`${trackId}_${vehicleId}`} style={[setupStyles.card, setupStyles.cardList, setupStyles.setupCarCard]}>
-                    <View style={setupStyles.setupCarAccent} />
-                    <View style={setupStyles.setupCarCompactRow}>
-                      <Pressable
-                        onPress={() => router.push(`/setups/editor/${trackId}/${vehicleId}`)}
-                        style={({ pressed }) => [setupStyles.setupCarTextPress, pressed && setupStyles.cardPressed]}
-                      >
-                        <View style={setupStyles.setupCarHeaderLine}>
-                          <Text style={setupStyles.setupCarKicker}>CAR SETUP</Text>
-                          <Text style={setupStyles.setupCarDate}>{subtitle}</Text>
-                        </View>
-                        <Text style={setupStyles.cardTitle}>{title}</Text>
-                      </Pressable>
-
-                      <View style={setupStyles.setupCarInlineActions}>
-                        <Pressable
-                          onPress={() => openCopyPrompt(row)}
-                          style={({ pressed }) => [setupStyles.button, setupStyles.buttonSecondary, setupStyles.setupCarMiniButton, pressed && setupStyles.cardPressed]}
-                        >
-                          <Text style={setupStyles.buttonSecondaryText}>Copy</Text>
-                        </Pressable>
-                        <Pressable
-                          onPress={() => router.push(`/setups/editor/${trackId}/${vehicleId}`)}
-                          style={({ pressed }) => [setupStyles.button, setupStyles.topActionButton, setupStyles.setupCarMiniButton, pressed && setupStyles.cardPressed]}
-                        >
-                          <Text style={setupStyles.buttonText}>Edit</Text>
-                        </Pressable>
-                      </View>
-                    </View>
+              <View style={setupBrowserStyles.trackList}>
+                {selectedVehicleTrackRows.map((row) => (
+                  <View key={`${row.trackId}_${row.vehicleId}`} style={setupBrowserStyles.trackRow}>
+                    <Pressable style={({ pressed }) => [setupBrowserStyles.trackIdentity, pressed && setupBrowserStyles.pressed]} onPress={() => router.push(`/setups/editor/${row.trackId}/${row.vehicleId}`)}>
+                      <Text style={setupBrowserStyles.trackName} numberOfLines={1}>{getTrackDisplayName(row.track)}</Text>
+                      <Text style={setupBrowserStyles.trackMeta} numberOfLines={1}>{getTrackTypeDisplay(row.track)}</Text>
+                      <Text style={setupBrowserStyles.trackStatus}>Saved {formatDate(row.setup?.savedAt || row.setup?.updatedAt)}</Text>
+                    </Pressable>
+                    <Pressable style={setupBrowserStyles.copyButton} onPress={() => openCopyPrompt(row)}><Text style={setupBrowserStyles.copyText}>COPY</Text></Pressable>
+                    <Pressable style={setupBrowserStyles.openButton} onPress={() => router.push(`/setups/editor/${row.trackId}/${row.vehicleId}`)}><Text style={setupBrowserStyles.openText}>OPEN</Text></Pressable>
                   </View>
-                );
-              })
+                ))}
+              </View>
             )}
           </>
         )}
           </>
         )}
       </ScrollView>
+
+      <NewLookBottomNav active="garage" router={router} />
 
       <ImportTargetPopup
         visible={Boolean(pendingImport)}
@@ -982,3 +942,50 @@ export default function SetupsIndexScreen() {
     </StableSafeAreaView>
   );
 }
+
+const setupBrowserStyles = StyleSheet.create({
+  headerWrap: { width: '100%', maxWidth: 860, alignSelf: 'center', paddingHorizontal: 15 },
+  introRow: { minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, borderBottomWidth: 1, borderBottomColor: AppColors.border },
+  introText: { flex: 1, color: AppColors.mutedText, fontSize: 10, lineHeight: 15 },
+  importButton: { minHeight: 28, justifyContent: 'center', paddingHorizontal: 9, borderWidth: 1, borderColor: AppColors.borderStrong },
+  importText: { color: AppColors.primary, fontSize: 8, fontWeight: '900', letterSpacing: 0.45 },
+  scrollContent: { width: '100%', maxWidth: 860, alignSelf: 'center', paddingHorizontal: 15, paddingBottom: 92 },
+  loadingCard: { minHeight: 100, alignItems: 'center', justifyContent: 'center', gap: 8 },
+  sectionHeading: { minHeight: 54, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 10 },
+  kicker: { color: AppColors.primary, fontSize: 8, lineHeight: 11, fontWeight: '900', letterSpacing: 1.1 },
+  sectionTitle: { marginTop: 2, color: AppColors.textStrong, fontSize: 18, fontWeight: '900' },
+  sectionCount: { color: AppColors.mutedText, fontSize: 8, fontWeight: '900', letterSpacing: 0.5 },
+  vehicleList: { borderTopWidth: 1, borderTopColor: AppColors.borderStrong },
+  vehicleRow: { minHeight: 56, flexDirection: 'row', alignItems: 'center', gap: 9, paddingHorizontal: 8, borderBottomWidth: 1, borderBottomColor: AppColors.border },
+  vehicleNumber: { width: 24, color: AppColors.subtleText, fontSize: 9, fontWeight: '800' },
+  vehicleIdentity: { flex: 1, minWidth: 0 },
+  vehicleName: { color: AppColors.textStrong, fontSize: 14, fontWeight: '900' },
+  vehicleMeta: { marginTop: 2, color: AppColors.mutedText, fontSize: 9 },
+  setupBadge: { width: 54, height: 29, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(47,140,255,0.70)', backgroundColor: 'rgba(47,140,255,0.12)' },
+  setupBadgeValue: { color: AppColors.textStrong, fontSize: 10, lineHeight: 11, fontWeight: '900' },
+  setupBadgeLabel: { color: AppColors.primary, fontSize: 5, lineHeight: 6, fontWeight: '900', letterSpacing: 0.4 },
+  chevron: { color: AppColors.primary, fontSize: 21 },
+  selectedSummary: { minHeight: 66, flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 12, paddingLeft: 11, borderLeftWidth: 2, borderLeftColor: AppColors.primary, backgroundColor: AppColors.card },
+  selectedSummaryText: { flex: 1, minWidth: 0 },
+  selectedVehicleName: { marginTop: 2, color: AppColors.textStrong, fontSize: 17, fontWeight: '900' },
+  selectedVehicleMeta: { marginTop: 2, color: AppColors.mutedText, fontSize: 9 },
+  setupCountBox: { minWidth: 62, alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center', borderLeftWidth: 1, borderLeftColor: AppColors.border },
+  setupCountValue: { color: AppColors.primary, fontSize: 21, fontWeight: '900' },
+  setupCountLabel: { marginTop: 1, color: AppColors.mutedText, fontSize: 7, fontWeight: '900', letterSpacing: 0.6 },
+  addSetupButton: { minHeight: 34, justifyContent: 'center', paddingHorizontal: 10, backgroundColor: AppColors.primary },
+  addSetupText: { color: '#FFFFFF', fontSize: 9, fontWeight: '900', letterSpacing: 0.4 },
+  trackList: { borderTopWidth: 1, borderTopColor: AppColors.borderStrong },
+  trackRow: { minHeight: 68, flexDirection: 'row', alignItems: 'center', gap: 7, paddingVertical: 8, paddingLeft: 10, borderLeftWidth: 2, borderLeftColor: AppColors.primary, borderBottomWidth: 1, borderBottomColor: AppColors.border },
+  trackIdentity: { flex: 1, minWidth: 0 },
+  trackName: { color: AppColors.textStrong, fontSize: 14, fontWeight: '900' },
+  trackMeta: { marginTop: 2, color: AppColors.mutedText, fontSize: 9 },
+  trackStatus: { marginTop: 4, color: AppColors.primary, fontSize: 8, fontWeight: '800' },
+  copyButton: { minWidth: 44, minHeight: 30, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: AppColors.borderStrong },
+  copyText: { color: AppColors.mutedText, fontSize: 7, fontWeight: '900' },
+  openButton: { minWidth: 52, minHeight: 30, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: AppColors.primary, backgroundColor: AppColors.primarySoft },
+  openText: { color: AppColors.primary, fontSize: 7, fontWeight: '900' },
+  emptyPanel: { marginTop: 18, padding: 14, borderWidth: 1, borderColor: AppColors.border, backgroundColor: AppColors.card },
+  emptyTitle: { color: AppColors.textStrong, fontSize: 15, fontWeight: '900' },
+  emptyCopy: { marginTop: 4, color: AppColors.mutedText, fontSize: 10, lineHeight: 15 },
+  pressed: { opacity: 0.72 },
+});

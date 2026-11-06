@@ -46,8 +46,9 @@ export default function FlootDashboardView({
   onSelectDashboardTrack,
 }) {
   const { width, height } = useWindowDimensions();
-  const compactLayout = width < 375 || height < 720;
-  const shortLayout = height < 640;
+  const compactLayout = width < 430 || height < 900;
+  const shortLayout = height < 850;
+  const allowHomeScroll = isLandscape || height < 680;
   const [showTrackPicker, setShowTrackPicker] = useState(false);
   const trackList = Array.isArray(tracks) ? tracks : [];
   const savedTrackChoice = trackList.find((track) => entityId(track) === String(dashboardTrackId || '')) || null;
@@ -79,6 +80,7 @@ export default function FlootDashboardView({
         contentContainerStyle={[styles.content, compactLayout && styles.contentCompact, shortLayout && styles.contentShort]}
         showsVerticalScrollIndicator={false}
         bounces={false}
+        scrollEnabled={allowHomeScroll}
       >
         <View style={[styles.topbar, compactLayout && styles.topbarCompact]}>
           <View style={styles.titleBlock}>

@@ -7,6 +7,7 @@ import {
   FlatList,
   Platform,
   Pressable,
+  StyleSheet,
   Text,
   useWindowDimensions,
   View,
@@ -14,7 +15,6 @@ import {
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import TrackCard from '../../features/tracks/components/TrackCard';
 import TrackEditSheet from '../../features/tracks/components/TrackEditSheet';
 import TrackImportSheet from '../../features/tracks/components/TrackImportSheet';
 import {
@@ -26,6 +26,23 @@ import { openTrackSubmissionEmail } from '../../features/tracks/utils/trackSubmi
 import { trackStyles as styles, TRACK_BLUE } from '../../features/tracks/styles/trackStyles';
 import NewLookBottomNav from '../../src/navigation/NewLookBottomNav';
 import AppScreenHeader from '../../src/layout/AppScreenHeader';
+import { AppColors } from '../../src/theme/colors';
+
+function clean(value) {
+  return String(value ?? '').trim();
+}
+
+function trackName(track) {
+  return clean(track?.trackName || track?.name) || 'Unnamed track';
+}
+
+function trackMeta(track) {
+  return [track?.surface, track?.trackType || track?.type, track?.direction].filter(Boolean).join(' · ') || 'Track details';
+}
+
+function trackLocation(track) {
+  return [track?.city, track?.state].filter(Boolean).join(', ') || clean(track?.address) || 'Location not set';
+}
 
 const NEW_TRACK = {
   trackName: '',
@@ -292,36 +309,30 @@ export default function TracksScreen() {
             onRightPress={addTrack}
           />
 
-          <View style={styles.subHeaderRow}>
+          <View style={modernTrackStyles.introRow}>
             <Text style={styles.pageSubtitle}>Saved tracks are used for Setups and Race Day.</Text>
-            <View style={styles.savedCountPill}>
-              <Text style={styles.savedCountText}>
-                {loading
-                  ? 'Loading tracks…'
-                  : `${tracks.length} saved ${tracks.length === 1 ? 'track' : 'tracks'}`}
-              </Text>
-            </View>
+            <Text style={modernTrackStyles.savedCount}>{tracks.length} SAVED</Text>
           </View>
 
-          <View style={styles.headerToolsRow}>
+          <View style={modernTrackStyles.utilityRow}>
             <Pressable
               onPress={openImportSheet}
               style={({ pressed }) => [
-                styles.headerImportButton,
+                modernTrackStyles.utilityButton,
                 pressed && styles.buttonPressed,
               ]}
             >
-              <Text style={styles.headerImportButtonText}>⬇ Import</Text>
+              <Text style={modernTrackStyles.utilityText}>IMPORT</Text>
             </Pressable>
 
             <Pressable
               onPress={openSubmitTrackScreen}
               style={({ pressed }) => [
-                styles.headerButton,
+                modernTrackStyles.utilityButton,
                 pressed && styles.buttonPressed,
               ]}
             >
-              <Text style={styles.headerButtonText}>Submit</Text>
+              <Text style={modernTrackStyles.utilityText}>SUBMIT TRACK</Text>
             </Pressable>
           </View>
         </View>
@@ -357,12 +368,19 @@ export default function TracksScreen() {
           <FlatList
             data={tracks}
             keyExtractor={item => item.id}
-            renderItem={({ item }) => (
-              <TrackCard
-                track={item}
-                isLandscape={isLandscape}
+            renderItem={({ item, index }) => (
+              <Pressable
+                style={({ pressed }) => [modernTrackStyles.trackRow, pressed && modernTrackStyles.pressed]}
                 onPress={() => openTrack(item)}
-              />
+              >
+                <Text style={modernTrackStyles.trackNumber}>{String(index + 1).padStart(2, '0')}</Text>
+                <View style={modernTrackStyles.trackIdentity}>
+                  <Text style={modernTrackStyles.trackName} numberOfLines={1}>{trackName(item)}</Text>
+                  <Text style={modernTrackStyles.trackMeta} numberOfLines={1}>{trackMeta(item)}</Text>
+                  <Text style={modernTrackStyles.trackLocation} numberOfLines={1}>{trackLocation(item)}</Text>
+                </View>
+                <Text style={modernTrackStyles.chevron}>›</Text>
+              </Pressable>
             )}
             style={styles.list}
             contentContainerStyle={[
@@ -400,3 +418,45 @@ export default function TracksScreen() {
     </View>
   );
 }
+
+const modernTrackStyles = StyleSheet.create({
+  introRow: {
+    minHeight: 46,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: AppColors.border,
+  },
+  savedCount: { color: AppColors.mutedText, fontSize: 8, fontWeight: '900', letterSpacing: 0.6 },
+  utilityRow: {
+    minHeight: 38,
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    gap: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: AppColors.borderStrong,
+  },
+  utilityButton: { minHeight: 28, justifyContent: 'center', paddingHorizontal: 9, borderWidth: 1, borderColor: AppColors.borderStrong },
+  utilityText: { color: AppColors.primary, fontSize: 8, fontWeight: '900', letterSpacing: 0.45 },
+  trackRow: {
+    width: '100%',
+    minHeight: 62,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 9,
+    paddingHorizontal: 8,
+    paddingVertical: 7,
+    borderBottomWidth: 1,
+    borderBottomColor: AppColors.border,
+  },
+  trackNumber: { width: 24, color: AppColors.subtleText, fontSize: 9, fontWeight: '800' },
+  trackIdentity: { flex: 1, minWidth: 0 },
+  trackName: { color: AppColors.textStrong, fontSize: 14, fontWeight: '900' },
+  trackMeta: { marginTop: 2, color: AppColors.mutedText, fontSize: 9 },
+  trackLocation: { marginTop: 2, color: AppColors.subtleText, fontSize: 8, fontWeight: '700' },
+  chevron: { color: AppColors.primary, fontSize: 21 },
+  pressed: { opacity: 0.72 },
+});

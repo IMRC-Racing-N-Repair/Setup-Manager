@@ -5,15 +5,15 @@ import {
   Pressable,
   RefreshControl,
   ScrollView,
+  StyleSheet,
   Text,
   useWindowDimensions,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { router, useFocusEffect } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 
 import EmptyVehiclesState from "./components/EmptyVehiclesState";
-import VehicleCard from "./components/VehicleCard";
 import VehicleForm from "./components/VehicleForm";
 import {
   deleteVehicle,
@@ -26,10 +26,28 @@ import { vehicleStyles as styles } from "./styles/vehicleStyles";
 import { vehicleScreenModernStyles as modernStyles } from "./styles/vehicleScreenModernStyles";
 import NewLookBottomNav from "../../src/navigation/NewLookBottomNav";
 import AppScreenHeader from "../../src/layout/AppScreenHeader";
+import { AppColors } from "../../src/theme/colors";
+
+function clean(value) {
+  return String(value ?? "").trim();
+}
+
+function vehicleMakeModel(vehicle) {
+  return [vehicle?.manufacturer, vehicle?.model].filter(Boolean).join(" ") || "Manufacturer / Model not set";
+}
+
+function vehicleChassis(vehicle) {
+  return clean(vehicle?.chassisStyle || vehicle?.vehicleStyle) || "Vehicle details";
+}
+
+function vehicleTx(vehicle) {
+  return clean(vehicle?.transponder || vehicle?.transponderNumber || vehicle?.transponderId) || "—";
+}
 
 export default function VehicleScreen() {
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
+  const params = useLocalSearchParams();
   const isLandscape = width > height;
 
   const [vehicles, setVehicles] = useState([]);
@@ -40,6 +58,7 @@ export default function VehicleScreen() {
   const [editingVehicle, setEditingVehicle] = useState(null);
   const pendingViewSetupsRef = useRef(null);
   const androidNavigationTimerRef = useRef(null);
+  const handledRouteActionRef = useRef("");
 
   const loadVehicles = useCallback(async () => {
     const savedVehicles = await getVehicles();
@@ -78,6 +97,24 @@ export default function VehicleScreen() {
     setEditingVehicle(null);
     setFormVisible(true);
   }
+
+  useEffect(() => {
+    const editId = clean(params?.editVehicleId);
+    const wantsAdd = String(params?.addVehicle || "") === "1";
+    const actionKey = editId ? `edit:${editId}` : wantsAdd ? "add" : "";
+    if (!actionKey || handledRouteActionRef.current === actionKey || loading) return;
+
+    if (editId) {
+      const vehicle = vehicles.find((item) => clean(item?.id || item?.vehicleId) === editId);
+      if (!vehicle) return;
+      handledRouteActionRef.current = actionKey;
+      openEditForm(vehicle);
+      return;
+    }
+
+    handledRouteActionRef.current = actionKey;
+    openAddForm();
+  }, [loading, params?.addVehicle, params?.editVehicleId, vehicles]);
 
   const handleBack = useCallback(() => {
     if (typeof router.canGoBack === "function" && router.canGoBack()) {
@@ -144,9 +181,6 @@ export default function VehicleScreen() {
     });
   }
 
-  const vehicleCountLabel =
-    vehicles.length === 1 ? "1 saved vehicle" : `${vehicles.length} saved vehicles`;
-
   return (
     <View style={styles.safeArea}>
       <View
@@ -169,14 +203,11 @@ export default function VehicleScreen() {
           />
         </View>
 
-        <View style={modernStyles.subHeaderRow}>
+        <View style={listStyles.introRow}>
           <Text style={modernStyles.subHeaderText} numberOfLines={2}>
             Saved cars are used for Setups and Race Day.
           </Text>
-
-          <View style={modernStyles.countPill}>
-            <Text style={modernStyles.countPillText}>{vehicleCountLabel}</Text>
-          </View>
+          <Text style={listStyles.savedCount}>{vehicles.length} SAVED</Text>
         </View>
 
         <ScrollView
@@ -204,16 +235,25 @@ export default function VehicleScreen() {
           ) : vehicles.length === 0 ? (
             <EmptyVehiclesState onAdd={openAddForm} />
           ) : (
-            <View
-              style={isLandscape ? styles.landscapeGrid : styles.portraitList}
-            >
-              {vehicles.map((vehicle) => (
-                <VehicleCard
-                  key={vehicle.id}
-                  vehicle={vehicle}
-                  isLandscape={isLandscape}
-                  onEdit={openEditForm}
-                />
+            <View style={listStyles.vehicleList}>
+              {vehicles.map((vehicle, index) => (
+                <Pressable
+                  key={clean(vehicle?.id || vehicle?.vehicleId) || String(index)}
+                  style={({ pressed }) => [listStyles.vehicleRow, pressed && listStyles.pressed]}
+                  onPress={() => openEditForm(vehicle)}
+                >
+                  <Text style={listStyles.vehicleNumber}>{String(index + 1).padStart(2, "0")}</Text>
+                  <View style={listStyles.vehicleIdentity}>
+                    <Text style={listStyles.vehicleName} numberOfLines={1}>{vehicle?.name || "Unnamed vehicle"}</Text>
+                    <Text style={listStyles.vehicleMeta} numberOfLines={1}>{vehicleMakeModel(vehicle)}</Text>
+                    <Text style={listStyles.vehicleChassis} numberOfLines={1}>{vehicleChassis(vehicle)}</Text>
+                  </View>
+                  <View style={listStyles.txBox}>
+                    <Text style={listStyles.txLabel}>TX</Text>
+                    <Text style={listStyles.txValue} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>{vehicleTx(vehicle)}</Text>
+                  </View>
+                  <Text style={listStyles.chevron}>›</Text>
+                </Pressable>
               ))}
             </View>
           )}
@@ -238,3 +278,47 @@ export default function VehicleScreen() {
     </View>
   );
 }
+
+const listStyles = StyleSheet.create({
+  introRow: {
+    minHeight: 48,
+    marginHorizontal: 15,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: AppColors.border,
+  },
+  savedCount: { color: AppColors.mutedText, fontSize: 8, fontWeight: "900", letterSpacing: 0.6 },
+  vehicleList: { borderTopWidth: 1, borderTopColor: AppColors.borderStrong },
+  vehicleRow: {
+    minHeight: 62,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 9,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: AppColors.border,
+  },
+  vehicleNumber: { width: 24, color: AppColors.subtleText, fontSize: 9, fontWeight: "800" },
+  vehicleIdentity: { flex: 1, minWidth: 0 },
+  vehicleName: { color: AppColors.textStrong, fontSize: 14, fontWeight: "900" },
+  vehicleMeta: { marginTop: 2, color: AppColors.mutedText, fontSize: 9 },
+  vehicleChassis: { marginTop: 2, color: AppColors.subtleText, fontSize: 8, fontWeight: "700" },
+  txBox: {
+    width: 62,
+    height: 29,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 5,
+    borderWidth: 1,
+    borderColor: "rgba(47,140,255,0.70)",
+    backgroundColor: "rgba(47,140,255,0.12)",
+  },
+  txLabel: { color: AppColors.primary, fontSize: 6, lineHeight: 7, fontWeight: "900", letterSpacing: 0.5 },
+  txValue: { width: "100%", color: AppColors.textStrong, fontSize: 9, lineHeight: 11, fontWeight: "900", textAlign: "center" },
+  chevron: { color: AppColors.primary, fontSize: 21 },
+  pressed: { opacity: 0.72 },
+});

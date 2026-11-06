@@ -126,6 +126,14 @@ export default function GarageScreen() {
     router.push(`/setups/select-track?vehicleId=${encodeURIComponent(selectedVehicleId)}`);
   }, [router, selectedVehicleId]);
 
+  const handleHeaderAction = useCallback(() => {
+    if (showVehicleTracks && selectedVehicleId) {
+      router.push({ pathname: '/vehicles', params: { editVehicleId: selectedVehicleId } });
+      return;
+    }
+    router.push({ pathname: '/vehicles', params: { addVehicle: '1' } });
+  }, [router, selectedVehicleId, showVehicleTracks]);
+
   const goBack = useCallback(() => {
     if (showVehicleTracks) {
       setShowVehicleTracks(false);
@@ -147,8 +155,8 @@ export default function GarageScreen() {
             title="Garage"
             kicker="IMRC GARAGE"
             onBack={goBack}
-            rightLabel="+ VEHICLE"
-            onRightPress={() => router.push('/vehicles')}
+            rightLabel={showVehicleTracks ? 'EDIT' : '+ ADD'}
+            onRightPress={handleHeaderAction}
           />
 
           <Text style={styles.intro}>

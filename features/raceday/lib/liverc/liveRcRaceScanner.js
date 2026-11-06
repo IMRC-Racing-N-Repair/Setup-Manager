@@ -149,25 +149,39 @@ export function parseRaceLinks(eventHtml = '', eventUrl = '', className = '') {
   return links;
 }
 
-export async function scanRaceLinks(eventUrl, className, { debug } = {}) {
+function throwIfCancelled(shouldCancel) {
+  if (typeof shouldCancel !== 'function' || !shouldCancel()) return;
+  const error = new Error('RaceDay refresh cancelled.');
+  error.code = 'RACEDAY_SYNC_CANCELLED';
+  throw error;
+}
+
+export async function scanRaceLinks(eventUrl, className, { debug, shouldCancel, skipRace } = {}) {
+  throwIfCancelled(shouldCancel);
   debug?.add?.('raceScanner:fetchEvent', { eventUrl, className });
   const eventHtml = await fetchLiveRcText(eventUrl);
+  throwIfCancelled(shouldCancel);
   const rounds = splitRaceResultsRounds(eventHtml).map((round) => ({
     label: normalizeRoundLabel(round.label),
     races: parseRoundRaceLinks(round, eventUrl, className, new Set()).length,
   }));
   const links = parseRaceLinks(eventHtml, eventUrl, className);
+  const linksToHydrate = typeof skipRace === 'function' ? links.filter((link) => !skipRace(link)) : links;
+  const skipped = links.length - linksToHydrate.length;
 
   debug?.add?.('raceScanner:rounds', {
     className,
     rounds,
     candidateCount: links.length,
+    skippedSavedCount: skipped,
   });
 
   const hydrated = [];
-  for (const link of links) {
+  for (const link of linksToHydrate) {
+    throwIfCancelled(shouldCancel);
     try {
       const html = await fetchLiveRcText(link.raceUrl);
+      throwIfCancelled(shouldCancel);
       const roundLabel = extractRoundLabel(html, link.roundLabel || link.linkText);
       hydrated.push({
         ...link,
@@ -176,6 +190,7 @@ export async function scanRaceLinks(eventUrl, className, { debug } = {}) {
         resultType: getResultType(roundLabel, link.linkText, link.raceUrl),
       });
     } catch (error) {
+      if (error?.code === 'RACEDAY_SYNC_CANCELLED') throw error;
       debug?.add?.('raceScanner:raceFetchFailed', { raceUrl: link.raceUrl, message: error.message });
     }
   }
@@ -186,5 +201,7 @@ export async function scanRaceLinks(eventUrl, className, { debug } = {}) {
     labels: hydrated.map((item) => item.roundLabel),
     raceNumbers: hydrated.map((item) => item.raceNumber).filter(Boolean),
   });
+  hydrated.skippedSavedCount = skipped;
+  hydrated.totalCandidateCount = links.length;
   return hydrated;
 }

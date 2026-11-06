@@ -19,6 +19,7 @@ import RaceDayPracticeTrackCard from '../../features/raceday/components/RaceDayP
 import RaceDayLiveHeader from '../../features/raceday/components/RaceDayLiveHeader';
 import RaceDaySyncStatusPopup, { mergeSyncProgress } from '../../features/raceday/components/RaceDaySyncStatusPopup';
 import RaceDayAutoSyncOverlay from '../../features/raceday/components/RaceDayAutoSyncOverlay';
+import NewLookBottomNav from '../../src/navigation/NewLookBottomNav';
 import useLiveRcLiveFeed from '../../features/raceday/hooks/useLiveRcLiveFeed';
 import { hydrateActiveRaceDay, endRaceDay, saveRaceDayEvent } from '../../features/raceday/lib/raceDayStorage';
 import { getRaceDayRuns, getLatestRunForVehicle, getRunsForVehicleFromList } from '../../features/raceday/lib/raceDayResultStorage';
@@ -104,6 +105,7 @@ export default function RaceDayDashboardScreen() {
   const pendingPracticeDayRef = useRef(null);
   const practiceDismissTimerRef = useRef(null);
   const autoSyncRunningRef = useRef(false);
+  const autoSyncCancelRef = useRef(null);
 
   useEffect(() => () => {
     if (resultDismissTimerRef.current) clearTimeout(resultDismissTimerRef.current);
@@ -180,6 +182,7 @@ export default function RaceDayDashboardScreen() {
     setVehicles(nextVehicles);
     setCompareFields(nextFields);
     const raceDayId = raceDay?.id || raceDay?.raceDayId;
+    let loadedRuns = [];
     if (raceDayId) {
       const storedPracticeDay = await getRaceDaySelectedPracticeDay(raceDayId);
       const [nextRuns, nextPracticeSummaries, nextLineups] = await Promise.all([
@@ -187,6 +190,7 @@ export default function RaceDayDashboardScreen() {
         storedPracticeDay ? getPracticeSummariesForVehiclesByDay(raceDayId, nextVehicles, storedPracticeDay) : Promise.resolve({}),
         getRaceDayLineups(raceDayId),
       ]);
+      loadedRuns = nextRuns;
       setRuns(nextRuns);
       setLineups(nextLineups);
       setSelectedPracticeDay(storedPracticeDay);
@@ -200,7 +204,12 @@ export default function RaceDayDashboardScreen() {
       setPracticeSummaries({});
     }
     if (showLoading) setLoading(false);
-    return { raceDay, track: nextTrack, vehicles: nextVehicles };
+    return { raceDay, track: nextTrack, vehicles: nextVehicles, runs: loadedRuns };
+  }, []);
+
+  const cancelAutoSync = useCallback(() => {
+    if (autoSyncCancelRef.current) autoSyncCancelRef.current.cancelled = true;
+    setAutoSyncing(false);
   }, []);
 
   useFocusEffect(useCallback(() => {
@@ -211,8 +220,11 @@ export default function RaceDayDashboardScreen() {
       const raceDay = snapshot?.raceDay;
       const nextTrack = snapshot?.track;
       const nextVehicles = snapshot?.vehicles || [];
+      const savedRuns = snapshot?.runs || [];
       if (cancelled || !raceDay?.eventUrl || !nextVehicles.length || autoSyncRunningRef.current) return;
 
+      const cancelToken = { cancelled: false };
+      autoSyncCancelRef.current = cancelToken;
       autoSyncRunningRef.current = true;
       setAutoSyncProgress(nextVehicles.map((vehicle) => ({
         key: normalizeId(vehicle.id || vehicle.vehicleId) || getVehicleDisplayName(vehicle),
@@ -229,25 +241,29 @@ export default function RaceDayDashboardScreen() {
           vehicles: nextVehicles,
           eventUrl: raceDay.eventUrl,
           siteUrl: raceDay.siteUrl || getTrackLiveRcUrl(nextTrack || {}),
+          existingRuns: savedRuns,
+          shouldCancel: () => cancelled || cancelToken.cancelled,
           onProgress: (update) => {
-            if (!cancelled) setAutoSyncProgress((previous) => mergeSyncProgress(previous, update));
+            if (!cancelled && !cancelToken.cancelled) setAutoSyncProgress((previous) => mergeSyncProgress(previous, update));
           },
         });
-        if (!cancelled) await load({ showLoading: false });
+        if (!cancelled && !cancelToken.cancelled) await load({ showLoading: false });
         // Keep the completed checklist visible briefly so the final car and
         // lineup steps visibly reach Done instead of disappearing immediately.
-        if (!cancelled) await new Promise((resolve) => setTimeout(resolve, 450));
+        if (!cancelled && !cancelToken.cancelled) await new Promise((resolve) => setTimeout(resolve, 450));
       } catch (error) {
-        console.warn('[RaceDay] Automatic LiveRC refresh failed', error);
+        if (error?.code !== 'RACEDAY_SYNC_CANCELLED') console.warn('[RaceDay] Automatic LiveRC refresh failed', error);
       } finally {
+        if (autoSyncCancelRef.current === cancelToken) autoSyncCancelRef.current = null;
         autoSyncRunningRef.current = false;
-        if (!cancelled) setAutoSyncing(false);
+        if (!cancelled && !cancelToken.cancelled) setAutoSyncing(false);
       }
     }
 
     loadAndResync();
     return () => {
       cancelled = true;
+      if (autoSyncCancelRef.current) autoSyncCancelRef.current.cancelled = true;
       setAutoSyncing(false);
     };
   }, [load]));
@@ -464,6 +480,7 @@ export default function RaceDayDashboardScreen() {
         vehicles,
         eventUrl: nextEventUrl,
         siteUrl: nextSiteUrl,
+        existingRuns: runs,
         onProgress: handleSyncProgress,
       });
 
@@ -489,11 +506,19 @@ export default function RaceDayDashboardScreen() {
     runLiveRcSync({ ...eventPayload, saveEvent: true });
   }
 
+  const handleBack = useCallback(() => {
+    if (typeof router.canGoBack === 'function' && router.canGoBack()) {
+      router.back();
+      return;
+    }
+    router.replace('/');
+  }, [router]);
+
   if (loading) {
     return (
       <View style={raceDayStyles.screen}>
         <View style={raceDayStyles.container}>
-          <RaceDayHeader title="RaceDay" subtitle="Loading" onLeftPress={() => router.replace('/')} leftLabel="Home" />
+          <RaceDayHeader title="RaceDay" subtitle="Loading" onLeftPress={handleBack} leftLabel="‹ Back" />
           <View style={raceDayStyles.empty}><ActivityIndicator /></View>
         </View>
       </View>
@@ -504,7 +529,7 @@ export default function RaceDayDashboardScreen() {
     return (
       <View style={raceDayStyles.screen}>
         <View style={raceDayStyles.container}>
-          <RaceDayHeader title="RaceDay" subtitle="No active session" onLeftPress={() => router.replace('/')} leftLabel="Home" />
+          <RaceDayHeader title="RaceDay" subtitle="No active session" onLeftPress={handleBack} leftLabel="‹ Back" />
           <View style={raceDayStyles.empty}>
             <Text style={raceDayStyles.emptyText}>No active Race Day was found. Start Race Day from the Dashboard.</Text>
           </View>
@@ -520,8 +545,8 @@ export default function RaceDayDashboardScreen() {
         <RaceDayHeader
           title="RaceDay"
           subtitle={trackName}
-          leftLabel="Home"
-          onLeftPress={() => router.replace('/')}
+          leftLabel="‹ Back"
+          onLeftPress={handleBack}
           rightLabel="End"
           rightTone="danger"
           onRightPress={confirmEndRaceDay}
@@ -692,7 +717,8 @@ export default function RaceDayDashboardScreen() {
         onClose={() => setSyncStatusOpen(false)}
       />
 
-      <RaceDayAutoSyncOverlay visible={autoSyncing} progress={autoSyncProgress} />
+      <RaceDayAutoSyncOverlay visible={autoSyncing} progress={autoSyncProgress} onCancel={cancelAutoSync} />
+      <NewLookBottomNav active="raceday" router={router} />
     </View>
   );
 }

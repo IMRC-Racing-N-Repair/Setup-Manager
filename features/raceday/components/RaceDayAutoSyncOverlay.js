@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { raceDayColors, raceDayStyles } from '../styles/raceDayStyles';
 
 function isFailed(item = {}) {
@@ -62,7 +62,7 @@ function ProgressRow({ item }) {
   );
 }
 
-export default function RaceDayAutoSyncOverlay({ visible, progress = [] }) {
+export default function RaceDayAutoSyncOverlay({ visible, progress = [], onCancel }) {
   const activeItem = useMemo(
     () => [...progress].reverse().find((item) => isWorking(item)),
     [progress],
@@ -82,6 +82,9 @@ export default function RaceDayAutoSyncOverlay({ visible, progress = [] }) {
       accessibilityLabel="Refreshing RaceDay"
     >
       <View style={raceDayStyles.autoSyncCard}>
+        <Pressable style={styles.cancelButton} onPress={onCancel} accessibilityRole="button" accessibilityLabel="Cancel RaceDay refresh">
+          <Text style={styles.cancelButtonText}>×</Text>
+        </Pressable>
         <View style={raceDayStyles.autoSyncLogoWrap}>
           <ActivityIndicator
             size="large"
@@ -117,6 +120,25 @@ const styles = StyleSheet.create({
     width: '100%',
     maxHeight: 238,
     marginTop: 14,
+  },
+  cancelButton: {
+    position: 'absolute',
+    top: 9,
+    right: 9,
+    zIndex: 2,
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: raceDayColors.border,
+    backgroundColor: raceDayColors.cardAlt,
+  },
+  cancelButtonText: {
+    color: raceDayColors.text,
+    fontSize: 23,
+    lineHeight: 25,
+    fontWeight: '700',
   },
   progressListContent: {
     gap: 7,

@@ -183,9 +183,9 @@ export default function FlootDashboardView({
             <Pressable onPress={() => router.push('/garage')}><Text style={styles.viewAll}>OPEN GARAGE  ›</Text></Pressable>
           </View>
           {activeTrack ? <View style={styles.garageMetrics}>
-            <CountCell label="VEHICLES" value={counts?.vehicles || 0} onPress={() => router.push('/garage')} />
-            <CountCell label="TRACKS" value={counts?.tracks || 0} onPress={() => router.push('/garage')} />
-            <CountCell label="SETUPS" value={counts?.setups || 0} onPress={() => router.push('/garage')} />
+            <CountCell label="VEHICLES" value={counts?.vehicles || 0} onPress={() => router.push('/vehicles')} />
+            <CountCell label="TRACKS" value={counts?.tracks || 0} onPress={() => router.push('/tracks')} />
+            <CountCell label="SETUPS" value={counts?.setups || 0} onPress={() => router.push('/setups')} />
           </View> : null}
           <View style={styles.vehicleList}>
             {viewedVehicle ? (

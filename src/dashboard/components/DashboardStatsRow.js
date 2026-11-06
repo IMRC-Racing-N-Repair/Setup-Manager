@@ -9,9 +9,9 @@ import SetupsButton from '../buttons/SetupsButton';
 export default function DashboardStatsRow({ counts, router }) {
   return (
     <View style={styles.statsRow}>
-      <VehicleButton count={counts.vehicles} onPress={() => router.push('/garage')} />
-      <TrackButton count={counts.tracks} onPress={() => router.push('/garage')} />
-      <SetupsButton count={counts.setups} onPress={() => router.push('/garage')} />
+      <VehicleButton count={counts.vehicles} onPress={() => router.push('/vehicles')} />
+      <TrackButton count={counts.tracks} onPress={() => router.push('/tracks')} />
+      <SetupsButton count={counts.setups} onPress={() => router.push('/setups')} />
     </View>
   );
 }

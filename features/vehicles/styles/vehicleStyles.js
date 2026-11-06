@@ -107,7 +107,7 @@ export const vehicleStyles = StyleSheet.create({
     borderColor: VEHICLE_COLORS.accentBorder,
     backgroundColor: VEHICLE_COLORS.accentSoft,
     paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingVertical: 1,
   },
 
   countPillText: {
@@ -201,8 +201,8 @@ export const vehicleStyles = StyleSheet.create({
   },
 
   thinTransponderBox: {
-    width: 84,
-    minHeight: 42,
+    width: 68,
+    height: 31,
     borderRadius: 2,
     borderWidth: 1,
     borderColor: VEHICLE_COLORS.accentBorder,
@@ -215,8 +215,8 @@ export const vehicleStyles = StyleSheet.create({
 
   thinTransponderLabel: {
     color: VEHICLE_COLORS.textFaint,
-    fontSize: 10,
-    lineHeight: 11,
+    fontSize: 7,
+    lineHeight: 8,
     fontWeight: "900",
     letterSpacing: 0,
     textAlign: "center",
@@ -225,8 +225,8 @@ export const vehicleStyles = StyleSheet.create({
 
   thinTransponderValue: {
     color: VEHICLE_COLORS.text,
-    fontSize: 12,
-    lineHeight: 15,
+    fontSize: 10,
+    lineHeight: 12,
     fontWeight: "900",
     marginTop: 1,
     textAlign: "center",

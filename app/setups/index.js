@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Modal, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Modal, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import StableSafeAreaView from '../../src/layout/StableSafeAreaView';
 import AppScreenHeader from '../../src/layout/AppScreenHeader';
@@ -407,6 +407,8 @@ function CopySetupPopup({
 export default function SetupsIndexScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const { width, height } = useWindowDimensions();
+  const isTabletLandscape = width >= 700 && width > height;
   const handledIncomingUrisRef = useRef(new Set());
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -791,7 +793,7 @@ export default function SetupsIndexScreen() {
 
   return (
     <StableSafeAreaView edges={['top', 'bottom']} style={setupStyles.safe}>
-      <View style={setupBrowserStyles.headerWrap}>
+      <View style={[setupBrowserStyles.headerWrap, isTabletLandscape && setupBrowserStyles.fullWidthTabletLandscape]}>
         <AppScreenHeader
           title="Setups"
           kicker="IMRC GARAGE"
@@ -818,7 +820,7 @@ export default function SetupsIndexScreen() {
 
       <ScrollView
         style={setupStyles.scroll}
-        contentContainerStyle={setupBrowserStyles.scrollContent}
+        contentContainerStyle={[setupBrowserStyles.scrollContent, isTabletLandscape && setupBrowserStyles.fullWidthTabletLandscape]}
         keyboardShouldPersistTaps="handled"
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={setupColors.purple} />}
       >
@@ -945,6 +947,7 @@ export default function SetupsIndexScreen() {
 
 const setupBrowserStyles = StyleSheet.create({
   headerWrap: { width: '100%', maxWidth: 860, alignSelf: 'center', paddingHorizontal: 15 },
+  fullWidthTabletLandscape: { maxWidth: '100%', paddingHorizontal: 22 },
   introRow: { minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, borderBottomWidth: 1, borderBottomColor: AppColors.border },
   introText: { flex: 1, color: AppColors.mutedText, fontSize: 10, lineHeight: 15 },
   importButton: { minHeight: 28, justifyContent: 'center', paddingHorizontal: 9, borderWidth: 1, borderColor: AppColors.borderStrong },

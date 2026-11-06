@@ -44,10 +44,12 @@ export default function FlootDashboardView({
   isLandscape,
   dashboardTrackId,
   onSelectDashboardTrack,
+  loading = false,
 }) {
   const { width, height } = useWindowDimensions();
   const compactLayout = width < 430 || height < 900;
   const shortLayout = height < 850;
+  const tabletLandscape = width >= 700 && width > height;
   const allowHomeScroll = isLandscape || height < 680;
   const [showTrackPicker, setShowTrackPicker] = useState(false);
   const trackList = Array.isArray(tracks) ? tracks : [];
@@ -66,6 +68,15 @@ export default function FlootDashboardView({
   const currentRaceMeta = raceDayReady
     ? [liveState?.roundType, liveState?.heat, liveState?.raceStatus].filter(Boolean).join(' · ') || 'LiveRC updates will appear here'
     : 'Choose a track and your race vehicles';
+  const workspaceTrackName = loading
+    ? 'Checking saved RaceDay'
+    : textValue(activeTrack?.name || activeTrack?.trackName, 'No track');
+  const workspaceTrackMeta = loading
+    ? 'Loading track, event, and race information'
+    : activeTrack
+      ? [activeTrack.surface, activeTrack.type || activeTrack.trackType].filter(Boolean).join(' · ') || 'Track details'
+      : 'No track selected';
+  const showWorkspace = loading || !!activeTrack;
   const sponsorImage = sponsor?.logo || sponsor?.image || '';
   const syncColor = statusDotColor || '#6F7D74';
   const openSponsor = () => sponsor?.url && Linking.openURL(sponsor.url).catch(() => {});
@@ -77,7 +88,12 @@ export default function FlootDashboardView({
   return (
     <View style={styles.root}>
       <ScrollView
-        contentContainerStyle={[styles.content, compactLayout && styles.contentCompact, shortLayout && styles.contentShort]}
+        contentContainerStyle={[
+          styles.content,
+          compactLayout && styles.contentCompact,
+          shortLayout && styles.contentShort,
+          tabletLandscape && styles.contentTabletLandscape,
+        ]}
         showsVerticalScrollIndicator={false}
         bounces={false}
         scrollEnabled={allowHomeScroll}
@@ -121,15 +137,13 @@ export default function FlootDashboardView({
           <Text style={styles.sponsorVisit}>VISIT  ›</Text>
         </Pressable>
 
-        <Pressable style={({ pressed }) => [styles.trackStrip, compactLayout && styles.trackStripCompact, pressed && styles.pressed]} onPress={() => setShowTrackPicker(true)}>
+        <Pressable disabled={loading} style={({ pressed }) => [styles.trackStrip, compactLayout && styles.trackStripCompact, loading && styles.loadingMuted, pressed && styles.pressed]} onPress={() => setShowTrackPicker(true)}>
           <Text style={styles.trackGlyph}>⌖</Text>
           <View style={styles.trackIdentity}>
-            <Text style={styles.trackName} numberOfLines={1}>{textValue(activeTrack?.name || activeTrack?.trackName, 'No track')}</Text>
-            <Text style={styles.trackMeta} numberOfLines={1}>
-              {activeTrack ? [activeTrack.surface, activeTrack.type || activeTrack.trackType].filter(Boolean).join(' · ') || 'Track details' : 'No track selected'}
-            </Text>
+            <Text style={styles.trackName} numberOfLines={1}>{workspaceTrackName}</Text>
+            <Text style={styles.trackMeta} numberOfLines={1}>{workspaceTrackMeta}</Text>
           </View>
-          {raceDayReady && activeTrack ? (
+          {!loading && raceDayReady && activeTrack ? (
             <View style={styles.trackLiveBadge}>
               <View style={styles.liveDot} />
               <Text style={styles.trackLiveText}>LIVE · RACE {currentRaceNumber}</Text>
@@ -137,28 +151,28 @@ export default function FlootDashboardView({
           ) : <Text style={styles.chevron}>›</Text>}
         </Pressable>
 
-        {activeTrack ? <View style={styles.primaryGrid}>
+        {showWorkspace ? <View style={styles.primaryGrid}>
           <View style={[styles.racePanel, compactLayout && styles.racePanelCompact]}>
             <View style={styles.sectionHeader}>
               <View>
-                <Text style={styles.microLabel}>{raceDayReady ? 'LIVE RACEDAY' : 'RACEDAY'}</Text>
-                <Text style={styles.sectionTitle}>{textValue(activeTrack?.name || activeTrack?.trackName, raceDayReady ? 'Live race workspace' : 'Prepare for race day')}</Text>
+                <Text style={styles.microLabel}>{loading ? 'CHECKING RACEDAY' : raceDayReady ? 'LIVE RACEDAY' : 'RACEDAY'}</Text>
+                <Text style={styles.sectionTitle}>{workspaceTrackName}</Text>
               </View>
-              <View style={[styles.liveBadge, !raceDayReady && styles.idleBadge]}>
-                <View style={[styles.liveDot, !raceDayReady && styles.idleDot]} />
-                <Text style={[styles.liveText, !raceDayReady && styles.idleText]}>{raceDayReady ? 'LIVE' : 'READY'}</Text>
+              <View style={[styles.liveBadge, (loading || !raceDayReady) && styles.idleBadge]}>
+                <View style={[styles.liveDot, (loading || !raceDayReady) && styles.idleDot]} />
+                <Text style={[styles.liveText, (loading || !raceDayReady) && styles.idleText]}>{loading ? 'LOADING' : raceDayReady ? 'LIVE' : 'READY'}</Text>
               </View>
             </View>
 
-            <Pressable style={({ pressed }) => [styles.raceLine, compactLayout && styles.raceLineCompact, pressed && styles.pressed]} onPress={onRaceDayPress}>
+            <Pressable disabled={loading} style={({ pressed }) => [styles.raceLine, compactLayout && styles.raceLineCompact, loading && styles.loadingMuted, pressed && styles.pressed]} onPress={onRaceDayPress}>
               <View style={styles.raceBadge}>
                 <Text style={styles.raceBadgeTop}>RACE</Text>
-                <Text style={styles.raceBadgeValue}>{raceDayReady ? currentRaceNumber : '—'}</Text>
+                <Text style={styles.raceBadgeValue}>{!loading && raceDayReady ? currentRaceNumber : '—'}</Text>
               </View>
               <View style={styles.raceMain}>
-                <Text style={styles.mutedLabel}>{raceDayReady ? 'CURRENT RACE' : 'START'}</Text>
-                <Text style={styles.raceMainTitle}>{currentRaceTitle}</Text>
-                <Text style={styles.raceMainMeta}>{currentRaceMeta}</Text>
+                <Text style={styles.mutedLabel}>{loading ? 'LOADING' : raceDayReady ? 'CURRENT RACE' : 'START'}</Text>
+                <Text style={styles.raceMainTitle}>{loading ? 'Checking race information' : currentRaceTitle}</Text>
+                <Text style={styles.raceMainMeta}>{loading ? 'Reading your saved RaceDay and LiveRC data' : currentRaceMeta}</Text>
               </View>
               <Text style={styles.chevronLarge}>›</Text>
             </Pressable>
@@ -167,8 +181,8 @@ export default function FlootDashboardView({
               <Text style={styles.microLabel}>YOUR NEXT RACE</Text>
               <View style={styles.nextRaceRow}>
                 <View style={styles.nextRaceIdentity}>
-                  <Text style={styles.nextRaceVehicle} numberOfLines={1}>{nextRace?.vehicleName || (raceDayReady ? 'Waiting for lineup' : 'No active RaceDay')}</Text>
-                  <Text style={styles.nextRaceClass} numberOfLines={1}>{nextRace ? nextRace.className : 'Lineup details will appear after sync'}</Text>
+                  <Text style={styles.nextRaceVehicle} numberOfLines={1}>{loading ? 'Checking your vehicles' : nextRace?.vehicleName || (raceDayReady ? 'Waiting for lineup' : 'No active RaceDay')}</Text>
+                  <Text style={styles.nextRaceClass} numberOfLines={1}>{loading ? 'Loading class and lineup details' : nextRace ? nextRace.className : 'Lineup details will appear after sync'}</Text>
                 </View>
                 <View style={styles.nextRaceNumberBox}>
                   <Text style={styles.nextRaceNumberLabel}>RACE</Text>
@@ -177,8 +191,8 @@ export default function FlootDashboardView({
               </View>
             </View>
 
-            <Pressable style={({ pressed }) => [styles.primaryButton, pressed && styles.pressed]} onPress={onRaceDayPress}>
-              <Text style={styles.primaryButtonText}>{raceDayReady ? 'OPEN RACEDAY' : 'START RACEDAY'}</Text>
+            <Pressable disabled={loading} style={({ pressed }) => [styles.primaryButton, loading && styles.loadingMuted, pressed && styles.pressed]} onPress={onRaceDayPress}>
+              <Text style={styles.primaryButtonText}>{loading ? 'LOADING RACEDAY' : raceDayReady ? 'OPEN RACEDAY' : 'START RACEDAY'}</Text>
               <Text style={styles.primaryButtonArrow}>›</Text>
             </Pressable>
           </View>
@@ -192,7 +206,7 @@ export default function FlootDashboardView({
             </View>
             <Pressable onPress={() => router.push('/garage')}><Text style={styles.viewAll}>OPEN GARAGE  ›</Text></Pressable>
           </View>
-          {activeTrack ? <View style={styles.garageMetrics}>
+          {showWorkspace ? <View style={styles.garageMetrics}>
             <CountCell label="VEHICLES" value={counts?.vehicles || 0} onPress={() => router.push('/vehicles')} />
             <CountCell label="TRACKS" value={counts?.tracks || 0} onPress={() => router.push('/tracks')} />
             <CountCell label="SETUPS" value={counts?.setups || 0} onPress={() => router.push('/setups')} />
@@ -210,6 +224,11 @@ export default function FlootDashboardView({
                 <Text style={[styles.vehicleStatus, isLandscape && styles.vehicleStatusLandscape]}>LAST VIEWED</Text>
                 <Text style={styles.chevron}>›</Text>
               </Pressable>
+            ) : loading ? (
+              <View style={styles.emptyVehicleRow}>
+                <Text style={styles.emptyTitle}>Loading garage…</Text>
+                <Text style={styles.emptyCopy}>Checking your last viewed vehicle and saved setups.</Text>
+              </View>
             ) : (
               <Pressable style={styles.emptyVehicleRow} onPress={() => router.push('/garage')}>
                 <Text style={styles.emptyTitle}>No vehicles saved</Text>

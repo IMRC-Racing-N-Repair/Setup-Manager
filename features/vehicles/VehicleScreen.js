@@ -49,6 +49,7 @@ export default function VehicleScreen() {
   const { width, height } = useWindowDimensions();
   const params = useLocalSearchParams();
   const isLandscape = width > height;
+  const isTabletLandscape = width >= 700 && isLandscape;
 
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -193,7 +194,7 @@ export default function VehicleScreen() {
           },
         ]}
       >
-        <View style={modernStyles.sharedHeaderInset}>
+        <View style={[modernStyles.sharedHeaderInset, isTabletLandscape && modernStyles.sharedHeaderInsetTabletLandscape]}>
           <AppScreenHeader
             title="Vehicles"
             kicker="IMRC GARAGE"
@@ -203,7 +204,7 @@ export default function VehicleScreen() {
           />
         </View>
 
-        <View style={listStyles.introRow}>
+        <View style={[listStyles.introRow, isTabletLandscape && listStyles.introRowTabletLandscape]}>
           <Text style={modernStyles.subHeaderText} numberOfLines={2}>
             Saved cars are used for Setups and Race Day.
           </Text>
@@ -222,6 +223,7 @@ export default function VehicleScreen() {
           contentContainerStyle={[
             modernStyles.bodyContent,
             isLandscape && modernStyles.bodyContentLandscape,
+            isTabletLandscape && modernStyles.bodyContentTabletLandscape,
             {
               paddingBottom: Math.max(insets.bottom + 82, 92),
             },
@@ -290,6 +292,7 @@ const listStyles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: AppColors.border,
   },
+  introRowTabletLandscape: { marginHorizontal: 22 },
   savedCount: { color: AppColors.mutedText, fontSize: 8, fontWeight: "900", letterSpacing: 0.6 },
   vehicleList: { borderTopWidth: 1, borderTopColor: AppColors.borderStrong },
   vehicleRow: {

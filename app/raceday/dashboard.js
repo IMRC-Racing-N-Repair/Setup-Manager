@@ -38,7 +38,7 @@ import { getTrackDisplayName, getTrackLiveRcUrl, getVehicleDisplayName, normaliz
 import { syncLiveRcRaceDay } from '../../features/raceday/lib/liverc/liveRcSyncRunner';
 import { syncLiveRcPracticeDay } from '../../features/raceday/lib/liverc/liveRcPracticeSyncRunner';
 import { findEventByUrl } from '../../features/raceday/lib/liverc/liveRcEventFinder';
-import { raceDayStyles } from '../../features/raceday/styles/raceDayStyles';
+import { raceDayColors, raceDayStyles } from '../../features/raceday/styles/raceDayStyles';
 
 const LIVE_FEED_ENABLED_KEY = '@raceDayLiveFeedEnabled_v1';
 
@@ -566,10 +566,14 @@ export default function RaceDayDashboardScreen() {
   if (loading) {
     return (
       <View style={raceDayStyles.screen}>
-        <View style={[raceDayStyles.container, { paddingTop: insets.top }]}>
+        <View style={[raceDayStyles.container, isTabletLandscape && raceDayStyles.containerTabletLandscape, { paddingTop: insets.top }]}>
           <RaceDayHeader title="RaceDay" subtitle="Loading" onLeftPress={handleBack} leftLabel="‹ BACK" topOffset={false} />
-          <View style={raceDayStyles.empty}><ActivityIndicator /></View>
+          <View style={[raceDayStyles.empty, raceDayStyles.loadingShell]}>
+            <ActivityIndicator color={raceDayColors.accent} />
+            <Text style={raceDayStyles.loadingShellText}>Checking RaceDay, vehicles, and saved race information…</Text>
+          </View>
         </View>
+        <NewLookBottomNav active="raceday" router={router} />
       </View>
     );
   }
@@ -577,13 +581,14 @@ export default function RaceDayDashboardScreen() {
   if (!active?.trackId) {
     return (
       <View style={raceDayStyles.screen}>
-        <View style={[raceDayStyles.container, { paddingTop: insets.top }]}>
+        <View style={[raceDayStyles.container, isTabletLandscape && raceDayStyles.containerTabletLandscape, { paddingTop: insets.top }]}>
           <RaceDayHeader title="RaceDay" subtitle="No active session" onLeftPress={handleBack} leftLabel="‹ BACK" topOffset={false} />
           <View style={raceDayStyles.empty}>
             <Text style={raceDayStyles.emptyText}>No active Race Day was found. Start Race Day from the Dashboard.</Text>
           </View>
         </View>
-        <RaceDayBottomActions primaryLabel="Select Track" onPrimaryPress={() => router.replace('/raceday/select-track')} />
+        <RaceDayBottomActions docked tabletLandscape={isTabletLandscape} primaryLabel="Select Track" onPrimaryPress={() => router.replace('/raceday/select-track')} />
+        <NewLookBottomNav active="raceday" router={router} />
       </View>
     );
   }

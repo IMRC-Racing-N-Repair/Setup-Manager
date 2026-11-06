@@ -12,6 +12,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -57,6 +58,8 @@ export function fmt(value, places = 2, fallback = '—') {
 
 export function ToolScaffold({ title, subtitle, children, onBack, right, scroll = true, contentStyle, listProps = null, scrollRef = null }) {
   const insets = useSafeAreaInsets();
+  const { width, height } = useWindowDimensions();
+  const isTabletLandscape = width >= 700 && width > height;
   const Container = scroll ? ScrollView : View;
   const [keyboardOpen, setKeyboardOpen] = React.useState(false);
 
@@ -81,7 +84,7 @@ export function ToolScaffold({ title, subtitle, children, onBack, right, scroll 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 6 : 0}
       >
-        <View style={styles.sharedHeaderWrap}>
+        <View style={[styles.sharedHeaderWrap, isTabletLandscape && styles.sharedHeaderWrapTabletLandscape]}>
           <AppScreenHeader title={title} subtitle={subtitle} onBack={onBack} right={right || undefined} />
         </View>
 
@@ -91,6 +94,7 @@ export function ToolScaffold({ title, subtitle, children, onBack, right, scroll 
             style={styles.flex}
             contentContainerStyle={[
               styles.content,
+              isTabletLandscape && styles.contentTabletLandscape,
               { paddingBottom: Math.max(12, insets.bottom + 10) + (keyboardOpen ? 180 : 0) },
               contentStyle,
               listProps.contentContainerStyle,
@@ -109,6 +113,7 @@ export function ToolScaffold({ title, subtitle, children, onBack, right, scroll 
             style={styles.flex}
             contentContainerStyle={scroll ? [
               styles.content,
+              isTabletLandscape && styles.contentTabletLandscape,
               { paddingBottom: Math.max(12, insets.bottom + 10) + (keyboardOpen ? 180 : 0) },
               contentStyle,
             ] : undefined}
@@ -232,6 +237,7 @@ export const styles = StyleSheet.create({
   flex: { flex: 1 },
   safe: { flex: 1, backgroundColor: TOOL_BG },
   sharedHeaderWrap: { paddingHorizontal: 15, backgroundColor: TOOL_BG },
+  sharedHeaderWrapTabletLandscape: { paddingHorizontal: 22 },
   headerOuter: {
     backgroundColor: TOOL_PANEL,
     borderBottomWidth: 1,
@@ -290,6 +296,9 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 9,
     paddingTop: 8,
     gap: 7,
+  },
+  contentTabletLandscape: {
+    paddingHorizontal: 22,
   },
   listHeader: {
     gap: 8,

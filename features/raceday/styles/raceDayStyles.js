@@ -507,6 +507,16 @@ export const raceDayStyles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 20,
   },
+  loadingShell: {
+    minHeight: 96,
+    flexDirection: 'row',
+    gap: 10,
+  },
+  loadingShellText: {
+    color: raceDayColors.muted,
+    fontSize: 11,
+    fontWeight: '700',
+  },
   modalBackdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.72)',

@@ -144,6 +144,7 @@ export default function DashboardScreen({
     return true;
   });
   const [dashboardTrackId, setDashboardTrackId] = useState('');
+  const [dashboardHydrated, setDashboardHydrated] = useState(false);
 
   const isShortLandscape = isLandscape && height < 540;
   const isVeryShortLandscape = isLandscape && height < 470;
@@ -458,11 +459,15 @@ export default function DashboardScreen({
   useImportIntent({ router });
 
   const refreshDashboard = useCallback(async () => {
-    await repairEndedRaceDayActivePointers();
-    await syncRaceDayReady();
-    await loadCounts();
-    await refreshRecentChanges();
-    await loadDashboardTrack();
+    try {
+      await repairEndedRaceDayActivePointers();
+      await syncRaceDayReady();
+      await loadCounts();
+      await refreshRecentChanges();
+      await loadDashboardTrack();
+    } finally {
+      setDashboardHydrated(true);
+    }
   }, [loadCounts, loadDashboardTrack, refreshRecentChanges, syncRaceDayReady]);
 
   useEffect(() => {
@@ -582,6 +587,7 @@ export default function DashboardScreen({
         isLandscape={isLandscape}
         dashboardTrackId={dashboardTrackId}
         onSelectDashboardTrack={selectDashboardTrack}
+        loading={!dashboardHydrated}
       />
 
       <RaceDayStartModal

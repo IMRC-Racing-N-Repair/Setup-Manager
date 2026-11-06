@@ -6,6 +6,7 @@ export const vehicleScreenModernStyles = StyleSheet.create({
     flex: 1,
   },
   sharedHeaderInset: { paddingHorizontal: 15 },
+  sharedHeaderInsetTabletLandscape: { paddingHorizontal: 22 },
 
   headerBar: {
     minHeight: 54,
@@ -120,6 +121,9 @@ export const vehicleScreenModernStyles = StyleSheet.create({
 
   bodyContentLandscape: {
     paddingHorizontal: 18,
+  },
+  bodyContentTabletLandscape: {
+    paddingHorizontal: 22,
   },
 
   loadingBlock: {

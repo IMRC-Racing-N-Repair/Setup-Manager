@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useFocusEffect, useRouter } from 'expo-router';
 
@@ -46,6 +46,8 @@ function savedLabel(setup) {
 
 export default function GarageScreen() {
   const router = useRouter();
+  const { width, height } = useWindowDimensions();
+  const isTabletLandscape = width >= 700 && width > height;
   const [loading, setLoading] = useState(true);
   const [vehicles, setVehicles] = useState([]);
   const [tracks, setTracks] = useState([]);
@@ -167,7 +169,7 @@ export default function GarageScreen() {
     <StableSafeAreaView style={styles.safe}>
       <StatusBar style="light" />
       <View style={styles.root}>
-        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={[styles.content, isTabletLandscape && styles.contentTabletLandscape]} showsVerticalScrollIndicator={false}>
           <AppScreenHeader
             title="Garage"
             kicker="IMRC GARAGE"
@@ -282,6 +284,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: AppColors.background },
   root: { flex: 1, backgroundColor: AppColors.background },
   content: { width: '100%', maxWidth: 860, alignSelf: 'center', paddingHorizontal: 15, paddingBottom: 92 },
+  contentTabletLandscape: { maxWidth: '100%', paddingHorizontal: 22, paddingBottom: 104 },
   header: { minHeight: 70, flexDirection: 'row', alignItems: 'center', gap: 10, borderBottomWidth: 1, borderBottomColor: AppColors.borderStrong },
   backButton: { minHeight: 34, justifyContent: 'center', paddingHorizontal: 9, borderWidth: 1, borderColor: AppColors.border },
   backText: { color: AppColors.primary, fontSize: 9, fontWeight: '900', letterSpacing: 0.6 },

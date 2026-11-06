@@ -95,7 +95,7 @@ export default function GarageScreen() {
         .filter((item) => clean(item?.vehicleId) === vehicleId && clean(item?.trackId) === trackId)
         .sort((a, b) => setupTime(b) - setupTime(a))[0] || null;
       return { track, trackId, setup };
-    }).sort((a, b) => {
+    }).filter((row) => Boolean(row.setup)).sort((a, b) => {
       if (a.setup && !b.setup) return -1;
       if (!a.setup && b.setup) return 1;
       if (a.setup && b.setup) return setupTime(b.setup) - setupTime(a.setup);
@@ -217,10 +217,10 @@ export default function GarageScreen() {
                     </View>
                   </Pressable>
                 ))}
-                {!tracks.length ? (
+                {!trackRows.length ? (
                   <View style={styles.emptyTracks}>
-                    <Text style={styles.emptyTitle}>No tracks saved</Text>
-                    <Text style={styles.emptyCopy}>Add a track before creating a setup for this vehicle.</Text>
+                    <Text style={styles.emptyTitle}>No setups for this vehicle</Text>
+                    <Text style={styles.emptyCopy}>Use Add Setup to choose a track and create this car’s first setup.</Text>
                   </View>
                 ) : null}
               </View>

@@ -24,6 +24,7 @@ import {
 } from '../../features/tracks/storage/trackStorage';
 import { openTrackSubmissionEmail } from '../../features/tracks/utils/trackSubmitEmail';
 import { trackStyles as styles, TRACK_BLUE } from '../../features/tracks/styles/trackStyles';
+import NewLookBottomNav from '../../src/navigation/NewLookBottomNav';
 
 const NEW_TRACK = {
   trackName: '',
@@ -391,6 +392,8 @@ export default function TracksScreen() {
           />
         )}
       </View>
+
+      <NewLookBottomNav active="garage" router={router} />
 
       <TrackEditSheet
         visible={sheetVisible}

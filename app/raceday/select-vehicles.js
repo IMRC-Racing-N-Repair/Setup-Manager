@@ -1,11 +1,10 @@
-import React, { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { useCallback, useMemo, useState } from 'react';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import RaceDayHeader from '../../features/raceday/components/RaceDayHeader';
+
 import RaceDayBottomActions from '../../features/raceday/components/RaceDayBottomActions';
 import { getActiveRaceDay, getVehicles, setRaceDayVehicles } from '../../features/raceday/lib/raceDayStorage';
-import { getVehicleDisplayName, getVehicleTransponder, normalizeIdList } from '../../features/raceday/lib/raceDayModel';
-import { raceDayStyles } from '../../features/raceday/styles/raceDayStyles';
+import { normalizeIdList } from '../../features/raceday/lib/raceDayModel';
+import { GaragePickerScreen, GarageVehicleChoice } from '../../src/garage/GaragePicker';
 
 export default function RaceDaySelectVehiclesScreen() {
   const router = useRouter();
@@ -22,7 +21,7 @@ export default function RaceDaySelectVehiclesScreen() {
     setLoading(true);
     const [raceDay, nextVehicles] = await Promise.all([getActiveRaceDay(), getVehicles()]);
     setActive(raceDay);
-    setVehicles(nextVehicles);
+    setVehicles(Array.isArray(nextVehicles) ? nextVehicles : []);
     setSelectedIds(normalizeIdList(raceDay?.vehicleIds || []));
     setLoading(false);
   }, []);
@@ -39,66 +38,47 @@ export default function RaceDaySelectVehiclesScreen() {
     router.replace('/raceday/dashboard');
   }
 
+  const goBack = () => {
+    if (typeof router.canGoBack === 'function' && router.canGoBack()) router.back();
+    else router.replace('/raceday/select-track');
+  };
+
+  const emptyMessage = !loading && !active?.trackId
+    ? 'No active RaceDay was found. Go back and select a track.'
+    : !loading && !vehicles.length
+      ? 'No vehicles are saved yet. Add a vehicle from Garage before continuing RaceDay.'
+      : '';
+
   return (
-    <View style={raceDayStyles.screen}>
-      <View style={raceDayStyles.container}>
-        <RaceDayHeader
-          title="Vehicles"
-          subtitle={adding ? 'Add more vehicles' : 'Select RaceDay vehicles'}
-          onLeftPress={() => router.back()}
+    <GaragePickerScreen
+      title="Select Vehicles"
+      subtitle={adding ? 'Add or remove RaceDay vehicles.' : 'Choose every vehicle you are racing today.'}
+      countLabel={loading ? 'Loading…' : `${selectedIds.length} SELECTED`}
+      onBack={goBack}
+      loading={loading}
+      emptyMessage={emptyMessage}
+      footer={(
+        <RaceDayBottomActions
+          secondaryLabel="Back"
+          onSecondaryPress={goBack}
+          primaryLabel={adding ? 'Save Vehicles' : 'Start RaceDay'}
+          onPrimaryPress={handleContinue}
+          primaryDisabled={!active?.trackId || selectedIds.length === 0}
         />
-        {loading ? (
-          <View style={raceDayStyles.empty}><ActivityIndicator /></View>
-        ) : (
-          <ScrollView contentContainerStyle={raceDayStyles.scrollContent} showsVerticalScrollIndicator={false}>
-            {!active?.trackId ? (
-              <View style={raceDayStyles.empty}>
-                <Text style={raceDayStyles.emptyText}>No active Race Day was found. Start by selecting a track.</Text>
-              </View>
-            ) : vehicles.length ? vehicles.map((vehicle) => {
-              const id = vehicle.id || vehicle.vehicleId;
-              const selected = selectedSet.has(String(id));
-              return (
-                <TouchableOpacity
-                  key={String(id)}
-                  style={[raceDayStyles.card, selected && raceDayStyles.selectedCard]}
-                  onPress={() => toggleVehicle(id)}
-                  activeOpacity={0.86}
-                >
-                  <View style={raceDayStyles.cardAccent} />
-                  <View style={raceDayStyles.rowBetween}>
-                    <View style={raceDayStyles.flex1}>
-                      <Text style={raceDayStyles.cardTitle}>{getVehicleDisplayName(vehicle)}</Text>
-                      <Text style={raceDayStyles.cardSub} numberOfLines={1}>
-                        {[vehicle.manufacturer, vehicle.model].filter(Boolean).join(' ') || 'Vehicle'}
-                      </Text>
-                      <Text style={raceDayStyles.cardSub} numberOfLines={1}>
-                        {[vehicle.chassisStyle, getVehicleTransponder(vehicle) ? `TX ${getVehicleTransponder(vehicle)}` : null].filter(Boolean).join(' • ') || 'RaceDay vehicle'}
-                      </Text>
-                    </View>
-                    <View style={selected ? [raceDayStyles.pill, raceDayStyles.selectedPill] : raceDayStyles.pill}>
-                      <Text style={selected ? [raceDayStyles.pillText, raceDayStyles.selectedPillText] : raceDayStyles.pillText}>
-                        {selected ? 'Selected' : 'Add'}
-                      </Text>
-                    </View>
-                  </View>
-                </TouchableOpacity>
-              );
-            }) : (
-              <View style={raceDayStyles.empty}>
-                <Text style={raceDayStyles.emptyText}>No vehicles are saved yet. Add a Vehicle first, then continue Race Day.</Text>
-              </View>
-            )}
-          </ScrollView>
-        )}
-      </View>
-      <RaceDayBottomActions
-        secondaryLabel="Back"
-        onSecondaryPress={() => router.back()}
-        primaryLabel={adding ? 'Save Vehicles' : 'Start RaceDay'}
-        onPrimaryPress={handleContinue}
-        primaryDisabled={!active?.trackId || selectedIds.length === 0}
-      />
-    </View>
+      )}
+    >
+      {vehicles.map((vehicle) => {
+        const id = vehicle?.id || vehicle?.vehicleId;
+        return (
+          <GarageVehicleChoice
+            key={String(id)}
+            vehicle={vehicle}
+            selected={selectedSet.has(String(id))}
+            multiSelect
+            onPress={() => toggleVehicle(id)}
+          />
+        );
+      })}
+    </GaragePickerScreen>
   );
 }

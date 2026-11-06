@@ -123,7 +123,9 @@ export const vehicleStyles = StyleSheet.create({
   },
 
   portraitList: {
-    gap: 7,
+    gap: 0,
+    borderTopWidth: 1,
+    borderTopColor: VEHICLE_COLORS.borderStrong,
   },
 
   cardWrapperLandscape: {
@@ -131,15 +133,15 @@ export const vehicleStyles = StyleSheet.create({
   },
 
   card: {
-    borderRadius: 5,
-    backgroundColor: VEHICLE_COLORS.cardBg,
-    borderWidth: 1,
-    borderColor: VEHICLE_COLORS.border,
+    borderRadius: 0,
+    backgroundColor: "transparent",
+    borderBottomWidth: 1,
+    borderBottomColor: VEHICLE_COLORS.border,
     overflow: "hidden",
   },
 
   thinCard: {
-    minHeight: 68,
+    minHeight: 62,
   },
 
   cardPressed: {
@@ -152,18 +154,18 @@ export const vehicleStyles = StyleSheet.create({
     left: 0,
     top: 0,
     bottom: 0,
-    width: 4,
+    width: 2,
     backgroundColor: VEHICLE_COLORS.accent,
   },
 
   thinCardInner: {
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-    paddingLeft: 14,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    paddingLeft: 11,
   },
 
   thinCardMainRow: {
-    minHeight: 52,
+    minHeight: 49,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -199,10 +201,9 @@ export const vehicleStyles = StyleSheet.create({
   },
 
   thinTransponderBox: {
-    minWidth: 74,
-    maxWidth: 102,
-    minHeight: 38,
-    borderRadius: 4,
+    width: 84,
+    minHeight: 42,
+    borderRadius: 2,
     borderWidth: 1,
     borderColor: VEHICLE_COLORS.accentBorder,
     backgroundColor: VEHICLE_COLORS.accentSoft,

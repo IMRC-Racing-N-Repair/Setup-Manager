@@ -24,6 +24,7 @@ import {
 import { VEHICLE_COLORS } from "./constants/vehicleColors";
 import { vehicleStyles as styles } from "./styles/vehicleStyles";
 import { vehicleScreenModernStyles as modernStyles } from "./styles/vehicleScreenModernStyles";
+import NewLookBottomNav from "../../src/navigation/NewLookBottomNav";
 
 export default function VehicleScreen() {
   const insets = useSafeAreaInsets();
@@ -195,7 +196,7 @@ export default function VehicleScreen() {
             modernStyles.bodyContent,
             isLandscape && modernStyles.bodyContentLandscape,
             {
-              paddingBottom: Math.max(insets.bottom + 18, 28),
+              paddingBottom: Math.max(insets.bottom + 82, 92),
             },
           ]}
           showsVerticalScrollIndicator={false}
@@ -221,6 +222,8 @@ export default function VehicleScreen() {
             </View>
           )}
         </ScrollView>
+
+        <NewLookBottomNav active="garage" router={router} />
 
         <VehicleForm
           visible={formVisible}

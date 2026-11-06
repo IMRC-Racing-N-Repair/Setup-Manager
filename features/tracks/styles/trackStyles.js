@@ -199,8 +199,10 @@ export const trackStyles = StyleSheet.create({
   },
 
   listContent: {
-    paddingBottom: TRACK_SAFE_BOTTOM + 26,
-    gap: 7,
+    paddingBottom: TRACK_SAFE_BOTTOM + 82,
+    gap: 0,
+    borderTopWidth: 1,
+    borderTopColor: trackColors.border,
   },
 
   listContentLandscape: {
@@ -302,13 +304,13 @@ export const trackStyles = StyleSheet.create({
   trackCard: {
     width: '100%',
     minHeight: 68,
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: trackColors.border,
-    backgroundColor: trackColors.card,
-    paddingLeft: 14,
-    paddingRight: 10,
-    paddingVertical: 10,
+    borderRadius: 0,
+    borderBottomWidth: 1,
+    borderBottomColor: trackColors.border,
+    backgroundColor: 'transparent',
+    paddingLeft: 11,
+    paddingRight: 8,
+    paddingVertical: 7,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
@@ -331,7 +333,7 @@ export const trackStyles = StyleSheet.create({
     left: 0,
     top: 0,
     bottom: 0,
-    width: 4,
+    width: 2,
     backgroundColor: trackColors.blue,
   },
 
@@ -364,9 +366,9 @@ export const trackStyles = StyleSheet.create({
   },
 
   cardRightPill: {
-    width: 74,
+    width: 84,
     minHeight: 42,
-    borderRadius: 5,
+    borderRadius: 2,
     borderWidth: 1,
     borderColor: trackColors.blueBorder,
     backgroundColor: trackColors.bluePill,

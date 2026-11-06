@@ -1,83 +1,63 @@
-import React, { useCallback, useState } from 'react';
-import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { useCallback, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
-import RaceDayHeader from '../../features/raceday/components/RaceDayHeader';
+
 import { getTracks, startRaceDayWithTrack } from '../../features/raceday/lib/raceDayStorage';
-import { getTrackDisplayName, getTrackLiveRcUrl } from '../../features/raceday/lib/raceDayModel';
-import { raceDayStyles } from '../../features/raceday/styles/raceDayStyles';
+import { GaragePickerScreen, GarageTrackChoice } from '../../src/garage/GaragePicker';
 
 export default function RaceDaySelectTrackScreen() {
   const router = useRouter();
   const [tracks, setTracks] = useState([]);
-  const [selectingTrackId, setSelectingTrackId] = useState(null);
+  const [selectingTrackId, setSelectingTrackId] = useState('');
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     setLoading(true);
     const nextTracks = await getTracks();
-    setTracks(nextTracks);
+    setTracks(Array.isArray(nextTracks) ? nextTracks : []);
     setLoading(false);
   }, []);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
+  const goBack = () => {
+    if (typeof router.canGoBack === 'function' && router.canGoBack()) router.back();
+    else router.replace('/');
+  };
+
   async function handleSelectTrack(trackId) {
     if (!trackId || selectingTrackId) return;
-    setSelectingTrackId(trackId);
+    setSelectingTrackId(String(trackId));
     try {
       await startRaceDayWithTrack(trackId);
       router.push('/raceday/select-vehicles');
     } finally {
-      setSelectingTrackId(null);
+      setSelectingTrackId('');
     }
   }
 
   return (
-    <View style={raceDayStyles.screen}>
-      <View style={raceDayStyles.container}>
-        <RaceDayHeader title="Select Track" subtitle="Tap a track to continue" onLeftPress={() => router.back()} />
-        {loading ? (
-          <View style={raceDayStyles.empty}><ActivityIndicator /></View>
-        ) : (
-          <ScrollView contentContainerStyle={raceDayStyles.scrollContent} showsVerticalScrollIndicator={false}>
-            {tracks.length ? tracks.map((track) => {
-              const id = track.id || track.trackId;
-              const selecting = String(id) === String(selectingTrackId);
-              return (
-                <TouchableOpacity
-                  key={String(id)}
-                  style={[raceDayStyles.card, selecting && raceDayStyles.softSelectedCard]}
-                  onPress={() => handleSelectTrack(id)}
-                  activeOpacity={0.86}
-                  disabled={!!selectingTrackId}
-                >
-                  <View style={raceDayStyles.cardAccent} />
-                  <View style={raceDayStyles.rowBetween}>
-                    <View style={raceDayStyles.flex1}>
-                      <Text style={raceDayStyles.cardTitle}>{getTrackDisplayName(track)}</Text>
-                      <Text style={raceDayStyles.cardSub}>
-                        {[track.city, track.state, track.surface].filter(Boolean).join(' • ') || 'Race track'}
-                      </Text>
-                      <Text style={raceDayStyles.cardSub} numberOfLines={1}>
-                        LiveRC: {getTrackLiveRcUrl(track) || 'Not saved yet'}
-                      </Text>
-                    </View>
-                    <View style={selecting ? [raceDayStyles.pill, raceDayStyles.selectedPill] : raceDayStyles.pill}>
-                      <Text style={selecting ? [raceDayStyles.pillText, raceDayStyles.selectedPillText] : raceDayStyles.pillText}>
-                        {selecting ? 'Opening' : 'Start'}
-                      </Text>
-                    </View>
-                  </View>
-                </TouchableOpacity>
-              );
-            }) : (
-              <View style={raceDayStyles.empty}>
-                <Text style={raceDayStyles.emptyText}>No tracks are saved yet. Add a Track first, then start Race Day.</Text>
-              </View>
-            )}
-          </ScrollView>
-        )}
-      </View>
-    </View>
+    <GaragePickerScreen
+      title="Select Track"
+      subtitle="Choose the track for this RaceDay."
+      countLabel={loading ? 'Loading…' : `${tracks.length} SAVED`}
+      onBack={goBack}
+      loading={loading}
+      emptyMessage={!loading && !tracks.length ? 'No tracks are saved yet. Add a track from Garage before starting RaceDay.' : ''}
+    >
+      {tracks.map((track) => {
+        const id = track?.id || track?.trackId;
+        const selecting = String(id) === selectingTrackId;
+        return (
+          <GarageTrackChoice
+            key={String(id)}
+            track={track}
+            actionLabel={selecting ? 'OPENING' : 'SELECT'}
+            selected={selecting}
+            disabled={Boolean(selectingTrackId)}
+            onPress={() => handleSelectTrack(id)}
+          />
+        );
+      })}
+    </GaragePickerScreen>
   );
 }

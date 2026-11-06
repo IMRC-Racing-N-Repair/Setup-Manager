@@ -403,10 +403,7 @@ export default function TracksScreen() {
               </Pressable>
             )}
             style={styles.list}
-            contentContainerStyle={[
-              styles.listContent,
-              isLandscape && styles.listContentLandscape,
-            ]}
+            contentContainerStyle={styles.listContent}
             numColumns={1}
             showsVerticalScrollIndicator={false}
           />

@@ -205,13 +205,6 @@ export const trackStyles = StyleSheet.create({
     borderTopColor: trackColors.border,
   },
 
-  listContentLandscape: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'flex-start',
-    gap: 10,
-  },
-
   emptyStateCard: {
     marginTop: 8,
     marginBottom: TRACK_SAFE_BOTTOM,

@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSafeAreaLayout } from '../../../../src/layout/safeAreaLayout';
 import StableSafeAreaView from '../../../../src/layout/StableSafeAreaView';
 import AppScreenHeader from '../../../../src/layout/AppScreenHeader';
+import NewLookBottomNav from '../../../../src/navigation/NewLookBottomNav';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import SetupField from '../../../../features/setups/components/SetupField';
 import SetupSection from '../../../../features/setups/components/SetupSection';
@@ -65,17 +66,20 @@ function getEditorLayoutMetrics({ height, width, topInset = 0, bottomInset = 0, 
   const screenWidth = Number(width || 0) || 390;
   const safeHeight = Math.max(500, screenHeight - Number(topInset || 0) - Number(bottomInset || 0));
   const narrow = screenWidth < 390;
+  const tabletLandscape = screenWidth >= 700 && screenWidth > screenHeight;
+  const editorMaxWidth = tabletLandscape ? Math.min(screenWidth - 72, 1120) : 820;
+  const navHeight = tabletLandscape ? 78 : (screenWidth > screenHeight ? 54 : 66);
 
   // The edit screen does not scroll, so the chassis map must fit in the real
   // space left after the header, Run Line/Rollout row, and bottom actions.
   // This is intentionally more aggressive than a simple full-screen scale so
   // LR/RR never sit underneath the Results/Notes/History bar on taller Android
   // phones with large status/nav bars.
-  const reservedForFixedAreas = (readOnly ? 350 : 320);
+  const reservedForFixedAreas = (readOnly ? 350 : 320) + navHeight;
   const availableMapHeight = Math.max(340, safeHeight - reservedForFixedAreas);
   const mapScale = clampNumber(availableMapHeight / 700, 0.58, 0.92);
   const headerScale = clampNumber(safeHeight / 850, 0.76, 1);
-  const widthScale = clampNumber(screenWidth / 410, 0.80, 1);
+  const widthScale = clampNumber(editorMaxWidth / 820, 0.80, tabletLandscape ? 1.16 : 1);
 
   const v = (value, minValue = 0) => Math.max(minValue, Math.round(value * mapScale));
   const hv = (value, minValue = 0) => Math.max(minValue, Math.round(value * headerScale));
@@ -102,13 +106,15 @@ function getEditorLayoutMetrics({ height, width, topInset = 0, bottomInset = 0, 
   const framePadVertical = Math.max(0, Math.floor((frameHeight - actualRowsHeight) / 2));
   return {
     scale: mapScale,
+    tabletLandscape,
+    pageWidth: { maxWidth: editorMaxWidth },
     editorHeader: {
       paddingTop: hv(7, 3),
       paddingBottom: hv(5, 2),
     },
     editorNoScrollContent: {
       paddingTop: v(3, 0),
-      paddingHorizontal: narrow ? 8 : 12,
+      paddingHorizontal: tabletLandscape ? 18 : (narrow ? 8 : 12),
       paddingBottom: 0,
     },
     editorTitle: {
@@ -267,12 +273,13 @@ function getEditorLayoutMetrics({ height, width, topInset = 0, bottomInset = 0, 
       marginTop: v(2, 0),
     },
     bottomBar: {
-      paddingTop: v(5, 2),
-      paddingBottom: Math.max(12, Number(bottomInset || 0) + (mapScale < 0.78 ? 6 : 10)),
+      marginBottom: navHeight,
+      paddingTop: tabletLandscape ? 6 : v(5, 2),
+      paddingBottom: tabletLandscape ? 6 : Math.max(6, (mapScale < 0.78 ? 4 : 6)),
     },
     mapActionButton: {
-      minHeight: v(56, 42),
-      paddingVertical: v(7, 4),
+      minHeight: tabletLandscape ? 62 : v(50, 44),
+      paddingVertical: tabletLandscape ? 6 : v(5, 4),
       borderRadius: 0,
     },
     mapActionValue: {
@@ -792,7 +799,7 @@ export default function SetupEditorScreen() {
         keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 0}
       >
         <View style={setupStyles.editorMainArea}>
-          <View style={[setupStyles.editorPageHeader, layoutMetrics.editorHeader]}>
+          <View style={[setupStyles.editorPageHeader, layoutMetrics.pageWidth, layoutMetrics.editorHeader]}>
             <AppScreenHeader
               title={title}
               subtitle={subtitle}
@@ -838,7 +845,7 @@ export default function SetupEditorScreen() {
             </View>
           ) : null}
 
-          <View style={[setupStyles.editorNoScrollContent, layoutMetrics.editorNoScrollContent]}>
+          <View style={[setupStyles.editorNoScrollContent, layoutMetrics.pageWidth, layoutMetrics.editorNoScrollContent]}>
             {loading || !setup ? (
               <View style={setupStyles.card}>
                 <Text style={setupStyles.emptyText}>Loading setup...</Text>
@@ -883,6 +890,7 @@ export default function SetupEditorScreen() {
           onDismiss={finishExportDismissal}
         />
       </KeyboardAvoidingView>
+      <NewLookBottomNav active="garage" router={router} />
     </StableSafeAreaView>
   );
 }
@@ -1045,22 +1053,38 @@ function CornerHotspot({ corner, setup, profile, onPress, layoutMetrics }) {
 }
 
 function FixedBottomActions({ setup, historyCount, onOpenPanel, bottomInset = 0, layoutMetrics }) {
+  const actions = [
+    { key: 'results', glyph: '▥', label: 'Results', value: setup.results?.round || 'Practice' },
+    { key: 'notes', glyph: '▤', label: 'Notes', value: 'Setup notes' },
+    { key: 'history', glyph: '↻', label: 'History', value: `${historyCount}/10` },
+  ];
+
   return (
     <View style={[setupStyles.editorBottomBar, layoutMetrics?.bottomBar || { paddingBottom: Math.max(24, bottomInset + 16) }]}>
-      <View style={setupStyles.editorBottomActionRow}>
-        <MapAction label="Results" value={setup.results?.round || 'Practice'} onPress={() => onOpenPanel('results')} layoutMetrics={layoutMetrics} />
-        <MapAction label="Notes" value="Setup notes" onPress={() => onOpenPanel('notes')} layoutMetrics={layoutMetrics} />
-        <MapAction label="History" value={`${historyCount}/10`} onPress={() => onOpenPanel('history')} layoutMetrics={layoutMetrics} />
+      <View style={[setupStyles.editorBottomActionRow, layoutMetrics?.pageWidth]}>
+        {actions.map((action) => (
+          <MapAction
+            key={action.key}
+            glyph={action.glyph}
+            label={action.label}
+            value={action.value}
+            onPress={() => onOpenPanel(action.key)}
+            layoutMetrics={layoutMetrics}
+          />
+        ))}
       </View>
     </View>
   );
 }
 
-function MapAction({ label, value, onPress, layoutMetrics }) {
+function MapAction({ glyph, label, value, onPress, layoutMetrics }) {
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [setupStyles.mapActionButton, layoutMetrics?.mapActionButton, pressed && setupStyles.cardPressed]}>
-      <Text style={setupStyles.mapActionLabel}>{label}</Text>
-      <Text numberOfLines={1} style={[setupStyles.mapActionValue, layoutMetrics?.mapActionValue]}>{value}</Text>
+      <Text style={[setupStyles.mapActionGlyph, layoutMetrics?.tabletLandscape && setupStyles.mapActionGlyphTablet]}>{glyph}</Text>
+      <View style={setupStyles.mapActionCopy}>
+        <Text style={setupStyles.mapActionLabel}>{label}</Text>
+        <Text numberOfLines={1} style={[setupStyles.mapActionValue, layoutMetrics?.mapActionValue]}>{value}</Text>
+      </View>
     </Pressable>
   );
 }

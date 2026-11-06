@@ -234,15 +234,15 @@ export default function GarageScreen() {
                 <View style={styles.setupCountBox}><Text style={styles.setupCountValue}>{selectedSetupCount}</Text><Text style={styles.setupCountLabel}>SETUPS</Text></View>
               </View>
 
-              <View style={styles.manageRow}>
-                <Pressable style={({ pressed }) => [styles.manageButton, pressed && styles.pressed]} onPress={() => router.push('/tracks')}>
-                  <Text style={styles.manageButtonText}>ALL TRACKS</Text>
+              <View style={[styles.manageRow, isTabletLandscape && styles.manageRowTabletLandscape]}>
+                <Pressable style={({ pressed }) => [styles.manageButton, isTabletLandscape && styles.manageButtonTabletLandscape, pressed && styles.pressed]} onPress={() => router.push('/tracks')}>
+                  <Text style={[styles.manageButtonText, isTabletLandscape && styles.manageButtonTextTabletLandscape]}>ALL TRACKS</Text>
                 </Pressable>
-                <Pressable style={({ pressed }) => [styles.manageButton, pressed && styles.pressed]} onPress={addTrack}>
-                  <Text style={styles.manageButtonText}>+ ADD TRACK</Text>
+                <Pressable style={({ pressed }) => [styles.manageButton, isTabletLandscape && styles.manageButtonTabletLandscape, pressed && styles.pressed]} onPress={addTrack}>
+                  <Text style={[styles.manageButtonText, isTabletLandscape && styles.manageButtonTextTabletLandscape]}>+ ADD TRACK</Text>
                 </Pressable>
-                <Pressable style={({ pressed }) => [styles.manageButton, styles.manageButtonPrimary, pressed && styles.pressed]} onPress={addSetup}>
-                  <Text style={[styles.manageButtonText, styles.manageButtonTextPrimary]}>+ ADD SETUP</Text>
+                <Pressable style={({ pressed }) => [styles.manageButton, styles.manageButtonPrimary, isTabletLandscape && styles.manageButtonTabletLandscape, pressed && styles.pressed]} onPress={addSetup}>
+                  <Text style={[styles.manageButtonText, styles.manageButtonTextPrimary, isTabletLandscape && styles.manageButtonTextTabletLandscape]}>+ ADD SETUP</Text>
                 </Pressable>
               </View>
 
@@ -316,9 +316,12 @@ const styles = StyleSheet.create({
   setupCountValue: { color: AppColors.primary, fontSize: 21, fontWeight: '900' },
   setupCountLabel: { marginTop: 1, color: AppColors.mutedText, fontSize: 7, fontWeight: '900', letterSpacing: 0.6 },
   manageRow: { minHeight: 46, flexDirection: 'row', alignItems: 'center', gap: 6, borderBottomWidth: 1, borderBottomColor: AppColors.border },
+  manageRowTabletLandscape: { minHeight: 62, gap: 10 },
   manageButton: { flex: 1, minHeight: 30, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5, borderWidth: 1, borderColor: AppColors.borderStrong, backgroundColor: AppColors.surface },
+  manageButtonTabletLandscape: { minHeight: 42, paddingHorizontal: 12 },
   manageButtonPrimary: { borderColor: AppColors.primary, backgroundColor: AppColors.primarySoft },
   manageButtonText: { color: AppColors.mutedText, fontSize: 7, fontWeight: '900', letterSpacing: 0.3, textAlign: 'center' },
+  manageButtonTextTabletLandscape: { fontSize: 10, lineHeight: 12, letterSpacing: 0.6 },
   manageButtonTextPrimary: { color: AppColors.primary },
   addSetupButton: { minHeight: 34, justifyContent: 'center', paddingHorizontal: 10, backgroundColor: AppColors.primary },
   addSetupText: { color: '#FFFFFF', fontSize: 9, fontWeight: '900', letterSpacing: 0.4 },

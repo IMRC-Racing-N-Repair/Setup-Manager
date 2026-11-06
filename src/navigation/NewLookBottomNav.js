@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
 import { AppColors } from '../theme/colors';
 
@@ -10,20 +10,23 @@ const items = [
 ];
 
 export default function NewLookBottomNav({ active = 'home', router, onRaceDay }) {
+  const { width, height } = useWindowDimensions();
+  const compact = height < 620 || width > height;
+
   return (
-    <View style={styles.bottomNav}>
+    <View style={[styles.bottomNav, compact && styles.bottomNavCompact]}>
       {items.map((item) => (
         <Pressable
           key={item.key}
-          style={({ pressed }) => [styles.navItem, active === item.key && styles.navItemActive, pressed && styles.pressed]}
+          style={({ pressed }) => [styles.navItem, compact && styles.navItemCompact, active === item.key && styles.navItemActive, pressed && styles.pressed]}
           onPress={() => {
             if (item.key === 'raceday' && onRaceDay) onRaceDay();
             else if (item.route === '/') router.replace('/');
             else router.push(item.route);
           }}
         >
-          <Text style={[styles.navGlyph, active === item.key && styles.navTextActive]}>{item.glyph}</Text>
-          <Text style={[styles.navLabel, active === item.key && styles.navTextActive]}>{item.label}</Text>
+          <Text style={[styles.navGlyph, compact && styles.navGlyphCompact, active === item.key && styles.navTextActive]}>{item.glyph}</Text>
+          <Text style={[styles.navLabel, compact && styles.navLabelCompact, active === item.key && styles.navTextActive]}>{item.label}</Text>
         </Pressable>
       ))}
     </View>
@@ -45,10 +48,14 @@ const styles = StyleSheet.create({
     borderTopColor: AppColors.borderStrong,
     backgroundColor: AppColors.background,
   },
+  bottomNavCompact: { minHeight: 54, paddingTop: 4, paddingBottom: 4 },
   navItem: { flex: 1, minHeight: 52, alignItems: 'center', justifyContent: 'center', gap: 2 },
+  navItemCompact: { minHeight: 44 },
   navItemActive: { backgroundColor: AppColors.surface },
   navGlyph: { color: AppColors.mutedText, fontSize: 18 },
+  navGlyphCompact: { fontSize: 15 },
   navLabel: { color: AppColors.mutedText, fontSize: 8, fontWeight: '700' },
+  navLabelCompact: { fontSize: 7 },
   navTextActive: { color: AppColors.primary },
   pressed: { opacity: 0.72 },
 });

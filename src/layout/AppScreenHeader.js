@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Constants from 'expo-constants';
 
@@ -21,33 +21,38 @@ export default function AppScreenHeader({
   version = Constants.expoConfig?.version || '',
 }) {
   const insets = useSafeAreaInsets();
+  const { width, height } = useWindowDimensions();
+  const narrow = width < 375;
+  const compact = height < 620 || width > height;
   const showRightAction = Boolean(rightLabel && onRightPress);
 
   return (
-    <View style={[styles.header, applyTopInset && { paddingTop: Math.max(insets.top, 8) }, style]}>
+    <View style={[styles.header, compact && styles.headerCompact, applyTopInset && { paddingTop: Math.max(insets.top, 8) }, style]}>
       {onBack ? (
-        <Pressable style={({ pressed }) => [styles.backButton, pressed && styles.pressed]} onPress={onBack}>
-          <Text style={styles.backText}>‹ {String(backLabel || 'BACK').toUpperCase()}</Text>
+        <Pressable style={({ pressed }) => [styles.backButton, narrow && styles.sideNarrow, compact && styles.buttonCompact, pressed && styles.pressed]} onPress={onBack}>
+          <Text style={[styles.backText, compact && styles.actionTextCompact]}>‹ {String(backLabel || 'BACK').toUpperCase()}</Text>
         </Pressable>
-      ) : <View style={styles.sideSpacer} />}
+      ) : <View style={[styles.sideSpacer, narrow && styles.sideNarrow, compact && styles.buttonCompact]} />}
 
       <View style={styles.titleBlock}>
         {!!kicker && (
           <View style={styles.kickerRow}>
-            <Text style={styles.kicker} numberOfLines={1}>{String(kicker).toUpperCase()}</Text>
+            <Text style={[styles.kicker, compact && styles.kickerCompact]} numberOfLines={1}>{String(kicker).toUpperCase()}</Text>
             {String(kicker).toUpperCase().includes('SETUP MANAGER') && version ? (
               <Text style={styles.versionText}>v{version}</Text>
             ) : null}
           </View>
         )}
-        <Text style={[styles.title, titleStyle]} numberOfLines={1}>{title}</Text>
-        {!!subtitle && <Text style={styles.subtitle} numberOfLines={1}>{subtitle}</Text>}
+        <Text style={[styles.title, compact && styles.titleCompact, titleStyle]} numberOfLines={1}>{title}</Text>
+        {!!subtitle && <Text style={[styles.subtitle, compact && styles.subtitleCompact]} numberOfLines={1}>{subtitle}</Text>}
       </View>
 
       {right || (showRightAction ? (
         <Pressable
           style={({ pressed }) => [
             styles.actionButton,
+            narrow && styles.sideNarrow,
+            compact && styles.buttonCompact,
             rightTone === 'danger' && styles.actionDanger,
             rightTone === 'outline' && styles.actionOutline,
             pressed && styles.pressed,
@@ -56,11 +61,12 @@ export default function AppScreenHeader({
         >
           <Text style={[
             styles.actionText,
+            compact && styles.actionTextCompact,
             rightTone === 'danger' && styles.actionDangerText,
             rightTone === 'outline' && styles.actionOutlineText,
           ]}>{String(rightLabel).toUpperCase()}</Text>
         </Pressable>
-      ) : <View style={styles.sideSpacer} />)}
+      ) : <View style={[styles.sideSpacer, narrow && styles.sideNarrow, compact && styles.buttonCompact]} />)}
     </View>
   );
 }
@@ -77,6 +83,7 @@ const styles = StyleSheet.create({
     borderBottomColor: AppColors.borderStrong,
     backgroundColor: AppColors.background,
   },
+  headerCompact: { minHeight: 58, gap: 8 },
   backButton: {
     width: 64,
     minHeight: 34,
@@ -93,6 +100,8 @@ const styles = StyleSheet.create({
     letterSpacing: 0.45,
   },
   sideSpacer: { width: 64, minHeight: 34 },
+  sideNarrow: { width: 58, minWidth: 58 },
+  buttonCompact: { minHeight: 30 },
   titleBlock: { flex: 1, minWidth: 0, justifyContent: 'center' },
   kickerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   kicker: {
@@ -103,6 +112,7 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: 1.4,
   },
+  kickerCompact: { fontSize: 8, lineHeight: 10, letterSpacing: 1.1 },
   versionText: {
     color: AppColors.subtleText,
     fontSize: 7,
@@ -118,7 +128,9 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: -0.55,
   },
+  titleCompact: { fontSize: 23, lineHeight: 25 },
   subtitle: { marginTop: 1, color: AppColors.mutedText, fontSize: 10, lineHeight: 13 },
+  subtitleCompact: { fontSize: 9, lineHeight: 11 },
   actionButton: {
     minWidth: 64,
     minHeight: 34,
@@ -130,6 +142,7 @@ const styles = StyleSheet.create({
     backgroundColor: AppColors.primary,
   },
   actionText: { color: '#FFFFFF', fontSize: 9, fontWeight: '900', letterSpacing: 0.45 },
+  actionTextCompact: { fontSize: 8 },
   actionOutline: { backgroundColor: 'transparent', borderColor: AppColors.borderStrong },
   actionOutlineText: { color: AppColors.primary },
   actionDanger: { backgroundColor: 'rgba(230,92,92,0.14)', borderColor: 'rgba(230,92,92,0.48)' },

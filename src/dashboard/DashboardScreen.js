@@ -1,11 +1,10 @@
 // src/dashboard/DashboardScreen.js
-import { AppState, Platform, ScrollView, Text, View, useWindowDimensions } from 'react-native';
+import { AppState, Platform, ScrollView, View, useWindowDimensions } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { dashboardStyles as styles } from './dashboard.styles';
-import { formatLastSync } from './logic/formatters';
 import { markCloudDirty } from '../../app/services/cloudSync';
 import { useAuthCloudSync } from './logic/useAuthCloudSync';
 import { useDashboardData } from './logic/useDashboardData';
@@ -30,10 +29,6 @@ import FlootDashboardView from './components/FlootDashboardView';
 
 let sponsorPopupShownThisLaunch = false;
 const DASHBOARD_TRACK_KEY = '@dashboardTrackSelection_v1';
-
-function Footer({ version, lastSyncAt, style }) {
-  return <Text style={[styles.footerText, style]}>v{version} · last sync {formatLastSync(lastSyncAt)}</Text>;
-}
 
 function isTruthyStoredFlag(value) {
   const t = String(value ?? '').trim().toLowerCase();
@@ -395,7 +390,6 @@ export default function DashboardScreen({
   const incomingDotColor = incomingSyncStatus?.color || '';
   const authDotResolved = !!auth.authUser && !!auth.statusDotColor && auth.statusDotColor !== '#6B7280';
   const dashboardStatusDotColor = authDotResolved ? auth.statusDotColor : (incomingDotColor || auth.statusDotColor);
-  const dashboardLastSyncAt = Number(incomingSyncStatus?.lastSyncAt || 0) || auth.lastSyncAt;
   const handleDashboardAuthPress = auth.handleAuthPress;
 
   const finishStartModalDismissal = useCallback(async () => {
@@ -585,7 +579,6 @@ export default function DashboardScreen({
         recentRows={recent.recentRows}
         router={router}
         version={auth.version}
-        lastSyncAt={dashboardLastSyncAt}
         isLandscape={isLandscape}
         dashboardTrackId={dashboardTrackId}
         onSelectDashboardTrack={selectDashboardTrack}

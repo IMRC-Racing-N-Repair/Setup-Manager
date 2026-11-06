@@ -1,9 +1,8 @@
 import { useState } from 'react';
-import { Linking, Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { Linking, Modal, Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native';
 import { Image } from 'expo-image';
 
 import { flootDashboardStyles as styles } from '../flootDashboard.styles';
-import { formatLastSync } from '../logic/formatters';
 import NewLookBottomNav from '../../navigation/NewLookBottomNav';
 
 function textValue(value, fallback = '—') {
@@ -42,11 +41,13 @@ export default function FlootDashboardView({
   recentRows,
   router,
   version,
-  lastSyncAt,
   isLandscape,
   dashboardTrackId,
   onSelectDashboardTrack,
 }) {
+  const { width, height } = useWindowDimensions();
+  const compactLayout = width < 375 || height < 720;
+  const shortLayout = height < 640;
   const [showTrackPicker, setShowTrackPicker] = useState(false);
   const trackList = Array.isArray(tracks) ? tracks : [];
   const savedTrackChoice = trackList.find((track) => entityId(track) === String(dashboardTrackId || '')) || null;
@@ -74,8 +75,12 @@ export default function FlootDashboardView({
 
   return (
     <View style={styles.root}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.topbar}>
+      <ScrollView
+        contentContainerStyle={[styles.content, compactLayout && styles.contentCompact, shortLayout && styles.contentShort]}
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+      >
+        <View style={[styles.topbar, compactLayout && styles.topbarCompact]}>
           <View style={styles.titleBlock}>
             <View style={styles.eyebrowRow}>
               <Text style={styles.eyebrow}>IMRC SETUP MANAGER</Text>
@@ -101,7 +106,7 @@ export default function FlootDashboardView({
           </View>
         </View>
 
-        <Pressable style={({ pressed }) => [styles.sponsorStrip, pressed && styles.pressed]} onPress={openSponsor}>
+        <Pressable style={({ pressed }) => [styles.sponsorStrip, compactLayout && styles.sponsorStripCompact, pressed && styles.pressed]} onPress={openSponsor}>
           {sponsorImage ? (
             <Image source={{ uri: sponsorImage }} contentFit="contain" cachePolicy="memory-disk" style={styles.sponsorLogo} />
           ) : (
@@ -114,7 +119,7 @@ export default function FlootDashboardView({
           <Text style={styles.sponsorVisit}>VISIT  ›</Text>
         </Pressable>
 
-        <Pressable style={({ pressed }) => [styles.trackStrip, pressed && styles.pressed]} onPress={() => setShowTrackPicker(true)}>
+        <Pressable style={({ pressed }) => [styles.trackStrip, compactLayout && styles.trackStripCompact, pressed && styles.pressed]} onPress={() => setShowTrackPicker(true)}>
           <Text style={styles.trackGlyph}>⌖</Text>
           <View style={styles.trackIdentity}>
             <Text style={styles.trackName} numberOfLines={1}>{textValue(activeTrack?.name || activeTrack?.trackName, 'No track')}</Text>
@@ -131,7 +136,7 @@ export default function FlootDashboardView({
         </Pressable>
 
         {activeTrack ? <View style={styles.primaryGrid}>
-          <View style={styles.racePanel}>
+          <View style={[styles.racePanel, compactLayout && styles.racePanelCompact]}>
             <View style={styles.sectionHeader}>
               <View>
                 <Text style={styles.microLabel}>{raceDayReady ? 'LIVE RACEDAY' : 'RACEDAY'}</Text>
@@ -143,7 +148,7 @@ export default function FlootDashboardView({
               </View>
             </View>
 
-            <Pressable style={({ pressed }) => [styles.raceLine, pressed && styles.pressed]} onPress={onRaceDayPress}>
+            <Pressable style={({ pressed }) => [styles.raceLine, compactLayout && styles.raceLineCompact, pressed && styles.pressed]} onPress={onRaceDayPress}>
               <View style={styles.raceBadge}>
                 <Text style={styles.raceBadgeTop}>RACE</Text>
                 <Text style={styles.raceBadgeValue}>{raceDayReady ? currentRaceNumber : '—'}</Text>
@@ -177,7 +182,7 @@ export default function FlootDashboardView({
           </View>
         </View> : null}
 
-        <View style={[styles.garageSection, !activeTrack && styles.garageSectionNoTrack]}>
+        <View style={[styles.garageSection, compactLayout && styles.garageSectionCompact, !activeTrack && styles.garageSectionNoTrack]}>
           <View style={styles.sectionHeader}>
             <View>
               <Text style={styles.microLabel}>GARAGE</Text>
@@ -212,7 +217,7 @@ export default function FlootDashboardView({
           </View>
         </View>
 
-        {!!recentRows?.length && (
+        {!!recentRows?.length && !shortLayout && (
           <View style={styles.activityStrip}>
             <Text style={styles.microLabel}>LATEST CHANGE</Text>
             <Text style={styles.activityText} numberOfLines={1}>
@@ -221,7 +226,6 @@ export default function FlootDashboardView({
           </View>
         )}
 
-        <Text style={styles.footer}>v{version} · last sync {formatLastSync(lastSyncAt)}</Text>
       </ScrollView>
 
       <Modal visible={showTrackPicker} transparent animationType="fade" onRequestClose={() => setShowTrackPicker(false)}>

@@ -623,7 +623,9 @@ export const raceDayStyles = StyleSheet.create({
     marginTop: 2,
   },
   eventSearchStatus: {
+    minWidth: 82,
     minHeight: 28,
+    flexShrink: 0,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -644,6 +646,7 @@ export const raceDayStyles = StyleSheet.create({
     backgroundColor: raceDayColors.accent,
   },
   eventSearchStatusText: {
+    flexShrink: 0,
     color: raceDayColors.muted,
     fontSize: 8,
     lineHeight: 10,

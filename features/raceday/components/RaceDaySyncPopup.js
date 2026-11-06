@@ -197,7 +197,7 @@ export default function RaceDaySyncPopup({
           </View>
           <View style={[raceDayStyles.eventSearchStatus, loadingEvents && raceDayStyles.eventSearchStatusActive]}>
             {loadingEvents ? <ActivityIndicator size="small" color={raceDayColors.accent} /> : <View style={raceDayStyles.eventSearchStatusDot} />}
-            <Text style={raceDayStyles.eventSearchStatusText}>{loadingEvents ? 'SEARCHING' : 'READY'}</Text>
+            <Text style={raceDayStyles.eventSearchStatusText} numberOfLines={1}>{loadingEvents ? 'SEARCHING' : 'READY'}</Text>
           </View>
         </View>
         <TextInput

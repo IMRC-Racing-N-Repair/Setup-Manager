@@ -1054,20 +1054,19 @@ function CornerHotspot({ corner, setup, profile, onPress, layoutMetrics }) {
 
 function FixedBottomActions({ setup, historyCount, onOpenPanel, bottomInset = 0, layoutMetrics }) {
   const actions = [
-    { key: 'results', glyph: '▥', label: 'Results', value: setup.results?.round || 'Practice' },
-    { key: 'notes', glyph: '▤', label: 'Notes', value: 'Setup notes' },
-    { key: 'history', glyph: '↻', label: 'History', value: `${historyCount}/10` },
+    { key: 'results', glyph: '▥', label: 'Results' },
+    { key: 'notes', glyph: '▤', label: 'Notes' },
+    { key: 'history', glyph: '↻', label: 'History' },
   ];
 
   return (
     <View style={[setupStyles.editorBottomBar, layoutMetrics?.bottomBar || { paddingBottom: Math.max(24, bottomInset + 16) }]}>
-      <View style={[setupStyles.editorBottomActionRow, layoutMetrics?.pageWidth]}>
+      <View style={setupStyles.editorBottomActionRow}>
         {actions.map((action) => (
           <MapAction
             key={action.key}
             glyph={action.glyph}
             label={action.label}
-            value={action.value}
             onPress={() => onOpenPanel(action.key)}
             layoutMetrics={layoutMetrics}
           />
@@ -1077,14 +1076,11 @@ function FixedBottomActions({ setup, historyCount, onOpenPanel, bottomInset = 0,
   );
 }
 
-function MapAction({ glyph, label, value, onPress, layoutMetrics }) {
+function MapAction({ glyph, label, onPress, layoutMetrics }) {
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [setupStyles.mapActionButton, layoutMetrics?.mapActionButton, pressed && setupStyles.cardPressed]}>
       <Text style={[setupStyles.mapActionGlyph, layoutMetrics?.tabletLandscape && setupStyles.mapActionGlyphTablet]}>{glyph}</Text>
-      <View style={setupStyles.mapActionCopy}>
-        <Text style={setupStyles.mapActionLabel}>{label}</Text>
-        <Text numberOfLines={1} style={[setupStyles.mapActionValue, layoutMetrics?.mapActionValue]}>{value}</Text>
-      </View>
+      <Text style={[setupStyles.mapActionLabel, layoutMetrics?.tabletLandscape && setupStyles.mapActionLabelTablet]}>{label}</Text>
     </Pressable>
   );
 }

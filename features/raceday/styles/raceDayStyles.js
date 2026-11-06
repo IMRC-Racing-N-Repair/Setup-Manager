@@ -35,8 +35,25 @@ export const raceDayStyles = StyleSheet.create({
     alignSelf: 'center',
     paddingHorizontal: 15,
   },
+  containerTabletLandscape: {
+    maxWidth: '100%',
+    paddingHorizontal: 22,
+  },
   scrollContent: {
-    paddingBottom: 78,
+    paddingBottom: 142,
+  },
+  scrollContentTabletLandscape: {
+    paddingBottom: 166,
+  },
+  vehicleGridTabletLandscape: {
+    width: '100%',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+  },
+  vehicleGridCellTabletLandscape: {
+    width: '49.45%',
   },
 
   // Header matches the newer IMRC pages: compact, safe-area aware, left aligned title block.
@@ -414,6 +431,15 @@ export const raceDayStyles = StyleSheet.create({
     paddingTop: 4,
     paddingBottom: 4,
   },
+  bottomBarTabletLandscape: {
+    maxWidth: '100%',
+    paddingHorizontal: 22,
+  },
+  bottomBarDockedTabletLandscape: {
+    bottom: 78,
+    paddingTop: 6,
+    paddingBottom: 6,
+  },
   actionNavRow: {
     minHeight: 54,
     flexDirection: 'row',
@@ -425,6 +451,13 @@ export const raceDayStyles = StyleSheet.create({
     justifyContent: 'center',
     gap: 1,
   },
+  actionNavRowTabletLandscape: {
+    minHeight: 64,
+  },
+  actionNavItemTabletLandscape: {
+    minHeight: 62,
+    gap: 3,
+  },
   actionNavItemDisabled: {
     opacity: 0.42,
   },
@@ -434,11 +467,20 @@ export const raceDayStyles = StyleSheet.create({
     lineHeight: 21,
     fontWeight: '600',
   },
+  actionNavGlyphTabletLandscape: {
+    fontSize: 23,
+    lineHeight: 25,
+  },
   actionNavLabel: {
     color: raceDayColors.muted,
     fontSize: 8,
     lineHeight: 10,
     fontWeight: '700',
+  },
+  actionNavLabelTabletLandscape: {
+    fontSize: 11,
+    lineHeight: 13,
+    fontWeight: '800',
   },
   actionNavPrimary: {
     color: raceDayColors.accent,

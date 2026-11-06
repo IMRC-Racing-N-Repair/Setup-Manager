@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ActivityIndicator, Alert, Platform, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Platform, ScrollView, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import RaceDayHeader from '../../features/raceday/components/RaceDayHeader';
@@ -82,6 +82,8 @@ function getEventIdLabel(eventUrl = '') {
 export default function RaceDayDashboardScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { width, height } = useWindowDimensions();
+  const isTabletLandscape = width >= 700 && width > height;
   const [loading, setLoading] = useState(true);
   const [active, setActive] = useState(null);
   const [track, setTrack] = useState(null);
@@ -588,7 +590,7 @@ export default function RaceDayDashboardScreen() {
 
   return (
     <View style={raceDayStyles.screen}>
-      <View style={[raceDayStyles.container, { paddingTop: insets.top }]}>
+      <View style={[raceDayStyles.container, isTabletLandscape && raceDayStyles.containerTabletLandscape, { paddingTop: insets.top }]}>
         <RaceDayHeader
           title="RaceDay"
           subtitle={trackName}
@@ -600,7 +602,7 @@ export default function RaceDayDashboardScreen() {
           topOffset={false}
         />
 
-        <ScrollView contentContainerStyle={raceDayStyles.scrollContent} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={[raceDayStyles.scrollContent, isTabletLandscape && raceDayStyles.scrollContentTabletLandscape]} showsVerticalScrollIndicator={false}>
           <RaceDayModeToggle mode={dashboardMode} onChange={handleDashboardModeChange} />
 
           {dashboardMode === 'practice' ? (
@@ -666,32 +668,38 @@ export default function RaceDayDashboardScreen() {
             </View>
           )}
 
-          {vehicles.length ? (dashboardMode === 'race' ? vehicles.map((vehicle) => {
-            const id = normalizeId(vehicle.id || vehicle.vehicleId);
-            return (
-              <RaceDayVehicleCard
-                key={id}
-                vehicle={vehicle}
-                latestRun={latestRunsByVehicle.get(id)}
-                runsForVehicle={runsByVehicle.get(id)}
-                lineup={lineupsByVehicle.get(id) || null}
-                compareFields={compareFields}
-                onOpenResults={(run) => openResults(vehicle, run)}
-                onOpenSetup={() => openSetup(vehicle)}
-              />
-            );
-          }) : vehicles.map((vehicle) => {
-            const id = normalizeId(vehicle.id || vehicle.vehicleId);
-            return (
-              <RaceDayPracticeCard
-                key={id}
-                vehicle={vehicle}
-                summary={practiceSummaries[id]}
-                onOpenSessions={() => openPracticeSessions(vehicle)}
-                onOpenSetup={() => openSetup(vehicle)}
-              />
-            );
-          })) : (
+          {vehicles.length ? (
+            <View style={isTabletLandscape ? raceDayStyles.vehicleGridTabletLandscape : null}>
+              {dashboardMode === 'race' ? vehicles.map((vehicle) => {
+                const id = normalizeId(vehicle.id || vehicle.vehicleId);
+                return (
+                  <View key={id} style={isTabletLandscape ? raceDayStyles.vehicleGridCellTabletLandscape : null}>
+                    <RaceDayVehicleCard
+                      vehicle={vehicle}
+                      latestRun={latestRunsByVehicle.get(id)}
+                      runsForVehicle={runsByVehicle.get(id)}
+                      lineup={lineupsByVehicle.get(id) || null}
+                      compareFields={compareFields}
+                      onOpenResults={(run) => openResults(vehicle, run)}
+                      onOpenSetup={() => openSetup(vehicle)}
+                    />
+                  </View>
+                );
+              }) : vehicles.map((vehicle) => {
+                const id = normalizeId(vehicle.id || vehicle.vehicleId);
+                return (
+                  <View key={id} style={isTabletLandscape ? raceDayStyles.vehicleGridCellTabletLandscape : null}>
+                    <RaceDayPracticeCard
+                      vehicle={vehicle}
+                      summary={practiceSummaries[id]}
+                      onOpenSessions={() => openPracticeSessions(vehicle)}
+                      onOpenSetup={() => openSetup(vehicle)}
+                    />
+                  </View>
+                );
+              })}
+            </View>
+          ) : (
             <View style={raceDayStyles.empty}>
               <Text style={raceDayStyles.emptyText}>No vehicles selected yet. Add vehicles to continue Race Day.</Text>
             </View>
@@ -701,6 +709,7 @@ export default function RaceDayDashboardScreen() {
 
       <RaceDayBottomActions
         docked
+        tabletLandscape={isTabletLandscape}
         secondaryLabel="Notes"
         onSecondaryPress={() => setNotesOpen(true)}
         tertiaryLabel="Changes"

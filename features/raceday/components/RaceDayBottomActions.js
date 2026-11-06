@@ -14,6 +14,7 @@ export default function RaceDayBottomActions({
   secondaryDisabled = false,
   tertiaryDisabled = false,
   docked = false,
+  tabletLandscape = false,
 }) {
   const insets = useSafeAreaInsets();
 
@@ -25,17 +26,34 @@ export default function RaceDayBottomActions({
     ].filter(Boolean);
 
     return (
-      <View style={[raceDayStyles.bottomBar, raceDayStyles.bottomBarDocked]}>
-        <View style={raceDayStyles.actionNavRow}>
+      <View style={[
+        raceDayStyles.bottomBar,
+        raceDayStyles.bottomBarDocked,
+        tabletLandscape && raceDayStyles.bottomBarTabletLandscape,
+        tabletLandscape && raceDayStyles.bottomBarDockedTabletLandscape,
+      ]}>
+        <View style={[raceDayStyles.actionNavRow, tabletLandscape && raceDayStyles.actionNavRowTabletLandscape]}>
           {actions.map((action) => (
             <TouchableOpacity
               key={action.key}
-              style={[raceDayStyles.actionNavItem, action.disabled && raceDayStyles.actionNavItemDisabled]}
+              style={[
+                raceDayStyles.actionNavItem,
+                tabletLandscape && raceDayStyles.actionNavItemTabletLandscape,
+                action.disabled && raceDayStyles.actionNavItemDisabled,
+              ]}
               onPress={action.disabled ? undefined : action.onPress}
               activeOpacity={0.72}
             >
-              <Text style={[raceDayStyles.actionNavGlyph, action.primary && raceDayStyles.actionNavPrimary]}>{action.glyph}</Text>
-              <Text style={[raceDayStyles.actionNavLabel, action.primary && raceDayStyles.actionNavPrimary]} numberOfLines={1}>{action.label}</Text>
+              <Text style={[
+                raceDayStyles.actionNavGlyph,
+                tabletLandscape && raceDayStyles.actionNavGlyphTabletLandscape,
+                action.primary && raceDayStyles.actionNavPrimary,
+              ]}>{action.glyph}</Text>
+              <Text style={[
+                raceDayStyles.actionNavLabel,
+                tabletLandscape && raceDayStyles.actionNavLabelTabletLandscape,
+                action.primary && raceDayStyles.actionNavPrimary,
+              ]} numberOfLines={1}>{action.label}</Text>
             </TouchableOpacity>
           ))}
         </View>

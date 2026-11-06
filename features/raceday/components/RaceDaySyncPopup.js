@@ -1,10 +1,11 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import RaceDayPopup from './RaceDayPopup';
 import { findRecentEvents } from '../lib/liverc/liveRcEventFinder';
 import { getEventsUrl, normalizeLiveRcEventUrl, normalizeLiveRcSiteUrl } from '../lib/liverc/liveRcUrls';
 import { saveTrackLiveRcUrl } from '../lib/raceDayStorage';
 import { getTrackLiveRcUrl } from '../lib/raceDayModel';
+import { getEventDateKey, getLocalDateKey } from '../lib/raceDayLiveStatus';
 import { raceDayColors, raceDayStyles } from '../styles/raceDayStyles';
 
 const EVENTS_PER_PAGE = 5;
@@ -62,6 +63,55 @@ export default function RaceDaySyncPopup({
   const [loadingEvents, setLoadingEvents] = useState(false);
   const [startingSync, setStartingSync] = useState(false);
   const [message, setMessage] = useState('');
+  const searchRequestRef = useRef(0);
+
+  const handleFindEvents = useCallback(async (sourceUrl, preferredEventUrl = '') => {
+    const requestId = ++searchRequestRef.current;
+    const normalized = normalizeLiveRcSiteUrl(sourceUrl);
+    const eventsUrl = getEventsUrl(sourceUrl);
+    if (!normalized) {
+      setEvents([]);
+      setLoadingEvents(false);
+      setMessage('Enter the LiveRC site URL. Events will load automatically.');
+      return;
+    }
+
+    setLoadingEvents(true);
+    setMessage('');
+    try {
+      if (track?.id || track?.trackId) {
+        await saveTrackLiveRcUrl(track.id || track.trackId, normalized);
+      }
+      const found = await findRecentEvents(normalized, { limit: 30 });
+      if (requestId !== searchRequestRef.current) return;
+
+      setSiteUrl(normalized);
+      setEvents(found);
+
+      const savedSelection = getSelectedEvent(found, preferredEventUrl);
+      const todayKey = getLocalDateKey();
+      const currentSelection = savedSelection && getEventDateKey(savedSelection.dateLabel) === todayKey
+        ? savedSelection
+        : found.find((event) => getEventDateKey(event.dateLabel) === todayKey) || found[0] || null;
+
+      if (currentSelection) {
+        handlePickEvent(currentSelection, normalized);
+        const currentIndex = found.findIndex((event) => getEventKey(event) === getEventKey(currentSelection));
+        setEventPage(Math.max(0, Math.floor(currentIndex / EVENTS_PER_PAGE)));
+      } else {
+        setEventPage(0);
+      }
+
+      setMessage(found.length ? '' : `No events were found at ${eventsUrl}`);
+    } catch (error) {
+      if (requestId !== searchRequestRef.current) return;
+      setEvents([]);
+      setEventPage(0);
+      setMessage(error.message || 'Could not connect to LiveRC. Check the site URL.');
+    } finally {
+      if (requestId === searchRequestRef.current) setLoadingEvents(false);
+    }
+  }, [track]);
 
   useEffect(() => {
     if (!visible) return;
@@ -75,53 +125,27 @@ export default function RaceDaySyncPopup({
     setEventPage(0);
     setMessage('');
     setStartingSync(false);
-  }, [visible, initialUrl, raceDay?.eventUrl, raceDay?.eventTitle, raceDay?.eventDateLabel]);
+    handleFindEvents(initialUrl, raceDay?.eventUrl || '');
+  }, [visible, initialUrl, raceDay?.eventUrl, raceDay?.eventTitle, raceDay?.eventDateLabel, handleFindEvents]);
 
-  function handlePickEvent(event) {
-    const eventUrl = normalizeLiveRcEventUrl(event.eventUrl, siteUrl);
+  useEffect(() => {
+    if (!visible) return undefined;
+    const normalizedCurrent = normalizeLiveRcSiteUrl(siteUrl);
+    const normalizedInitial = normalizeLiveRcSiteUrl(initialUrl);
+    if (!normalizedCurrent || normalizedCurrent === normalizedInitial) return undefined;
+    const timer = setTimeout(() => {
+      handleFindEvents(siteUrl, selectedEventUrl);
+    }, 650);
+    return () => clearTimeout(timer);
+  }, [visible, siteUrl, initialUrl, selectedEventUrl, handleFindEvents]);
+
+  function handlePickEvent(event, sourceUrl = siteUrl) {
+    const eventUrl = normalizeLiveRcEventUrl(event.eventUrl, sourceUrl);
     setSelectedEventUrl(eventUrl);
     setSelectedEventMeta({
       title: event.title || 'LiveRC Event',
       dateLabel: event.dateLabel || '',
     });
-  }
-
-  async function handleFindEvents() {
-    const normalized = normalizeLiveRcSiteUrl(siteUrl);
-    const eventsUrl = getEventsUrl(siteUrl);
-    if (!normalized) {
-      setMessage('Enter the LiveRC site URL first. Example: shopimrc.liverc.com');
-      return;
-    }
-
-    setLoadingEvents(true);
-    setMessage(`Checking ${eventsUrl}`);
-    try {
-      setSiteUrl(normalized);
-      if (track?.id || track?.trackId) {
-        await saveTrackLiveRcUrl(track.id || track.trackId, normalized);
-      }
-      const found = await findRecentEvents(normalized, { limit: 30 });
-      setEvents(found);
-
-      const current = getSelectedEvent(found, selectedEventUrl);
-      if (current) {
-        handlePickEvent(current);
-        const currentIndex = found.findIndex((event) => getEventKey(event) === getEventKey(current));
-        setEventPage(Math.max(0, Math.floor(currentIndex / EVENTS_PER_PAGE)));
-      } else if (!selectedEventUrl && found[0]?.eventUrl) {
-        handlePickEvent(found[0]);
-        setEventPage(0);
-      } else {
-        setEventPage(0);
-      }
-
-      setMessage(found.length ? '' : 'No LiveRC events were found at /events/. Check the LiveRC site URL and try again.');
-    } catch (error) {
-      setMessage(error.message || 'Could not connect to LiveRC.');
-    } finally {
-      setLoadingEvents(false);
-    }
   }
 
   async function handleSyncSelectedEvent() {
@@ -157,8 +181,8 @@ export default function RaceDaySyncPopup({
   return (
     <RaceDayPopup
       visible={visible}
-      title="LiveRC Sync"
-      subtitle="Find the event, then sync the selected RaceDay."
+      title="Choose LiveRC Event"
+      subtitle="Recent events load automatically from this track."
       onClose={onClose}
       onDismiss={onDismiss}
       centered
@@ -166,7 +190,16 @@ export default function RaceDaySyncPopup({
       contentContainerStyle={raceDayStyles.syncPickerContent}
     >
       <View style={raceDayStyles.syncPickerStaticTop}>
-        <Text style={raceDayStyles.statLabel}>LIVERC SITE URL</Text>
+        <View style={raceDayStyles.eventPickerHeadingRow}>
+          <View>
+            <Text style={raceDayStyles.statLabel}>TRACK LIVERC SITE</Text>
+            <Text style={raceDayStyles.eventPickerSectionTitle}>Event source</Text>
+          </View>
+          <View style={[raceDayStyles.eventSearchStatus, loadingEvents && raceDayStyles.eventSearchStatusActive]}>
+            {loadingEvents ? <ActivityIndicator size="small" color={raceDayColors.accent} /> : <View style={raceDayStyles.eventSearchStatusDot} />}
+            <Text style={raceDayStyles.eventSearchStatusText}>{loadingEvents ? 'SEARCHING' : 'READY'}</Text>
+          </View>
+        </View>
         <TextInput
           value={siteUrl}
           onChangeText={setSiteUrl}
@@ -176,24 +209,30 @@ export default function RaceDaySyncPopup({
           autoCorrect={false}
           keyboardType="url"
           returnKeyType="done"
-          style={[raceDayStyles.input, { marginTop: 6 }]}
+          onSubmitEditing={() => handleFindEvents(siteUrl, selectedEventUrl)}
+          style={raceDayStyles.eventPickerInput}
         />
         <Text style={raceDayStyles.eventPickerUrlHint} numberOfLines={1}>
-          Events checked at: {getEventsUrl(siteUrl) || 'https://your-site.liverc.com/events/'}
+          {loadingEvents ? 'Checking recent events…' : getEventsUrl(siteUrl) || 'Enter your track’s LiveRC address'}
         </Text>
 
-        <TouchableOpacity style={raceDayStyles.eventFindButton} onPress={handleFindEvents} activeOpacity={0.82}>
-          {loadingEvents ? <ActivityIndicator /> : <Text style={raceDayStyles.secondaryButtonText}>Find Events</Text>}
-        </TouchableOpacity>
-
-        <View style={[raceDayStyles.rowBetween, { marginTop: 10 }]}>
-          <Text style={raceDayStyles.statLabel}>EVENTS FOUND</Text>
-          <Text style={raceDayStyles.cardMetaRight}>{events.length} event{events.length === 1 ? '' : 's'}</Text>
+        <View style={raceDayStyles.eventResultsHeader}>
+          <View>
+            <Text style={raceDayStyles.statLabel}>RECENT EVENTS</Text>
+            <Text style={raceDayStyles.eventPickerSectionTitle}>Select RaceDay event</Text>
+          </View>
+          <Text style={raceDayStyles.eventCountText}>{loadingEvents ? 'LOADING' : `${events.length} FOUND`}</Text>
         </View>
       </View>
 
-      <View style={[raceDayStyles.eventPickerOnlyScrollContent, { marginTop: 7 }]}>
-        {events.length ? visibleEvents.map((event) => {
+      <View style={raceDayStyles.eventPickerOnlyScrollContent}>
+        {loadingEvents && !events.length ? (
+          <View style={raceDayStyles.eventPickerEmptyBox}>
+            <ActivityIndicator color={raceDayColors.accent} />
+            <Text style={raceDayStyles.eventPickerEmptyTitle}>Loading LiveRC events</Text>
+            <Text style={raceDayStyles.eventPickerEmptyText}>Checking the track’s recent event list…</Text>
+          </View>
+        ) : events.length ? visibleEvents.map((event, index) => {
           const eventUrl = normalizeLiveRcEventUrl(event.eventUrl, siteUrl);
           const selected = normalizeLiveRcEventUrl(selectedEventUrl, siteUrl) === eventUrl;
           return (
@@ -204,13 +243,20 @@ export default function RaceDaySyncPopup({
               activeOpacity={0.86}
             >
               <View style={raceDayStyles.cardAccent} />
-              <Text style={raceDayStyles.eventTitle} numberOfLines={1}>{event.title}</Text>
-              <Text style={raceDayStyles.eventDate} numberOfLines={1}>{event.dateLabel || 'Date not listed'}</Text>
+              <View style={raceDayStyles.eventCardNumber}><Text style={raceDayStyles.eventCardNumberText}>{String((safeEventPage * EVENTS_PER_PAGE) + index + 1).padStart(2, '0')}</Text></View>
+              <View style={raceDayStyles.eventCardIdentity}>
+                <Text style={raceDayStyles.eventTitle} numberOfLines={1}>{event.title}</Text>
+                <Text style={raceDayStyles.eventDate} numberOfLines={1}>{event.dateLabel || 'Date not listed'}</Text>
+              </View>
+              <View style={[raceDayStyles.eventSelectMark, selected && raceDayStyles.eventSelectMarkActive]}>
+                <Text style={[raceDayStyles.eventSelectMarkText, selected && raceDayStyles.eventSelectMarkTextActive]}>{selected ? '✓' : '›'}</Text>
+              </View>
             </TouchableOpacity>
           );
         }) : (
           <View style={raceDayStyles.eventPickerEmptyBox}>
-            <Text style={raceDayStyles.emptyText}>Tap Find Events to load LiveRC events.</Text>
+            <Text style={raceDayStyles.eventPickerEmptyTitle}>No events found</Text>
+            <Text style={raceDayStyles.eventPickerEmptyText}>Check the LiveRC address above. The search will run again automatically.</Text>
           </View>
         )}
       </View>
@@ -240,9 +286,12 @@ export default function RaceDaySyncPopup({
       <View style={raceDayStyles.syncPickerStaticBottom}>
         {selectedEventUrl ? (
           <View style={raceDayStyles.selectedEventSummaryCompact}>
-            <Text style={raceDayStyles.statLabel}>SELECTED RACEDAY EVENT</Text>
-            <Text style={raceDayStyles.cardTitle} numberOfLines={1}>{selectedTitle || 'LiveRC Event Selected'}</Text>
-            <Text style={raceDayStyles.cardSub} numberOfLines={1}>{selectedDate || 'Ready to sync selected event'}</Text>
+            <View style={raceDayStyles.selectedEventSummaryIcon}><Text style={raceDayStyles.selectedEventSummaryIconText}>✓</Text></View>
+            <View style={raceDayStyles.flex1}>
+              <Text style={raceDayStyles.statLabel}>SELECTED RACEDAY EVENT</Text>
+              <Text style={raceDayStyles.cardTitle} numberOfLines={1}>{selectedTitle || 'LiveRC Event Selected'}</Text>
+              <Text style={raceDayStyles.cardSub} numberOfLines={1}>{selectedDate || 'Ready to sync selected event'}</Text>
+            </View>
           </View>
         ) : null}
 

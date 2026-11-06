@@ -142,8 +142,28 @@ export default function RaceDayDashboardScreen() {
   const liveRcSiteUrl = active?.siteUrl || getTrackLiveRcUrl(track || {}) || active?.eventUrl || '';
   const liveRcState = useLiveRcLiveFeed(liveRcSiteUrl, Boolean(active?.trackId) && liveEnabled && livePreferenceLoaded);
   const liveStatus = getRaceDayLiveStatus(active || {}, liveRcState);
-  const eventTitleLabel = liveStatus.currentDay ? selectedEventTitleLabel : 'No Current Event';
+  const selectedEventDateLabel = getStoredEventDateLabel(active);
   const liveIsActive = Boolean(liveEnabled && liveStatus.liveActive);
+  const eventStatusText = !hasLiveRcEvent
+    ? 'No event selected'
+    : liveIsActive
+      ? 'Selected event is live now'
+      : liveStatus.eventMismatch
+        ? 'Selected event does not match the live track event'
+        : liveStatus.currentDay
+          ? 'Selected event · Waiting for live race activity'
+          : 'Selected event · Not live today';
+  const liveBadgeLabel = !liveEnabled
+    ? 'LIVE OFF'
+    : liveIsActive
+      ? 'LIVE'
+      : !hasLiveRcEvent
+        ? 'NO EVENT'
+        : liveStatus.eventMismatch
+          ? 'MISMATCH'
+          : liveStatus.currentDay
+            ? 'WAITING'
+            : 'NOT LIVE';
 
   const toggleLiveFeed = useCallback(() => {
     setLiveEnabled((current) => {
@@ -617,7 +637,7 @@ export default function RaceDayDashboardScreen() {
                 <View style={raceDayStyles.flex1}>
                   <Text style={raceDayStyles.trackCardEyebrow}>Live RaceDay</Text>
                   <Text style={raceDayStyles.cardTitle}>{trackName}</Text>
-                  <Text style={raceDayStyles.cardSub} numberOfLines={1}>{eventTitleLabel}</Text>
+                  <Text style={raceDayStyles.trackEventStatusText} numberOfLines={1}>{eventStatusText}</Text>
                 </View>
 
                 <TouchableOpacity
@@ -627,18 +647,26 @@ export default function RaceDayDashboardScreen() {
                 >
                   <View style={[raceDayStyles.trackLiveDot, (!liveEnabled || !liveIsActive) && raceDayStyles.trackLiveDotInactive]} />
                   <Text style={[raceDayStyles.trackLiveBadgeText, (!liveEnabled || !liveIsActive) && raceDayStyles.trackLiveBadgeTextInactive]}>
-                    {!liveEnabled ? 'LIVE OFF' : liveIsActive ? 'LIVE' : liveStatus.currentDay ? 'WAITING' : 'NO EVENT'}
+                    {liveBadgeLabel}
                   </Text>
                 </TouchableOpacity>
               </View>
 
               <View style={raceDayStyles.trackNavigationRow}>
                 <TouchableOpacity style={raceDayStyles.trackNavigationButton} onPress={() => setSyncOpen(true)} activeOpacity={0.82}>
-                  <View>
-                    <Text style={raceDayStyles.trackNavigationLabel}>EVENT</Text>
-                    <Text style={raceDayStyles.trackNavigationText}>{hasLiveRcEvent ? 'Change Event' : 'Choose Event'}</Text>
+                  <View style={raceDayStyles.trackEventIdentity}>
+                    <Text style={raceDayStyles.trackNavigationLabel}>{hasLiveRcEvent ? 'SELECTED EVENT' : 'RACEDAY EVENT'}</Text>
+                    <Text style={raceDayStyles.trackNavigationText} numberOfLines={1}>
+                      {hasLiveRcEvent ? selectedEventTitleLabel : 'Choose LiveRC Event'}
+                    </Text>
+                    <Text style={raceDayStyles.trackNavigationMeta} numberOfLines={1}>
+                      {hasLiveRcEvent ? selectedEventDateLabel || 'Date not listed' : 'No event is currently selected'}
+                    </Text>
                   </View>
-                  <Text style={raceDayStyles.trackNavigationArrow}>›</Text>
+                  <View style={raceDayStyles.trackEventChangeAction}>
+                    <Text style={raceDayStyles.trackEventChangeText}>{hasLiveRcEvent ? 'CHANGE' : 'SELECT'}</Text>
+                    <Text style={raceDayStyles.trackNavigationArrow}>›</Text>
+                  </View>
                 </TouchableOpacity>
 
                 <TouchableOpacity

@@ -1,4 +1,5 @@
-import { Linking, Pressable, ScrollView, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Linking, Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 
 import { flootDashboardStyles as styles } from '../flootDashboard.styles';
@@ -9,6 +10,12 @@ function textValue(value, fallback = '—') {
   const next = String(value ?? '').trim();
   return next || fallback;
 }
+
+function entityId(value) {
+  return String(value?.id || value?.trackId || '').trim();
+}
+
+const NO_TRACK = '__none__';
 
 function CountCell({ label, value, onPress }) {
   return (
@@ -37,8 +44,16 @@ export default function FlootDashboardView({
   version,
   lastSyncAt,
   isLandscape,
+  dashboardTrackId,
+  onSelectDashboardTrack,
 }) {
-  const activeTrack = raceLive?.selectedTrack || (Array.isArray(tracks) && tracks.length ? tracks[0] : null);
+  const [showTrackPicker, setShowTrackPicker] = useState(false);
+  const trackList = Array.isArray(tracks) ? tracks : [];
+  const savedTrackChoice = trackList.find((track) => entityId(track) === String(dashboardTrackId || '')) || null;
+  const noTrackSelected = dashboardTrackId === NO_TRACK;
+  const activeTrack = noTrackSelected
+    ? null
+    : savedTrackChoice || raceLive?.selectedTrack || (trackList.length ? trackList[0] : null);
   const viewedVehicle = lastViewedVehicle || (Array.isArray(vehicles) ? vehicles[0] : null);
   const liveState = raceLive?.liveState || {};
   const nextRace = raceLive?.nextRace || null;
@@ -52,6 +67,10 @@ export default function FlootDashboardView({
   const sponsorImage = sponsor?.logo || sponsor?.image || '';
   const syncColor = statusDotColor || '#6F7D74';
   const openSponsor = () => sponsor?.url && Linking.openURL(sponsor.url).catch(() => {});
+  const chooseTrack = (trackId) => {
+    onSelectDashboardTrack?.(trackId);
+    setShowTrackPicker(false);
+  };
 
   return (
     <View style={styles.root}>
@@ -92,15 +111,15 @@ export default function FlootDashboardView({
           <Text style={styles.sponsorVisit}>VISIT  ›</Text>
         </Pressable>
 
-        <Pressable style={({ pressed }) => [styles.trackStrip, pressed && styles.pressed]} onPress={() => router.push('/tracks')}>
+        <Pressable style={({ pressed }) => [styles.trackStrip, pressed && styles.pressed]} onPress={() => setShowTrackPicker(true)}>
           <Text style={styles.trackGlyph}>⌖</Text>
           <View style={styles.trackIdentity}>
-            <Text style={styles.trackName} numberOfLines={1}>{textValue(activeTrack?.name || activeTrack?.trackName, 'Select a track')}</Text>
+            <Text style={styles.trackName} numberOfLines={1}>{textValue(activeTrack?.name || activeTrack?.trackName, 'No track')}</Text>
             <Text style={styles.trackMeta} numberOfLines={1}>
               {activeTrack ? [activeTrack.surface, activeTrack.type || activeTrack.trackType].filter(Boolean).join(' · ') || 'Track details' : 'No track selected'}
             </Text>
           </View>
-          {raceDayReady ? (
+          {raceDayReady && activeTrack ? (
             <View style={styles.trackLiveBadge}>
               <View style={styles.liveDot} />
               <Text style={styles.trackLiveText}>LIVE · RACE {currentRaceNumber}</Text>
@@ -108,7 +127,7 @@ export default function FlootDashboardView({
           ) : <Text style={styles.chevron}>›</Text>}
         </Pressable>
 
-        <View style={styles.primaryGrid}>
+        {activeTrack ? <View style={styles.primaryGrid}>
           <View style={styles.racePanel}>
             <View style={styles.sectionHeader}>
               <View>
@@ -153,9 +172,9 @@ export default function FlootDashboardView({
               <Text style={styles.primaryButtonArrow}>›</Text>
             </Pressable>
           </View>
-        </View>
+        </View> : null}
 
-        <View style={styles.garageSection}>
+        <View style={[styles.garageSection, !activeTrack && styles.garageSectionNoTrack]}>
           <View style={styles.sectionHeader}>
             <View>
               <Text style={styles.microLabel}>GARAGE</Text>
@@ -163,14 +182,14 @@ export default function FlootDashboardView({
             </View>
             <Pressable onPress={() => router.push('/garage')}><Text style={styles.viewAll}>OPEN GARAGE  ›</Text></Pressable>
           </View>
-          <View style={styles.garageMetrics}>
-            <CountCell label="VEHICLES" value={counts?.vehicles || 0} onPress={() => router.push('/vehicles')} />
-            <CountCell label="TRACKS" value={counts?.tracks || 0} onPress={() => router.push('/tracks')} />
-            <CountCell label="SETUPS" value={counts?.setups || 0} onPress={() => router.push('/setups')} />
-          </View>
+          {activeTrack ? <View style={styles.garageMetrics}>
+            <CountCell label="VEHICLES" value={counts?.vehicles || 0} onPress={() => router.push('/garage')} />
+            <CountCell label="TRACKS" value={counts?.tracks || 0} onPress={() => router.push('/garage')} />
+            <CountCell label="SETUPS" value={counts?.setups || 0} onPress={() => router.push('/garage')} />
+          </View> : null}
           <View style={styles.vehicleList}>
             {viewedVehicle ? (
-              <Pressable key={String(viewedVehicle?.id || 'last-viewed')} style={({ pressed }) => [styles.vehicleRow, pressed && styles.pressed]} onPress={() => router.push('/vehicles')}>
+              <Pressable key={String(viewedVehicle?.id || 'last-viewed')} style={({ pressed }) => [styles.vehicleRow, pressed && styles.pressed]} onPress={() => router.push('/garage')}>
                 <Text style={styles.vehicleIndex}>LAST</Text>
                 <View style={styles.vehicleIdentity}>
                   <Text style={styles.vehicleName} numberOfLines={1}>{textValue(viewedVehicle?.name, 'Unnamed vehicle')}</Text>
@@ -182,7 +201,7 @@ export default function FlootDashboardView({
                 <Text style={styles.chevron}>›</Text>
               </Pressable>
             ) : (
-              <Pressable style={styles.emptyVehicleRow} onPress={() => router.push('/vehicles')}>
+              <Pressable style={styles.emptyVehicleRow} onPress={() => router.push('/garage')}>
                 <Text style={styles.emptyTitle}>No vehicles saved</Text>
                 <Text style={styles.emptyCopy}>Add your first vehicle to begin building setups.</Text>
               </Pressable>
@@ -201,6 +220,52 @@ export default function FlootDashboardView({
 
         <Text style={styles.footer}>v{version} · last sync {formatLastSync(lastSyncAt)}</Text>
       </ScrollView>
+
+      <Modal visible={showTrackPicker} transparent animationType="fade" onRequestClose={() => setShowTrackPicker(false)}>
+        <View style={styles.trackPickerBackdrop}>
+          <Pressable style={styles.trackPickerDismiss} onPress={() => setShowTrackPicker(false)} />
+          <View style={styles.trackPickerSheet}>
+            <View style={styles.trackPickerHeader}>
+              <View>
+                <Text style={styles.microLabel}>HOME DISPLAY</Text>
+                <Text style={styles.trackPickerTitle}>Select track</Text>
+              </View>
+              <Pressable style={styles.trackPickerClose} onPress={() => setShowTrackPicker(false)}>
+                <Text style={styles.trackPickerCloseText}>CLOSE</Text>
+              </Pressable>
+            </View>
+            <ScrollView style={styles.trackPickerScroll} contentContainerStyle={styles.trackPickerList} showsVerticalScrollIndicator={false}>
+              <Pressable
+                style={({ pressed }) => [styles.trackPickerRow, noTrackSelected && styles.trackPickerRowSelected, pressed && styles.pressed]}
+                onPress={() => chooseTrack(NO_TRACK)}
+              >
+                <View style={styles.trackPickerIdentity}>
+                  <Text style={styles.trackPickerName}>No track</Text>
+                  <Text style={styles.trackPickerMeta}>Show the last viewed vehicle on Home</Text>
+                </View>
+                <Text style={[styles.trackPickerMark, noTrackSelected && styles.trackPickerMarkSelected]}>{noTrackSelected ? '✓' : '›'}</Text>
+              </Pressable>
+              {trackList.map((track) => {
+                const id = entityId(track);
+                const selected = !!id && entityId(activeTrack) === id && !noTrackSelected;
+                return (
+                  <Pressable
+                    key={id || textValue(track?.name || track?.trackName)}
+                    style={({ pressed }) => [styles.trackPickerRow, selected && styles.trackPickerRowSelected, pressed && styles.pressed]}
+                    onPress={() => chooseTrack(id)}
+                  >
+                    <View style={styles.trackPickerIdentity}>
+                      <Text style={styles.trackPickerName} numberOfLines={1}>{textValue(track?.name || track?.trackName, 'Unnamed track')}</Text>
+                      <Text style={styles.trackPickerMeta} numberOfLines={1}>{[track?.surface, track?.type || track?.trackType].filter(Boolean).join(' · ') || 'Track details'}</Text>
+                    </View>
+                    <Text style={[styles.trackPickerMark, selected && styles.trackPickerMarkSelected]}>{selected ? '✓' : '›'}</Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
 
       <NewLookBottomNav active="home" router={router} onRaceDay={onRaceDayPress} />
     </View>

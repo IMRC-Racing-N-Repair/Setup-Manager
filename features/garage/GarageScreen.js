@@ -20,9 +20,11 @@ function clean(value) {
 }
 
 function vehicleMeta(vehicle) {
-  return [vehicle?.chassisStyle, vehicle?.transponder ? `TX ${vehicle.transponder}` : '']
-    .filter(Boolean)
-    .join(' · ') || 'Vehicle details';
+  return clean(vehicle?.chassisStyle || vehicle?.vehicleStyle) || 'Vehicle details';
+}
+
+function vehicleTx(vehicle) {
+  return clean(vehicle?.transponder || vehicle?.transponderNumber || vehicle?.transponderId) || '—';
 }
 
 function trackMeta(track) {
@@ -180,6 +182,10 @@ export default function GarageScreen() {
                         <Text style={styles.vehicleName} numberOfLines={1}>{vehicle?.name || 'Unnamed vehicle'}</Text>
                         <Text style={styles.vehicleMeta} numberOfLines={1}>{vehicleMeta(vehicle)}</Text>
                       </View>
+                      <View style={styles.txBox}>
+                        <Text style={styles.txLabel}>TX</Text>
+                        <Text style={styles.txValue} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>{vehicleTx(vehicle)}</Text>
+                      </View>
                       <Text style={styles.chevron}>›</Text>
                     </Pressable>
                   );
@@ -256,6 +262,9 @@ const styles = StyleSheet.create({
   vehicleIdentity: { flex: 1, minWidth: 0 },
   vehicleName: { color: AppColors.textStrong, fontSize: 14, fontWeight: '900' },
   vehicleMeta: { marginTop: 2, color: AppColors.mutedText, fontSize: 9 },
+  txBox: { width: 62, minHeight: 34, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5, borderWidth: 1, borderColor: 'rgba(47,140,255,0.70)', backgroundColor: 'rgba(47,140,255,0.12)' },
+  txLabel: { color: AppColors.primary, fontSize: 7, lineHeight: 9, fontWeight: '900', letterSpacing: 0.5 },
+  txValue: { width: '100%', color: AppColors.textStrong, fontSize: 10, lineHeight: 12, fontWeight: '900', textAlign: 'center' },
   chevron: { color: AppColors.primary, fontSize: 21 },
   selectedSummary: { minHeight: 66, flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 12, paddingLeft: 11, borderLeftWidth: 2, borderLeftColor: AppColors.primary, backgroundColor: AppColors.card },
   selectedSummaryText: { flex: 1, minWidth: 0 },

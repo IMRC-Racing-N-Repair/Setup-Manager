@@ -9,9 +9,9 @@ export default function StatsRow({ counts, router, rowStyle, cardStyle, valueSty
   const shared = { cardStyle, valueStyle, iconBubbleStyle };
   return (
     <View style={[styles.statsRow, rowStyle]}>
-      <VehicleButton count={counts.vehicles} onPress={() => router.push('/vehicles')} {...shared} />
-      <TrackButton count={counts.tracks} onPress={() => router.push('/tracks')} {...shared} />
-      <SetupsButton count={counts.setups} onPress={() => router.push('/setups')} {...shared} />
+      <VehicleButton count={counts.vehicles} onPress={() => router.push('/garage')} {...shared} />
+      <TrackButton count={counts.tracks} onPress={() => router.push('/garage')} {...shared} />
+      <SetupsButton count={counts.setups} onPress={() => router.push('/garage')} {...shared} />
     </View>
   );
 }

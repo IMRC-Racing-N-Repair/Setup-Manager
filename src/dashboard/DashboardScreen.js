@@ -29,6 +29,7 @@ import StatsRow from './components/StatsRow';
 import FlootDashboardView from './components/FlootDashboardView';
 
 let sponsorPopupShownThisLaunch = false;
+const DASHBOARD_TRACK_KEY = '@dashboardTrackSelection_v1';
 
 function Footer({ version, lastSyncAt, style }) {
   return <Text style={[styles.footerText, style]}>v{version} · last sync {formatLastSync(lastSyncAt)}</Text>;
@@ -147,6 +148,7 @@ export default function DashboardScreen({
     sponsorPopupShownThisLaunch = true;
     return true;
   });
+  const [dashboardTrackId, setDashboardTrackId] = useState('');
 
   const isShortLandscape = isLandscape && height < 540;
   const isVeryShortLandscape = isLandscape && height < 470;
@@ -367,6 +369,22 @@ export default function DashboardScreen({
     await refreshRecentChanges();
   }, [loadCounts, refreshRecentChanges]);
 
+  const loadDashboardTrack = useCallback(async () => {
+    try {
+      setDashboardTrackId((await AsyncStorage.getItem(DASHBOARD_TRACK_KEY)) || '');
+    } catch {
+      setDashboardTrackId('');
+    }
+  }, []);
+
+  const selectDashboardTrack = useCallback(async (trackId) => {
+    const next = String(trackId || '').trim();
+    setDashboardTrackId(next);
+    try {
+      await AsyncStorage.setItem(DASHBOARD_TRACK_KEY, next);
+    } catch {}
+  }, []);
+
   const auth = useAuthCloudSync({
     onDashboardRefresh: dashboardRefreshCallback,
     onRaceDayRefresh: syncRaceDayReady,
@@ -450,7 +468,8 @@ export default function DashboardScreen({
     await syncRaceDayReady();
     await loadCounts();
     await refreshRecentChanges();
-  }, [loadCounts, refreshRecentChanges, syncRaceDayReady]);
+    await loadDashboardTrack();
+  }, [loadCounts, loadDashboardTrack, refreshRecentChanges, syncRaceDayReady]);
 
   useEffect(() => {
     const sub = AppState.addEventListener('change', (s) => { if (s === 'active') refreshDashboard(); });
@@ -568,6 +587,8 @@ export default function DashboardScreen({
         version={auth.version}
         lastSyncAt={dashboardLastSyncAt}
         isLandscape={isLandscape}
+        dashboardTrackId={dashboardTrackId}
+        onSelectDashboardTrack={selectDashboardTrack}
       />
 
       <RaceDayStartModal

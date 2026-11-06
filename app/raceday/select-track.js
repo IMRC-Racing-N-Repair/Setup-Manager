@@ -42,6 +42,7 @@ export default function RaceDaySelectTrackScreen() {
       countLabel={loading ? 'Loading…' : `${tracks.length} SAVED`}
       onBack={goBack}
       loading={loading}
+      flatList
       emptyMessage={!loading && !tracks.length ? 'No tracks are saved yet. Add a track from Garage before starting RaceDay.' : ''}
     >
       {tracks.map((track) => {
@@ -54,6 +55,7 @@ export default function RaceDaySelectTrackScreen() {
             actionLabel={selecting ? 'OPENING' : 'SELECT'}
             selected={selecting}
             disabled={Boolean(selectingTrackId)}
+            flat
             onPress={() => handleSelectTrack(id)}
           />
         );

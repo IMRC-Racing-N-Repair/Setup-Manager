@@ -31,27 +31,23 @@ const styles = StyleSheet.create({
   wrap: {
     alignSelf: 'stretch',
     flexDirection: 'row',
-    gap: 4,
-    padding: 2,
-    borderRadius: 2,
-    borderWidth: 1,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
     borderColor: raceDayColors.border,
-    backgroundColor: raceDayColors.cardAlt,
-    marginBottom: 8,
+    marginBottom: 10,
   },
   button: {
     flex: 1,
-    minHeight: 24,
-    borderRadius: 1,
+    minHeight: 36,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 8,
-    borderWidth: 1,
-    borderColor: 'transparent',
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
   },
   activeButton: {
-    backgroundColor: raceDayColors.accentSoft,
-    borderColor: raceDayColors.accent,
+    backgroundColor: raceDayColors.accentSofter,
+    borderBottomColor: raceDayColors.accent,
   },
   buttonText: {
     color: raceDayColors.muted,
@@ -61,6 +57,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.75,
   },
   activeButtonText: {
-    color: raceDayColors.text,
+    color: raceDayColors.accent,
   },
 });

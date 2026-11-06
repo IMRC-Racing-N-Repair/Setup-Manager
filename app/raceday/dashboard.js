@@ -17,7 +17,7 @@ import RaceDayPracticeSessionsPopup from '../../features/raceday/components/Race
 import RaceDayPracticeDayPickerPopup from '../../features/raceday/components/RaceDayPracticeDayPickerPopup';
 import RaceDayPracticeTrackCard from '../../features/raceday/components/RaceDayPracticeTrackCard';
 import RaceDayLiveHeader from '../../features/raceday/components/RaceDayLiveHeader';
-import RaceDaySyncStatusPopup, { mergeSyncProgress } from '../../features/raceday/components/RaceDaySyncStatusPopup';
+import { mergeSyncProgress } from '../../features/raceday/components/RaceDaySyncStatusPopup';
 import RaceDayAutoSyncOverlay from '../../features/raceday/components/RaceDayAutoSyncOverlay';
 import NewLookBottomNav from '../../src/navigation/NewLookBottomNav';
 import useLiveRcLiveFeed from '../../features/raceday/hooks/useLiveRcLiveFeed';
@@ -92,9 +92,6 @@ export default function RaceDayDashboardScreen() {
   const [syncing, setSyncing] = useState(false);
   const [autoSyncing, setAutoSyncing] = useState(false);
   const [autoSyncProgress, setAutoSyncProgress] = useState([]);
-  const [syncStatusOpen, setSyncStatusOpen] = useState(false);
-  const [syncProgress, setSyncProgress] = useState([]);
-  const [syncSummary, setSyncSummary] = useState('');
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [selectedPracticeVehicle, setSelectedPracticeVehicle] = useState(null);
   const [selectedRun, setSelectedRun] = useState(null);
@@ -429,18 +426,8 @@ export default function RaceDayDashboardScreen() {
     ]);
   }
 
-  async function handleSynced(result) {
-    await load();
-    if (result?.progress?.length) setSyncProgress(result.progress);
-  }
-
-  function handleSyncProgress(update) {
-    setSyncStatusOpen(true);
-    setSyncProgress((previous) => mergeSyncProgress(previous, update));
-  }
-
   async function runLiveRcSync({ eventUrl, siteUrl, eventTitle, eventDateLabel, saveEvent = false } = {}) {
-    if (syncing) return;
+    if (syncing || autoSyncRunningRef.current) return;
 
     const nextEventUrl = eventUrl || active?.eventUrl;
     const nextSiteUrl = siteUrl || active?.siteUrl || getTrackLiveRcUrl(track || {});
@@ -450,10 +437,18 @@ export default function RaceDayDashboardScreen() {
     }
 
     await waitForSyncPopupDismissal();
+    const cancelToken = { cancelled: false };
+    autoSyncCancelRef.current = cancelToken;
+    autoSyncRunningRef.current = true;
     setSyncing(true);
-    setSyncStatusOpen(true);
-    setSyncProgress([]);
-    setSyncSummary('');
+    setAutoSyncProgress(vehicles.map((vehicle) => ({
+      key: normalizeId(vehicle.id || vehicle.vehicleId) || getVehicleDisplayName(vehicle),
+      vehicleId: vehicle.id || vehicle.vehicleId,
+      vehicleName: getVehicleDisplayName(vehicle),
+      phase: 'queued',
+      status: 'pending',
+    })));
+    setAutoSyncing(true);
 
     try {
       let raceDayForSync = {
@@ -481,15 +476,22 @@ export default function RaceDayDashboardScreen() {
         eventUrl: nextEventUrl,
         siteUrl: nextSiteUrl,
         existingRuns: runs,
-        onProgress: handleSyncProgress,
+        shouldCancel: () => cancelToken.cancelled,
+        onProgress: (update) => {
+          if (!cancelToken.cancelled) setAutoSyncProgress((previous) => mergeSyncProgress(previous, update));
+        },
       });
 
-      await load({ showLoading: false });
-      if (result?.progress?.length) setSyncProgress(result.progress);
-      setSyncSummary('Complete.');
+      if (!cancelToken.cancelled) await load({ showLoading: false });
+      if (!cancelToken.cancelled) await new Promise((resolve) => setTimeout(resolve, 450));
     } catch (error) {
-      setSyncSummary(error?.message || 'LiveRC sync failed.');
+      if (error?.code !== 'RACEDAY_SYNC_CANCELLED') {
+        Alert.alert('RaceDay Refresh', error?.message || 'LiveRC refresh failed.');
+      }
     } finally {
+      if (autoSyncCancelRef.current === cancelToken) autoSyncCancelRef.current = null;
+      autoSyncRunningRef.current = false;
+      if (!cancelToken.cancelled) setAutoSyncing(false);
       setSyncing(false);
     }
   }
@@ -707,14 +709,6 @@ export default function RaceDayDashboardScreen() {
         onClose={() => setSyncOpen(false)}
         onDismiss={() => syncDismissResolverRef.current?.()}
         onSyncSelected={handleSyncSelectedEvent}
-      />
-
-      <RaceDaySyncStatusPopup
-        visible={syncStatusOpen}
-        syncing={syncing}
-        progress={syncProgress}
-        summary={syncSummary}
-        onClose={() => setSyncStatusOpen(false)}
       />
 
       <RaceDayAutoSyncOverlay visible={autoSyncing} progress={autoSyncProgress} onCancel={cancelAutoSync} />

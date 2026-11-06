@@ -1,25 +1,26 @@
 import { StyleSheet } from 'react-native';
+import { AppColors } from '../../../src/theme/colors';
 
 export const raceDayColors = {
-  bg: '#050A12',
-  panel: '#08111E',
-  card: '#0B1625',
-  cardAlt: '#0E1C2E',
-  border: '#203653',
-  text: '#EEF5FF',
-  muted: '#9AA9BC',
-  faint: '#718198',
-  accent: '#2F8CFF',
-  accentSoft: 'rgba(47,140,255,0.11)',
+  bg: AppColors.background,
+  panel: AppColors.surface,
+  card: AppColors.card,
+  cardAlt: AppColors.cardSoft,
+  border: AppColors.border,
+  text: AppColors.text,
+  muted: AppColors.mutedText,
+  faint: AppColors.subtleText,
+  accent: AppColors.primary,
+  accentSoft: AppColors.primarySoft,
   accentSofter: 'rgba(47,140,255,0.06)',
   accentBorder: 'rgba(47,140,255,0.60)',
-  accentTextDark: '#04101F',
-  danger: '#EF4444',
+  accentTextDark: '#FFFFFF',
+  danger: AppColors.danger,
   dangerSoft: 'rgba(239,68,68,0.14)',
-  blue: '#38BDF8',
-  blueSoft: 'rgba(56,189,248,0.14)',
+  blue: AppColors.primary,
+  blueSoft: AppColors.primarySoft,
   purple: '#A78BFA',
-  input: '#0A0F19',
+  input: AppColors.backgroundSoft,
 };
 
 export const raceDayStyles = StyleSheet.create({

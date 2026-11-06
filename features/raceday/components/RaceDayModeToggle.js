@@ -33,7 +33,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 4,
     padding: 2,
-    borderRadius: 999,
+    borderRadius: 2,
     borderWidth: 1,
     borderColor: raceDayColors.border,
     backgroundColor: raceDayColors.cardAlt,
@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
   button: {
     flex: 1,
     minHeight: 24,
-    borderRadius: 999,
+    borderRadius: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 8,

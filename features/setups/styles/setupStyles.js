@@ -1130,6 +1130,10 @@ export const setupStyles = StyleSheet.create({
   },
 
   editorBottomBar: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    zIndex: 50,
     width: '100%',
     backgroundColor: setupColors.bg,
     paddingHorizontal: isNarrow ? 10 : 12,
@@ -1140,6 +1144,7 @@ export const setupStyles = StyleSheet.create({
   },
   editorBottomActionRow: {
     width: '100%',
+    minHeight: 54,
     alignSelf: 'center',
     flexDirection: 'row',
     backgroundColor: setupColors.bg,
@@ -1168,8 +1173,8 @@ export const setupStyles = StyleSheet.create({
     fontWeight: '700',
   },
   mapActionGlyphTablet: {
-    fontSize: 23,
-    lineHeight: 25,
+    fontSize: 20,
+    lineHeight: 22,
   },
   mapActionLabel: {
     color: setupColors.muted,
@@ -1178,8 +1183,8 @@ export const setupStyles = StyleSheet.create({
     fontWeight: '700',
   },
   mapActionLabelTablet: {
-    fontSize: 11,
-    lineHeight: 13,
+    fontSize: 9,
+    lineHeight: 11,
     fontWeight: '800',
   },
   fastAccessGrid: {

@@ -68,7 +68,7 @@ function getEditorLayoutMetrics({ height, width, topInset = 0, bottomInset = 0, 
   const narrow = screenWidth < 390;
   const tabletLandscape = screenWidth >= 700 && screenWidth > screenHeight;
   const editorMaxWidth = tabletLandscape ? Math.min(screenWidth - 72, 1120) : 820;
-  const navHeight = tabletLandscape ? 78 : (screenWidth > screenHeight ? 54 : 66);
+  const navHeight = 66;
 
   // The edit screen does not scroll, so the chassis map must fit in the real
   // space left after the header, Run Line/Rollout row, and bottom actions.
@@ -273,13 +273,13 @@ function getEditorLayoutMetrics({ height, width, topInset = 0, bottomInset = 0, 
       marginTop: v(2, 0),
     },
     bottomBar: {
-      marginBottom: navHeight,
-      paddingTop: tabletLandscape ? 6 : v(5, 2),
-      paddingBottom: tabletLandscape ? 6 : Math.max(6, (mapScale < 0.78 ? 4 : 6)),
+      bottom: navHeight,
+      paddingTop: tabletLandscape ? 4 : v(5, 2),
+      paddingBottom: tabletLandscape ? 4 : Math.max(4, (mapScale < 0.78 ? 3 : 4)),
     },
     mapActionButton: {
-      minHeight: tabletLandscape ? 62 : v(50, 44),
-      paddingVertical: tabletLandscape ? 6 : v(5, 4),
+      minHeight: tabletLandscape ? 50 : v(50, 44),
+      paddingVertical: tabletLandscape ? 4 : v(5, 4),
       borderRadius: 0,
     },
     mapActionValue: {

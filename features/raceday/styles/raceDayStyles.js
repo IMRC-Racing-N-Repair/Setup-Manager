@@ -43,7 +43,7 @@ export const raceDayStyles = StyleSheet.create({
     paddingBottom: 142,
   },
   scrollContentTabletLandscape: {
-    paddingBottom: 166,
+    paddingBottom: 142,
   },
   vehicleGridTabletLandscape: {
     width: '100%',
@@ -472,9 +472,9 @@ export const raceDayStyles = StyleSheet.create({
     paddingHorizontal: 22,
   },
   bottomBarDockedTabletLandscape: {
-    bottom: 78,
-    paddingTop: 6,
-    paddingBottom: 6,
+    bottom: 66,
+    paddingTop: 4,
+    paddingBottom: 4,
   },
   actionNavRow: {
     minHeight: 54,
@@ -488,11 +488,11 @@ export const raceDayStyles = StyleSheet.create({
     gap: 1,
   },
   actionNavRowTabletLandscape: {
-    minHeight: 64,
+    minHeight: 54,
   },
   actionNavItemTabletLandscape: {
-    minHeight: 62,
-    gap: 3,
+    minHeight: 50,
+    gap: 1,
   },
   actionNavItemDisabled: {
     opacity: 0.42,
@@ -504,8 +504,8 @@ export const raceDayStyles = StyleSheet.create({
     fontWeight: '600',
   },
   actionNavGlyphTabletLandscape: {
-    fontSize: 23,
-    lineHeight: 25,
+    fontSize: 20,
+    lineHeight: 22,
   },
   actionNavLabel: {
     color: raceDayColors.muted,
@@ -514,8 +514,8 @@ export const raceDayStyles = StyleSheet.create({
     fontWeight: '700',
   },
   actionNavLabelTabletLandscape: {
-    fontSize: 11,
-    lineHeight: 13,
+    fontSize: 9,
+    lineHeight: 11,
     fontWeight: '800',
   },
   actionNavPrimary: {

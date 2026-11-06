@@ -7,9 +7,9 @@ web-build/
 android/
 ios/
 
-# Local environment and signing files
-.env
+# Root Expo public environment is versioned; local variants stay private
 .env.*
+!.env
 !.env.example
 *.jks
 *.keystore

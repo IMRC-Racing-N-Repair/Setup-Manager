@@ -52,6 +52,7 @@ export default function GarageScreen() {
   const [tracks, setTracks] = useState([]);
   const [setups, setSetups] = useState([]);
   const [selectedVehicleId, setSelectedVehicleId] = useState('');
+  const [showVehicleTracks, setShowVehicleTracks] = useState(false);
 
   const loadGarage = useCallback(async () => {
     setLoading(true);
@@ -108,6 +109,7 @@ export default function GarageScreen() {
     const id = clean(vehicle?.id || vehicle?.vehicleId);
     if (!id) return;
     setSelectedVehicleId(id);
+    setShowVehicleTracks(true);
     markVehicleViewed(id).catch(() => {});
   }, []);
 
@@ -135,7 +137,11 @@ export default function GarageScreen() {
             <Pressable style={styles.addVehicleButton} onPress={() => router.push('/vehicles')}><Text style={styles.addVehicleText}>+ VEHICLE</Text></Pressable>
           </View>
 
-          <Text style={styles.intro}>Choose a vehicle, then open or create its setup for any saved track.</Text>
+          <Text style={styles.intro}>
+            {showVehicleTracks
+              ? `Tracks and setups for ${selectedVehicle?.name || 'the selected vehicle'}.`
+              : 'Choose a vehicle to view its tracks and setups.'}
+          </Text>
 
           {loading ? (
             <ActivityIndicator color={AppColors.primary} style={styles.loading} />
@@ -145,20 +151,19 @@ export default function GarageScreen() {
               <Text style={styles.emptyCopy}>Add your first car before creating track setups.</Text>
               <Pressable style={styles.primaryButton} onPress={() => router.push('/vehicles')}><Text style={styles.primaryButtonText}>ADD VEHICLE</Text></Pressable>
             </View>
-          ) : (
+          ) : !showVehicleTracks ? (
             <>
               <View style={styles.sectionHeading}>
-                <View><Text style={styles.kicker}>STEP 1</Text><Text style={styles.sectionTitle}>Select vehicle</Text></View>
+                <View><Text style={styles.kicker}>GARAGE VEHICLES</Text><Text style={styles.sectionTitle}>Select vehicle</Text></View>
                 <Text style={styles.sectionCount}>{vehicles.length} SAVED</Text>
               </View>
 
               <View style={styles.vehicleList}>
                 {vehicles.map((vehicle) => {
                   const id = clean(vehicle?.id || vehicle?.vehicleId);
-                  const selected = id === clean(selectedVehicleId);
                   return (
-                    <Pressable key={id} style={({ pressed }) => [styles.vehicleRow, selected && styles.vehicleRowSelected, pressed && styles.pressed]} onPress={() => selectVehicle(vehicle)}>
-                      <View style={[styles.selectionMark, selected && styles.selectionMarkSelected]}><Text style={styles.selectionMarkText}>{selected ? '✓' : ''}</Text></View>
+                    <Pressable key={id} style={({ pressed }) => [styles.vehicleRow, pressed && styles.pressed]} onPress={() => selectVehicle(vehicle)}>
+                      <Text style={styles.vehicleNumber}>{String(vehicles.indexOf(vehicle) + 1).padStart(2, '0')}</Text>
                       <View style={styles.vehicleIdentity}>
                         <Text style={styles.vehicleName} numberOfLines={1}>{vehicle?.name || 'Unnamed vehicle'}</Text>
                         <Text style={styles.vehicleMeta} numberOfLines={1}>{vehicleMeta(vehicle)}</Text>
@@ -167,6 +172,15 @@ export default function GarageScreen() {
                     </Pressable>
                   );
                 })}
+              </View>
+            </>
+          ) : (
+            <>
+              <View style={styles.vehicleViewHeader}>
+                <Pressable style={styles.changeVehicleButton} onPress={() => setShowVehicleTracks(false)}>
+                  <Text style={styles.changeVehicleText}>‹ CHANGE VEHICLE</Text>
+                </Pressable>
+                <Text style={styles.sectionCount}>{vehicles.length} VEHICLES</Text>
               </View>
 
               <View style={styles.selectedSummary}>
@@ -179,7 +193,7 @@ export default function GarageScreen() {
               </View>
 
               <View style={styles.sectionHeading}>
-                <View><Text style={styles.kicker}>STEP 2</Text><Text style={styles.sectionTitle}>Tracks & setups</Text></View>
+                <View><Text style={styles.kicker}>SELECT TRACK</Text><Text style={styles.sectionTitle}>Tracks & setups</Text></View>
                 <Pressable style={[styles.addSetupButton, !tracks.length && styles.disabledButton]} onPress={tracks.length ? addSetup : () => router.push('/tracks')}>
                   <Text style={styles.addSetupText}>{tracks.length ? '+ ADD SETUP' : '+ ADD TRACK'}</Text>
                 </Pressable>
@@ -233,14 +247,14 @@ const styles = StyleSheet.create({
   sectionCount: { color: AppColors.mutedText, fontSize: 8, fontWeight: '900', letterSpacing: 0.6 },
   vehicleList: { borderTopWidth: 1, borderTopColor: AppColors.borderStrong },
   vehicleRow: { minHeight: 54, flexDirection: 'row', alignItems: 'center', gap: 9, paddingHorizontal: 8, borderBottomWidth: 1, borderBottomColor: AppColors.border },
-  vehicleRowSelected: { backgroundColor: AppColors.primarySoft, borderLeftWidth: 2, borderLeftColor: AppColors.primary, paddingLeft: 6 },
-  selectionMark: { width: 20, height: 20, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: AppColors.borderStrong },
-  selectionMarkSelected: { borderColor: AppColors.primary, backgroundColor: AppColors.primary },
-  selectionMarkText: { color: '#FFFFFF', fontSize: 11, fontWeight: '900' },
+  vehicleNumber: { width: 24, color: AppColors.subtleText, fontSize: 9, fontWeight: '800' },
   vehicleIdentity: { flex: 1, minWidth: 0 },
   vehicleName: { color: AppColors.textStrong, fontSize: 14, fontWeight: '900' },
   vehicleMeta: { marginTop: 2, color: AppColors.mutedText, fontSize: 9 },
   chevron: { color: AppColors.primary, fontSize: 21 },
+  vehicleViewHeader: { minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, borderBottomWidth: 1, borderBottomColor: AppColors.border },
+  changeVehicleButton: { minHeight: 32, justifyContent: 'center', paddingHorizontal: 9, borderWidth: 1, borderColor: AppColors.borderStrong, backgroundColor: AppColors.surface },
+  changeVehicleText: { color: AppColors.primary, fontSize: 8, fontWeight: '900', letterSpacing: 0.45 },
   selectedSummary: { minHeight: 66, flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 12, paddingLeft: 11, borderLeftWidth: 2, borderLeftColor: AppColors.primary, backgroundColor: AppColors.card },
   selectedSummaryText: { flex: 1, minWidth: 0 },
   selectedVehicleName: { marginTop: 2, color: AppColors.textStrong, fontSize: 17, fontWeight: '900' },

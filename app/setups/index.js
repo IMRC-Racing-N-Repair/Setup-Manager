@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ActivityIndicator, Alert, Modal, Platform, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import StableSafeAreaView from '../../src/layout/StableSafeAreaView';
+import AppScreenHeader from '../../src/layout/AppScreenHeader';
 import SelectorCard from '../../features/setups/components/SelectorCard';
 import {
   ensureTrackForImportedSetup,
@@ -755,25 +756,10 @@ export default function SetupsIndexScreen() {
   return (
     <StableSafeAreaView edges={['top', 'bottom']} style={setupStyles.safe}>
       <View style={setupStyles.pageHeader}>
-        <View style={setupStyles.headerRow}>
-          <Pressable
-            onPress={handleSafeBack}
-            style={({ pressed }) => [
-              setupStyles.button,
-              setupStyles.buttonSecondary,
-              setupStyles.topBackButton,
-              pressed && setupStyles.cardPressed,
-            ]}
-          >
-            <Text style={setupStyles.buttonSecondaryText}>‹ Back</Text>
-          </Pressable>
-
-          <View style={setupStyles.headerTextWrap}>
-            <Text style={setupStyles.eyebrow}>IMRC SETUP MANAGER</Text>
-            <Text style={setupStyles.title}>Setups</Text>
-          </View>
-
-          <View style={setupStyles.topButtonCluster}>
+        <AppScreenHeader
+          title="Setups"
+          onBack={handleSafeBack}
+          right={<View style={setupStyles.topButtonCluster}>
             <Pressable
               disabled={transferBusy}
               onPress={handleImportSetups}
@@ -799,8 +785,8 @@ export default function SetupsIndexScreen() {
             >
               <Text style={setupStyles.buttonText}>+ Add</Text>
             </Pressable>
-          </View>
-        </View>
+          </View>}
+        />
 
         <Text style={setupStyles.subtitle}>
           Pick a Track first, then pick the Car setup you want to create, edit, copy, or import for that track.

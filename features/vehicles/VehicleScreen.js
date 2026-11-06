@@ -25,6 +25,7 @@ import { VEHICLE_COLORS } from "./constants/vehicleColors";
 import { vehicleStyles as styles } from "./styles/vehicleStyles";
 import { vehicleScreenModernStyles as modernStyles } from "./styles/vehicleScreenModernStyles";
 import NewLookBottomNav from "../../src/navigation/NewLookBottomNav";
+import AppScreenHeader from "../../src/layout/AppScreenHeader";
 
 export default function VehicleScreen() {
   const insets = useSafeAreaInsets();
@@ -158,19 +159,14 @@ export default function VehicleScreen() {
           },
         ]}
       >
-        <View style={modernStyles.headerBar}>
-          <Pressable style={modernStyles.headerSideButton} onPress={handleBack}>
-            <Text style={modernStyles.headerSideButtonText}>‹ Back</Text>
-          </Pressable>
-
-          <View style={modernStyles.headerTitleBlock}>
-            <Text style={modernStyles.headerKicker}>IMRC Garage</Text>
-            <Text style={modernStyles.headerTitle}>Vehicles</Text>
-          </View>
-
-          <Pressable style={modernStyles.headerAddButton} onPress={openAddForm}>
-            <Text style={modernStyles.headerAddButtonText}>+ Add</Text>
-          </Pressable>
+        <View style={modernStyles.sharedHeaderInset}>
+          <AppScreenHeader
+            title="Vehicles"
+            kicker="IMRC GARAGE"
+            onBack={handleBack}
+            rightLabel="+ ADD"
+            onRightPress={openAddForm}
+          />
         </View>
 
         <View style={modernStyles.subHeaderRow}>

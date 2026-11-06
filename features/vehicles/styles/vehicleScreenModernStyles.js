@@ -5,6 +5,7 @@ export const vehicleScreenModernStyles = StyleSheet.create({
   screenWithSafeArea: {
     flex: 1,
   },
+  sharedHeaderInset: { paddingHorizontal: 15 },
 
   headerBar: {
     minHeight: 54,

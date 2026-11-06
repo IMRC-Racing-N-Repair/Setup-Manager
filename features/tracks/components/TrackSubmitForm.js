@@ -18,6 +18,7 @@ import { TRACK_SUBMISSION_EMAIL } from '../constants/trackSubmit';
 import { validateTrack } from '../storage/trackStorage';
 import { openTrackSubmissionEmail } from '../utils/trackSubmitEmail';
 import { trackStyles as styles } from '../styles/trackStyles';
+import AppScreenHeader from '../../../src/layout/AppScreenHeader';
 
 const EMPTY_SUBMISSION = {
   trackName: '',
@@ -105,36 +106,12 @@ export default function TrackSubmitForm({ initialTrack, onCancel }) {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.editHeader}>
-          <View style={styles.submitTopHeaderRow}>
-            <Pressable
-              onPress={onCancel}
-              style={({ pressed }) => [
-                styles.headerButton,
-                pressed && styles.buttonPressed,
-              ]}
-            >
-              <Text style={styles.headerButtonText}>‹ Back</Text>
-            </Pressable>
-
-            <View style={styles.submitTopTitleWrap}>
-              <Text style={styles.appLabel}>IMRC SETUP MANAGER</Text>
-              <Text style={styles.editTitle}>Submit Track</Text>
-            </View>
-
-            <Pressable
-              onPress={handleSubmit}
-              disabled={submitting}
-              style={({ pressed }) => [
-                styles.addButton,
-                submitting && styles.disabledButton,
-                pressed && !submitting && styles.buttonPressed,
-              ]}
-            >
-              <Text style={styles.addButtonText}>
-                {submitting ? 'Opening...' : 'Submit'}
-              </Text>
-            </Pressable>
-          </View>
+          <AppScreenHeader
+            title="Submit Track"
+            onBack={onCancel}
+            rightLabel={submitting ? 'OPENING…' : 'SUBMIT'}
+            onRightPress={submitting ? undefined : handleSubmit}
+          />
 
           <Text style={styles.editSubtitle}>
             Opens an email draft to {TRACK_SUBMISSION_EMAIL}.

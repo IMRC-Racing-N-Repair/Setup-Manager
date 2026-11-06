@@ -12,6 +12,7 @@ import { getTracks } from '../tracks/storage/trackStorage';
 import { getSetups } from '../setups/lib/setupStorage';
 import { getEntityId, getTrackDisplayName } from '../setups/lib/setupModel';
 import StableSafeAreaView from '../../src/layout/StableSafeAreaView';
+import AppScreenHeader from '../../src/layout/AppScreenHeader';
 import NewLookBottomNav from '../../src/navigation/NewLookBottomNav';
 import { AppColors } from '../../src/theme/colors';
 
@@ -142,14 +143,13 @@ export default function GarageScreen() {
       <StatusBar style="light" />
       <View style={styles.root}>
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          <View style={styles.header}>
-            <Pressable style={styles.backButton} onPress={goBack}><Text style={styles.backText}>‹ BACK</Text></Pressable>
-            <View style={styles.headerText}>
-              <Text style={styles.kicker}>IMRC GARAGE</Text>
-              <Text style={styles.title}>Garage</Text>
-            </View>
-            <Pressable style={styles.addVehicleButton} onPress={() => router.push('/vehicles')}><Text style={styles.addVehicleText}>+ VEHICLE</Text></Pressable>
-          </View>
+          <AppScreenHeader
+            title="Garage"
+            kicker="IMRC GARAGE"
+            onBack={goBack}
+            rightLabel="+ VEHICLE"
+            onRightPress={() => router.push('/vehicles')}
+          />
 
           <Text style={styles.intro}>
             {showVehicleTracks

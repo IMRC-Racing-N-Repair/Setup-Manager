@@ -2,6 +2,7 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from
 import { StatusBar } from 'expo-status-bar';
 
 import StableSafeAreaView from '../layout/StableSafeAreaView';
+import AppScreenHeader from '../layout/AppScreenHeader';
 import { AppColors } from '../theme/colors';
 
 function clean(value) {
@@ -23,16 +24,7 @@ export function GaragePickerScreen({
     <StableSafeAreaView style={styles.safe} edges={['top', 'bottom', 'left', 'right']}>
       <StatusBar style="light" />
       <View style={styles.root}>
-        <View style={styles.header}>
-          <Pressable style={({ pressed }) => [styles.backButton, pressed && styles.pressed]} onPress={onBack}>
-            <Text style={styles.backText}>‹ Back</Text>
-          </Pressable>
-          <View style={styles.headerTitle}>
-            <Text style={styles.kicker}>IMRC GARAGE</Text>
-            <Text style={styles.title} numberOfLines={1}>{title}</Text>
-          </View>
-          <View style={styles.headerSpacer} />
-        </View>
+        <AppScreenHeader title={title} kicker="IMRC GARAGE" onBack={onBack} />
 
         <View style={styles.subHeader}>
           <Text style={styles.subtitle}>{subtitle}</Text>

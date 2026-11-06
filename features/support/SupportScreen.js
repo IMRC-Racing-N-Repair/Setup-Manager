@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import StableSafeAreaView from '../../src/layout/StableSafeAreaView';
+import AppScreenHeader from '../../src/layout/AppScreenHeader';
 import HowToUseAppModal from './components/HowToUseAppModal';
 import {
   getLatestCrashReport,
@@ -89,25 +90,8 @@ export default function SupportScreen({ navigation }) {
   return (
     <StableSafeAreaView edges={['top', 'bottom', 'left', 'right']} style={styles.safeArea}>
       <View style={styles.screen}>
-        <View style={styles.header}>
-          <Pressable
-            onPress={handleBack}
-            disabled={!canGoBack}
-            style={({ pressed }) => [
-              styles.headerButton,
-              !canGoBack && styles.headerButtonHidden,
-              pressed && styles.pressed,
-            ]}
-          >
-            <Text style={styles.headerButtonText}>Back</Text>
-          </Pressable>
-
-          <View style={styles.headerTitleWrap}>
-            <Text style={styles.headerKicker}>IMRC SUPPORT</Text>
-            <Text style={styles.headerTitle}>Support</Text>
-          </View>
-
-          <View style={styles.headerButtonSpacer} />
+        <View style={styles.sharedHeaderInset}>
+          <AppScreenHeader title="Support" kicker="IMRC SUPPORT" onBack={canGoBack ? handleBack : undefined} />
         </View>
 
         <ScrollView
@@ -197,6 +181,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: BG,
   },
+  sharedHeaderInset: { paddingHorizontal: 15 },
   header: {
     minHeight: 64,
     paddingHorizontal: 14,

@@ -14,6 +14,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSafeAreaLayout } from '../../../../src/layout/safeAreaLayout';
 import StableSafeAreaView from '../../../../src/layout/StableSafeAreaView';
+import AppScreenHeader from '../../../../src/layout/AppScreenHeader';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import SetupField from '../../../../features/setups/components/SetupField';
 import SetupSection from '../../../../features/setups/components/SetupSection';
@@ -765,26 +766,11 @@ export default function SetupEditorScreen() {
       >
         <View style={setupStyles.editorMainArea}>
           <View style={[setupStyles.editorPageHeader, layoutMetrics.editorHeader]}>
-            <View style={setupStyles.headerRow}>
-              <Pressable
-                onPress={() => requestLeaveEditor()}
-                style={({ pressed }) => [
-                  setupStyles.button,
-                  setupStyles.buttonSecondary,
-                  setupStyles.topBackButton,
-                  pressed && setupStyles.cardPressed,
-                ]}
-              >
-                <Text style={setupStyles.buttonSecondaryText}>‹ Back</Text>
-              </Pressable>
-
-              <View style={setupStyles.headerTextWrap}>
-                <Text style={setupStyles.eyebrow}>IMRC SETUP MANAGER</Text>
-                <Text numberOfLines={1} style={[setupStyles.editorScreenTitle, layoutMetrics.editorTitle]}>{title}</Text>
-                <Text numberOfLines={1} style={[setupStyles.editorScreenSubtitle, layoutMetrics.editorSubtitle]}>{subtitle}</Text>
-              </View>
-
-              <View style={setupStyles.headerActionRow}>
+            <AppScreenHeader
+              title={title}
+              subtitle={subtitle}
+              onBack={() => requestLeaveEditor()}
+              right={<View style={setupStyles.headerActionRow}>
                 <Pressable
                   disabled={!setup}
                   onPress={() => setExportPromptVisible(true)}
@@ -811,8 +797,8 @@ export default function SetupEditorScreen() {
                 >
                   <Text style={setupStyles.buttonText}>{saving ? 'Saving' : 'Save'}</Text>
                 </Pressable>
-              </View>
-            </View>
+              </View>}
+            />
           </View>
 
           {readOnly ? (

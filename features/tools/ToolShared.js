@@ -17,6 +17,7 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import StableSafeAreaView from '../../src/layout/StableSafeAreaView';
+import AppScreenHeader from '../../src/layout/AppScreenHeader';
 
 export const TOOL_GREEN = '#2F8CFF';
 export const TOOL_GREEN_DARK = '#102A4A';
@@ -80,18 +81,8 @@ export function ToolScaffold({ title, subtitle, children, onBack, right, scroll 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 6 : 0}
       >
-        <View style={styles.headerOuter}>
-          <View style={styles.headerAccent} />
-          <View style={styles.header}>
-            <Pressable style={({ pressed }) => [styles.backButton, pressed && styles.pressed]} onPress={onBack}>
-              <Text style={styles.backText}>‹ Back</Text>
-            </Pressable>
-            <View style={styles.headerTitleWrap}>
-              <Text style={styles.title} numberOfLines={1}>{title}</Text>
-              {!!subtitle && <Text style={styles.subtitle} numberOfLines={1}>{subtitle}</Text>}
-            </View>
-            <View style={styles.headerRight}>{right}</View>
-          </View>
+        <View style={styles.sharedHeaderWrap}>
+          <AppScreenHeader title={title} subtitle={subtitle} onBack={onBack} right={right || undefined} />
         </View>
 
         {listProps ? (
@@ -240,6 +231,7 @@ export function InfoText({ children, warning = false, style, numberOfLines }) {
 export const styles = StyleSheet.create({
   flex: { flex: 1 },
   safe: { flex: 1, backgroundColor: TOOL_BG },
+  sharedHeaderWrap: { paddingHorizontal: 15, backgroundColor: TOOL_BG },
   headerOuter: {
     backgroundColor: TOOL_PANEL,
     borderBottomWidth: 1,

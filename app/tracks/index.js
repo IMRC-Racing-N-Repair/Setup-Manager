@@ -25,6 +25,7 @@ import {
 import { openTrackSubmissionEmail } from '../../features/tracks/utils/trackSubmitEmail';
 import { trackStyles as styles, TRACK_BLUE } from '../../features/tracks/styles/trackStyles';
 import NewLookBottomNav from '../../src/navigation/NewLookBottomNav';
+import AppScreenHeader from '../../src/layout/AppScreenHeader';
 
 const NEW_TRACK = {
   trackName: '',
@@ -283,32 +284,13 @@ export default function TracksScreen() {
         },
       ]}>
         <View style={styles.vehicleLikeHeader}>
-          <View style={styles.headerTopRow}>
-            <Pressable
-              onPress={goBack}
-              style={({ pressed }) => [
-                styles.headerButton,
-                pressed && styles.buttonPressed,
-              ]}
-            >
-              <Text style={styles.headerButtonText}>‹ Back</Text>
-            </Pressable>
-
-            <View style={styles.headerTitleWrap}>
-              <Text style={styles.appLabel}>IMRC GARAGE</Text>
-              <Text style={styles.pageTitle}>Tracks</Text>
-            </View>
-
-            <Pressable
-              onPress={addTrack}
-              style={({ pressed }) => [
-                styles.addButton,
-                pressed && styles.buttonPressed,
-              ]}
-            >
-              <Text style={styles.addButtonText}>+ Add</Text>
-            </Pressable>
-          </View>
+          <AppScreenHeader
+            title="Tracks"
+            kicker="IMRC GARAGE"
+            onBack={goBack}
+            rightLabel="+ ADD"
+            onRightPress={addTrack}
+          />
 
           <View style={styles.subHeaderRow}>
             <Text style={styles.pageSubtitle}>Saved tracks are used for Setups and Race Day.</Text>

@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaLayout } from "../../../src/layout/safeAreaLayout";
+import AppScreenHeader from "../../../src/layout/AppScreenHeader";
 
 import ChassisStylePicker from "./ChassisStylePicker";
 import { createEmptyVehicle } from "../logic/vehicleDefaults";
@@ -288,20 +289,11 @@ export default function VehicleForm({
           >
             <View style={styles.formHandle} />
 
-            <View style={keyboardStyles.modalHeaderRow}>
-              <Pressable style={keyboardStyles.modalBackButton} onPress={handleCancel}>
-                <Text style={keyboardStyles.modalBackButtonText}>‹ Back</Text>
-              </Pressable>
-
-              <View style={keyboardStyles.modalTitleBlock}>
-                <Text style={styles.kicker}>Vehicle</Text>
-                <Text style={styles.formTitleCompact}>
-                  {isEditing ? "Edit Vehicle" : "Add Vehicle"}
-                </Text>
-              </View>
-
-              <View style={keyboardStyles.modalHeaderSpacer} />
-            </View>
+            <AppScreenHeader
+              title={isEditing ? "Edit Vehicle" : "Add Vehicle"}
+              kicker="IMRC GARAGE"
+              onBack={handleCancel}
+            />
 
             <ScrollView
               ref={scrollRef}

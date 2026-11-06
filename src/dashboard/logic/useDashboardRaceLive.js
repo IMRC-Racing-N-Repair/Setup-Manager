@@ -9,6 +9,7 @@ import {
 } from '../../../features/raceday/lib/raceDayStorage';
 import { getRaceDayLineups } from '../../../features/raceday/lib/raceDayLineupStorage';
 import { getLineupRaceNumber } from '../../../features/raceday/lib/raceDayLineupPriority';
+import { getRaceDayLiveStatus } from '../../../features/raceday/lib/raceDayLiveStatus';
 
 function clean(value) {
   return String(value ?? '').trim();
@@ -48,6 +49,10 @@ export function useDashboardRaceLive(raceDayReady) {
 
   const siteUrl = clean(context.track?.liveRcUrl || context.track?.livercUrl || context.raceDay?.siteUrl);
   const liveState = useLiveRcLiveFeed(siteUrl, Boolean(raceDayReady && siteUrl));
+  const liveStatus = useMemo(
+    () => getRaceDayLiveStatus(context.raceDay || {}, liveState),
+    [context.raceDay, liveState],
+  );
 
   const nextRace = useMemo(() => {
     const vehicleMap = new Map(
@@ -83,6 +88,7 @@ export function useDashboardRaceLive(raceDayReady) {
     selectedTrack: context.track,
     liveState,
     nextRace,
+    ...liveStatus,
   };
 }
 

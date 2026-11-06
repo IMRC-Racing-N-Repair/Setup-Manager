@@ -60,14 +60,44 @@ export default function FlootDashboardView({
     : savedTrackChoice || raceLive?.selectedTrack || (trackList.length ? trackList[0] : null);
   const viewedVehicle = lastViewedVehicle || (Array.isArray(vehicles) ? vehicles[0] : null);
   const liveState = raceLive?.liveState || {};
-  const nextRace = raceLive?.nextRace || null;
+  const currentEvent = Boolean(raceDayReady && raceLive?.currentDay);
+  const eventMatches = Boolean(currentEvent && raceLive?.eventMatches);
+  const eventMismatch = Boolean(currentEvent && raceLive?.eventMismatch);
+  const liveActive = Boolean(eventMatches && raceLive?.liveActive);
+  const nextRace = eventMatches ? raceLive?.nextRace || null : null;
   const currentRaceNumber = textValue(liveState?.raceNumber);
-  const currentRaceTitle = raceDayReady
-    ? textValue(liveState?.className, liveState?.active ? 'Race in progress' : 'Waiting for track activity')
-    : 'Start a RaceDay';
-  const currentRaceMeta = raceDayReady
-    ? [liveState?.roundType, liveState?.heat, liveState?.raceStatus].filter(Boolean).join(' · ') || 'LiveRC updates will appear here'
-    : 'Choose a track and your race vehicles';
+  const currentRaceTitle = !raceDayReady || !currentEvent
+    ? 'No Current Event'
+    : eventMismatch
+      ? 'Event does not match RaceDay'
+      : eventMatches
+        ? liveActive
+          ? textValue(liveState?.className, 'Race in progress')
+          : 'Waiting for track activity'
+        : 'Checking LiveRC event';
+  const currentRaceMeta = !raceDayReady || !currentEvent
+    ? 'Choose today’s event in RaceDay'
+    : eventMismatch
+      ? 'The live track event is different from the selected RaceDay event'
+      : eventMatches
+        ? liveActive
+          ? [liveState?.roundType, liveState?.heat, liveState?.raceStatus].filter(Boolean).join(' · ') || 'Current race is live'
+          : 'No race is currently live'
+        : 'Confirming the selected event with LiveRC';
+  const lineupTitle = !currentEvent
+    ? 'No Current Event'
+    : eventMismatch
+      ? "Event does not match RaceDay's"
+      : !eventMatches
+        ? 'Checking LiveRC event'
+        : nextRace?.vehicleName || 'Waiting for lineup';
+  const lineupMeta = !currentEvent
+    ? 'Select an event dated today to enable live RaceDay information'
+    : eventMismatch
+      ? 'Choose the same event in RaceDay that is currently live at the track'
+      : !eventMatches
+        ? 'Waiting for LiveRC to identify the current event'
+        : nextRace?.className || 'Lineup details will appear after sync';
   const workspaceTrackName = loading
     ? 'Checking saved RaceDay'
     : textValue(activeTrack?.name || activeTrack?.trackName, 'No track');
@@ -76,6 +106,10 @@ export default function FlootDashboardView({
     : activeTrack
       ? [activeTrack.surface, activeTrack.type || activeTrack.trackType].filter(Boolean).join(' · ') || 'Track details'
       : 'No track selected';
+  const raceDayTrackName = textValue(
+    raceLive?.selectedTrack?.name || raceLive?.selectedTrack?.trackName,
+    workspaceTrackName,
+  );
   const showWorkspace = loading || !!activeTrack;
   const sponsorImage = sponsor?.logo || sponsor?.image || '';
   const syncColor = statusDotColor || '#6F7D74';
@@ -143,7 +177,7 @@ export default function FlootDashboardView({
             <Text style={styles.trackName} numberOfLines={1}>{workspaceTrackName}</Text>
             <Text style={styles.trackMeta} numberOfLines={1}>{workspaceTrackMeta}</Text>
           </View>
-          {!loading && raceDayReady && activeTrack ? (
+          {!loading && liveActive && activeTrack ? (
             <View style={styles.trackLiveBadge}>
               <View style={styles.liveDot} />
               <Text style={styles.trackLiveText}>LIVE · RACE {currentRaceNumber}</Text>
@@ -155,22 +189,22 @@ export default function FlootDashboardView({
           <View style={[styles.racePanel, compactLayout && styles.racePanelCompact]}>
             <View style={styles.sectionHeader}>
               <View>
-                <Text style={styles.microLabel}>{loading ? 'CHECKING RACEDAY' : raceDayReady ? 'LIVE RACEDAY' : 'RACEDAY'}</Text>
-                <Text style={styles.sectionTitle}>{workspaceTrackName}</Text>
+                <Text style={styles.microLabel}>{loading ? 'CHECKING RACEDAY' : liveActive ? 'LIVE RACEDAY' : 'RACEDAY'}</Text>
+                <Text style={styles.sectionTitle}>{raceDayTrackName}</Text>
               </View>
-              <View style={[styles.liveBadge, (loading || !raceDayReady) && styles.idleBadge]}>
-                <View style={[styles.liveDot, (loading || !raceDayReady) && styles.idleDot]} />
-                <Text style={[styles.liveText, (loading || !raceDayReady) && styles.idleText]}>{loading ? 'LOADING' : raceDayReady ? 'LIVE' : 'READY'}</Text>
+              <View style={[styles.liveBadge, (loading || !liveActive) && styles.idleBadge]}>
+                <View style={[styles.liveDot, (loading || !liveActive) && styles.idleDot]} />
+                <Text style={[styles.liveText, (loading || !liveActive) && styles.idleText]}>{loading ? 'LOADING' : liveActive ? 'LIVE' : currentEvent ? 'WAITING' : 'NO EVENT'}</Text>
               </View>
             </View>
 
             <Pressable disabled={loading} style={({ pressed }) => [styles.raceLine, compactLayout && styles.raceLineCompact, loading && styles.loadingMuted, pressed && styles.pressed]} onPress={onRaceDayPress}>
               <View style={styles.raceBadge}>
                 <Text style={styles.raceBadgeTop}>RACE</Text>
-                <Text style={styles.raceBadgeValue}>{!loading && raceDayReady ? currentRaceNumber : '—'}</Text>
+                <Text style={styles.raceBadgeValue}>{!loading && liveActive ? currentRaceNumber : '—'}</Text>
               </View>
               <View style={styles.raceMain}>
-                <Text style={styles.mutedLabel}>{loading ? 'LOADING' : raceDayReady ? 'CURRENT RACE' : 'START'}</Text>
+                <Text style={styles.mutedLabel}>{loading ? 'LOADING' : liveActive ? 'CURRENT RACE' : 'EVENT STATUS'}</Text>
                 <Text style={styles.raceMainTitle}>{loading ? 'Checking race information' : currentRaceTitle}</Text>
                 <Text style={styles.raceMainMeta}>{loading ? 'Reading your saved RaceDay and LiveRC data' : currentRaceMeta}</Text>
               </View>
@@ -181,8 +215,8 @@ export default function FlootDashboardView({
               <Text style={styles.microLabel}>YOUR NEXT RACE</Text>
               <View style={styles.nextRaceRow}>
                 <View style={styles.nextRaceIdentity}>
-                  <Text style={styles.nextRaceVehicle} numberOfLines={1}>{loading ? 'Checking your vehicles' : nextRace?.vehicleName || (raceDayReady ? 'Waiting for lineup' : 'No active RaceDay')}</Text>
-                  <Text style={styles.nextRaceClass} numberOfLines={1}>{loading ? 'Loading class and lineup details' : nextRace ? nextRace.className : 'Lineup details will appear after sync'}</Text>
+                  <Text style={styles.nextRaceVehicle} numberOfLines={1}>{loading ? 'Checking your vehicles' : lineupTitle}</Text>
+                  <Text style={styles.nextRaceClass} numberOfLines={1}>{loading ? 'Loading class and lineup details' : lineupMeta}</Text>
                 </View>
                 <View style={styles.nextRaceNumberBox}>
                   <Text style={styles.nextRaceNumberLabel}>RACE</Text>

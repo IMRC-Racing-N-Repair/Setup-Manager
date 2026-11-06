@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
   bottomNavTabletLandscape: { minHeight: 66, paddingHorizontal: 22, paddingTop: 5, paddingBottom: 5 },
   navItem: { flex: 1, minHeight: 52, alignItems: 'center', justifyContent: 'center', gap: 2 },
   navItemCompact: { minHeight: 44 },
-  navItemTabletLandscape: { minHeight: 52, gap: 2 },
+  navItemTabletLandscape: { minHeight: 52, gap: 2, transform: [{ translateY: -8 }] },
   navItemActive: { backgroundColor: AppColors.surface },
   navGlyph: { color: AppColors.mutedText, fontSize: 18 },
   navGlyphCompact: { fontSize: 15 },

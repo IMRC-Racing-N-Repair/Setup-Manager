@@ -278,10 +278,10 @@ function getEditorLayoutMetrics({ height, width, topInset = 0, bottomInset = 0, 
       paddingBottom: tabletLandscape ? 4 : Math.max(4, (mapScale < 0.78 ? 3 : 4)),
     },
     bottomActionRow: {
-      minHeight: tabletLandscape ? 76 : 54,
+      minHeight: 54,
     },
     mapActionButton: {
-      minHeight: tabletLandscape ? 72 : v(50, 44),
+      minHeight: tabletLandscape ? 50 : v(50, 44),
       paddingVertical: tabletLandscape ? 4 : v(5, 4),
       borderRadius: 0,
     },

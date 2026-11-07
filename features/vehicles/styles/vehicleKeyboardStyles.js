@@ -54,8 +54,8 @@ export const vehicleKeyboardStyles = StyleSheet.create({
   },
 
   scrollContentStable: {
-    paddingHorizontal: 14,
-    paddingTop: 10,
+    paddingHorizontal: 16,
+    paddingTop: 12,
   },
 
   fixedActionBar: {
@@ -63,8 +63,8 @@ export const vehicleKeyboardStyles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    paddingHorizontal: 14,
-    paddingTop: 9,
+    paddingHorizontal: 16,
+    paddingTop: 10,
     backgroundColor: VEHICLE_COLORS.appBg,
     borderTopWidth: 1,
     borderTopColor: VEHICLE_COLORS.border,

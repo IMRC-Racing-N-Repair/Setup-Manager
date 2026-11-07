@@ -45,12 +45,13 @@ export default function VehicleForm({
 
   const isEditing = Boolean(draft?.id);
 
-  const popupWidth = Math.min(Math.max(0, usableWidth - 24), 560);
+  const isWideForm = usableWidth >= 760;
+  const popupWidth = Math.min(Math.max(0, usableWidth - 24), isWideForm ? 920 : 560);
   const verticalSafeReserve = Math.max(insets.top + insets.bottom, 22);
   const popupHeight = Math.min(
     Math.floor(usableHeight * 0.9),
     Math.max(0, height - verticalSafeReserve - 28),
-    650
+    isWideForm ? 720 : 650
   );
 
   const scrollFocusedFieldIntoView = useCallback((delay = 70) => {
@@ -309,6 +310,20 @@ export default function VehicleForm({
                 },
               ]}
             >
+              <View style={styles.formIntro}>
+                <Text style={styles.formIntroEyebrow}>VEHICLE PROFILE</Text>
+                <Text style={styles.formIntroText}>
+                  {isEditing
+                    ? "Update the vehicle details used throughout Garage, Setups, and RaceDay."
+                    : "Create a vehicle profile, then build track-specific setups from it."}
+                </Text>
+              </View>
+
+              <View style={styles.formSectionHeader}>
+                <Text style={styles.formSectionEyebrow}>IDENTITY</Text>
+                <Text style={styles.formSectionTitle}>Vehicle details</Text>
+              </View>
+
               <View
                 style={styles.fieldCompact}
                 onLayout={storeFieldPosition("name")}
@@ -363,57 +378,69 @@ export default function VehicleForm({
                 </View>
               </View>
 
-              <View
-                style={styles.fieldCompact}
-                onLayout={storeFieldPosition("chassisStyle")}
-              >
-                <Text style={styles.labelCompact}>Chassis Style *</Text>
-                <Pressable
-                  style={[
-                    styles.pickerButtonCompact,
-                    draft.chassisStyle && styles.pickerButtonSelected,
-                    errors.chassisStyle && styles.inputError,
-                  ]}
-                  onPress={() => {
-                    if (actionLockedRef.current || pickerVisible) return;
-                    Keyboard.dismiss();
-                    focusedFieldRef.current = "chassisStyle";
-                    setPickerVisible(true);
-                  }}
-                >
-                  <Text
-                    style={[
-                      styles.pickerButtonTextCompact,
-                      !draft.chassisStyle && styles.pickerButtonPlaceholder,
-                    ]}
-                    numberOfLines={1}
-                  >
-                    {draft.chassisStyle || "Select chassis style"}
-                  </Text>
-                  <Text style={styles.pickerChevron}>⌄</Text>
-                </Pressable>
-
-                {errors.chassisStyle ? (
-                  <Text style={styles.errorText}>{errors.chassisStyle}</Text>
-                ) : null}
+              <View style={styles.formSectionHeader}>
+                <Text style={styles.formSectionEyebrow}>RACE PROFILE</Text>
+                <Text style={styles.formSectionTitle}>Chassis and scoring</Text>
               </View>
 
-              <View
-                style={styles.fieldCompact}
-                onLayout={storeFieldPosition("transponder")}
-              >
-                <Text style={styles.labelCompact}>Transponder Number</Text>
-                <TextInput
-                  value={draft.transponder}
-                  onChangeText={(value) => updateField("transponder", value)}
-                  placeholder="Example: 3358118"
-                  placeholderTextColor="#6F7A8C"
-                  style={styles.inputCompact}
-                  autoCorrect={false}
-                  keyboardType={Platform.OS === "ios" ? "number-pad" : "numeric"}
-                  returnKeyType="next"
-                  {...getInputFocusProps("transponder")}
-                />
+              <View style={isWideForm ? styles.formRow : undefined}>
+                <View
+                  style={isWideForm ? styles.formRowItem : styles.fieldCompact}
+                  onLayout={storeFieldPosition("chassisStyle")}
+                >
+                  <Text style={styles.labelCompact}>Chassis Style *</Text>
+                  <Pressable
+                    style={[
+                      styles.pickerButtonCompact,
+                      draft.chassisStyle && styles.pickerButtonSelected,
+                      errors.chassisStyle && styles.inputError,
+                    ]}
+                    onPress={() => {
+                      if (actionLockedRef.current || pickerVisible) return;
+                      Keyboard.dismiss();
+                      focusedFieldRef.current = "chassisStyle";
+                      setPickerVisible(true);
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.pickerButtonTextCompact,
+                        !draft.chassisStyle && styles.pickerButtonPlaceholder,
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {draft.chassisStyle || "Select chassis style"}
+                    </Text>
+                    <Text style={styles.pickerChevron}>⌄</Text>
+                  </Pressable>
+
+                  {errors.chassisStyle ? (
+                    <Text style={styles.errorText}>{errors.chassisStyle}</Text>
+                  ) : null}
+                </View>
+
+                <View
+                  style={isWideForm ? styles.formRowItem : styles.fieldCompact}
+                  onLayout={storeFieldPosition("transponder")}
+                >
+                  <Text style={styles.labelCompact}>Transponder Number</Text>
+                  <TextInput
+                    value={draft.transponder}
+                    onChangeText={(value) => updateField("transponder", value)}
+                    placeholder="Example: 3358118"
+                    placeholderTextColor="#6F7A8C"
+                    style={styles.inputCompact}
+                    autoCorrect={false}
+                    keyboardType={Platform.OS === "ios" ? "number-pad" : "numeric"}
+                    returnKeyType="next"
+                    {...getInputFocusProps("transponder")}
+                  />
+                </View>
+              </View>
+
+              <View style={styles.formSectionHeader}>
+                <Text style={styles.formSectionEyebrow}>NOTES</Text>
+                <Text style={styles.formSectionTitle}>Anything worth remembering</Text>
               </View>
 
               <View

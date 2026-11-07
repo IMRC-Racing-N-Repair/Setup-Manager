@@ -411,6 +411,9 @@ export const trackStyles = StyleSheet.create({
   },
 
   formContent: {
+    width: '100%',
+    maxWidth: 1180,
+    alignSelf: 'center',
     paddingHorizontal: 14,
     paddingTop: TRACK_SAFE_TOP,
     paddingBottom: TRACK_SAFE_BOTTOM + 96,
@@ -423,6 +426,23 @@ export const trackStyles = StyleSheet.create({
 
   editHeader: {
     marginBottom: 11,
+  },
+
+  submitIntro: {
+    borderLeftWidth: 3,
+    borderLeftColor: trackColors.blue,
+    backgroundColor: trackColors.blueSoft,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    marginTop: 9,
+  },
+
+  submitIntroEyebrow: {
+    color: trackColors.blue,
+    fontSize: 9,
+    lineHeight: 11,
+    fontWeight: '900',
+    letterSpacing: 1.25,
   },
 
   submitTopHeaderRow: {
@@ -456,6 +476,31 @@ export const trackStyles = StyleSheet.create({
     gap: 9,
   },
 
+  formSectionHeader: {
+    width: '100%',
+    borderBottomWidth: 1,
+    borderBottomColor: trackColors.border,
+    paddingBottom: 7,
+    marginTop: 3,
+    marginBottom: 1,
+  },
+
+  formSectionEyebrow: {
+    color: trackColors.blue,
+    fontSize: 9,
+    lineHeight: 11,
+    fontWeight: '900',
+    letterSpacing: 1.2,
+  },
+
+  formSectionTitle: {
+    color: trackColors.text,
+    fontSize: 15,
+    lineHeight: 19,
+    fontWeight: '900',
+    marginTop: 1,
+  },
+
   formGridNested: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -479,11 +524,11 @@ export const trackStyles = StyleSheet.create({
 
   compactSection: {
     width: '100%',
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: trackColors.border,
+    borderLeftWidth: 2,
+    borderLeftColor: trackColors.blueBorder,
     backgroundColor: trackColors.panel,
-    padding: 10,
+    paddingHorizontal: 11,
+    paddingVertical: 10,
   },
 
   compactSectionTitle: {
@@ -515,7 +560,7 @@ export const trackStyles = StyleSheet.create({
 
   bottomSheet: {
     width: '100%',
-    maxWidth: 560,
+    maxWidth: 600,
     height: '84%',
     maxHeight: '84%',
     borderRadius: 8,
@@ -534,10 +579,10 @@ export const trackStyles = StyleSheet.create({
   },
 
   bottomSheetLandscape: {
-    height: '88%',
-    maxHeight: '88%',
+    height: '90%',
+    maxHeight: '90%',
     alignSelf: 'center',
-    maxWidth: 720,
+    maxWidth: 940,
     borderRadius: 8,
   },
 
@@ -557,6 +602,31 @@ export const trackStyles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: 10,
     marginBottom: 8,
+  },
+
+  sheetIntro: {
+    borderLeftWidth: 3,
+    borderLeftColor: trackColors.blue,
+    backgroundColor: trackColors.blueSoft,
+    paddingHorizontal: 11,
+    paddingVertical: 8,
+    marginBottom: 10,
+  },
+
+  sheetIntroEyebrow: {
+    color: trackColors.blue,
+    fontSize: 9,
+    lineHeight: 11,
+    fontWeight: '900',
+    letterSpacing: 1.2,
+  },
+
+  sheetIntroText: {
+    color: trackColors.muted,
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: '700',
+    marginTop: 2,
   },
 
   sheetHeaderTextWrap: {
@@ -629,6 +699,31 @@ export const trackStyles = StyleSheet.create({
     gap: 8,
   },
 
+  sheetSectionHeader: {
+    width: '100%',
+    borderBottomWidth: 1,
+    borderBottomColor: trackColors.border,
+    paddingBottom: 6,
+    marginTop: 2,
+    marginBottom: 1,
+  },
+
+  sheetSectionEyebrow: {
+    color: trackColors.blue,
+    fontSize: 9,
+    lineHeight: 11,
+    fontWeight: '900',
+    letterSpacing: 1.2,
+  },
+
+  sheetSectionHeaderTitle: {
+    color: trackColors.text,
+    fontSize: 14,
+    lineHeight: 18,
+    fontWeight: '900',
+    marginTop: 1,
+  },
+
   sheetGridNested: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -661,11 +756,11 @@ export const trackStyles = StyleSheet.create({
 
   sheetSection: {
     width: '100%',
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: trackColors.border,
+    borderLeftWidth: 2,
+    borderLeftColor: trackColors.blueBorder,
     backgroundColor: trackColors.panel,
-    padding: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 9,
   },
 
   sheetSectionTitle: {
@@ -682,8 +777,8 @@ export const trackStyles = StyleSheet.create({
   },
 
   textInput: {
-    minHeight: 40,
-    borderRadius: 5,
+    minHeight: 42,
+    borderRadius: 4,
     borderWidth: 1,
     borderColor: trackColors.border,
     backgroundColor: trackColors.panel,
@@ -731,8 +826,8 @@ export const trackStyles = StyleSheet.create({
   },
 
   dropdownButton: {
-    minHeight: 40,
-    borderRadius: 5,
+    minHeight: 42,
+    borderRadius: 4,
     borderWidth: 1,
     borderColor: trackColors.border,
     backgroundColor: trackColors.panel,
@@ -899,8 +994,12 @@ export const trackStyles = StyleSheet.create({
   },
 
   actionRow: {
-    gap: 9,
-    marginTop: 13,
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 16,
+    paddingTop: 11,
+    borderTopWidth: 1,
+    borderTopColor: trackColors.border,
   },
 
   actionRowLandscape: {
@@ -910,12 +1009,31 @@ export const trackStyles = StyleSheet.create({
   },
 
   primaryButton: {
+    flex: 2,
     minHeight: 46,
     borderRadius: 6,
     backgroundColor: trackColors.blue,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 16,
+  },
+
+  submitBackButton: {
+    flex: 1,
+    minHeight: 46,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: trackColors.border,
+    backgroundColor: trackColors.panelSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+  },
+
+  submitBackButtonText: {
+    color: trackColors.text,
+    fontSize: 14,
+    fontWeight: '900',
   },
 
   primaryButtonText: {

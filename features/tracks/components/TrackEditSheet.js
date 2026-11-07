@@ -356,6 +356,15 @@ export default function TrackEditSheet({
             ) : null}
           </View>
 
+          <View style={styles.sheetIntro}>
+            <Text style={styles.sheetIntroEyebrow}>TRACK PROFILE</Text>
+            <Text style={styles.sheetIntroText}>
+              {isNew
+                ? 'Add the track details used by Garage, Setups, and RaceDay.'
+                : 'Keep this track profile accurate across Garage, Setups, and RaceDay.'}
+            </Text>
+          </View>
+
           <PopupScrollTab
             scrollY={scrollY}
             visibleHeight={scrollVisibleHeight}
@@ -382,6 +391,11 @@ export default function TrackEditSheet({
             )}
           >
             <View style={styles.sheetGrid}>
+              <View style={styles.sheetSectionHeader}>
+                <Text style={styles.sheetSectionEyebrow}>IDENTITY</Text>
+                <Text style={styles.sheetSectionHeaderTitle}>Track details</Text>
+              </View>
+
               <View style={styles.sheetFieldFull} onLayout={event => rememberFieldLayout('trackName', event)}>
                 <Text style={styles.inputLabel}>Track Name *</Text>
                 <TextInput
@@ -505,6 +519,11 @@ export default function TrackEditSheet({
                 </View>
               </View>
 
+              <View style={styles.sheetSectionHeader}>
+                <Text style={styles.sheetSectionEyebrow}>RACE PROFILE</Text>
+                <Text style={styles.sheetSectionHeaderTitle}>Direction, traction, and dimensions</Text>
+              </View>
+
               <View style={halfFieldStyle} onLayout={event => rememberFieldLayout('phone', event)}>
                 <Text style={styles.inputLabel}>Phone</Text>
                 <TextInput
@@ -571,6 +590,11 @@ export default function TrackEditSheet({
                   style={styles.textInput}
                   returnKeyType="next"
                 />
+              </View>
+
+              <View style={styles.sheetSectionHeader}>
+                <Text style={styles.sheetSectionEyebrow}>NOTES</Text>
+                <Text style={styles.sheetSectionHeaderTitle}>Anything worth remembering</Text>
               </View>
 
               <View style={styles.sheetFieldFull} onLayout={event => rememberFieldLayout('notes', event)}>

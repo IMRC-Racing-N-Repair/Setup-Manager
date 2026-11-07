@@ -306,6 +306,55 @@ export const vehicleStyles = StyleSheet.create({
     paddingBottom: 18,
   },
 
+  formIntro: {
+    borderLeftWidth: 3,
+    borderLeftColor: VEHICLE_COLORS.accent,
+    backgroundColor: VEHICLE_COLORS.accentSoft,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 14,
+  },
+
+  formIntroEyebrow: {
+    color: VEHICLE_COLORS.accent,
+    fontSize: 9,
+    lineHeight: 12,
+    fontWeight: "900",
+    letterSpacing: 1.3,
+  },
+
+  formIntroText: {
+    color: VEHICLE_COLORS.textMuted,
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "700",
+    marginTop: 3,
+  },
+
+  formSectionHeader: {
+    borderBottomWidth: 1,
+    borderBottomColor: VEHICLE_COLORS.border,
+    paddingBottom: 6,
+    marginBottom: 9,
+    marginTop: 2,
+  },
+
+  formSectionEyebrow: {
+    color: VEHICLE_COLORS.accent,
+    fontSize: 9,
+    lineHeight: 11,
+    fontWeight: "900",
+    letterSpacing: 1.25,
+  },
+
+  formSectionTitle: {
+    color: VEHICLE_COLORS.text,
+    fontSize: 15,
+    lineHeight: 19,
+    fontWeight: "900",
+    marginTop: 1,
+  },
+
   formHeader: {
     marginBottom: 14,
   },
@@ -387,8 +436,8 @@ export const vehicleStyles = StyleSheet.create({
   },
 
   inputCompact: {
-    minHeight: 42,
-    borderRadius: 5,
+    minHeight: 44,
+    borderRadius: 4,
     borderWidth: 1,
     borderColor: VEHICLE_COLORS.border,
     backgroundColor: VEHICLE_COLORS.inputBg,
@@ -442,8 +491,8 @@ export const vehicleStyles = StyleSheet.create({
   },
 
   pickerButtonCompact: {
-    minHeight: 42,
-    borderRadius: 5,
+    minHeight: 44,
+    borderRadius: 4,
     borderWidth: 1,
     borderColor: VEHICLE_COLORS.border,
     backgroundColor: VEHICLE_COLORS.inputBg,

@@ -119,12 +119,20 @@ export default function TrackSubmitForm({ initialTrack, onCancel }) {
             onRightPress={submitting ? undefined : handleSubmit}
           />
 
-          <Text style={styles.editSubtitle}>
-            Opens an email draft to {TRACK_SUBMISSION_EMAIL}.
-          </Text>
+          <View style={styles.submitIntro}>
+            <Text style={styles.submitIntroEyebrow}>SHARE WITH IMRC</Text>
+            <Text style={styles.editSubtitle}>
+              Complete the track profile below. We’ll prepare an email draft to {TRACK_SUBMISSION_EMAIL}.
+            </Text>
+          </View>
         </View>
 
         <View style={styles.formGrid}>
+          <View style={styles.formSectionHeader}>
+            <Text style={styles.formSectionEyebrow}>IDENTITY</Text>
+            <Text style={styles.formSectionTitle}>Track details</Text>
+          </View>
+
           <View style={halfFieldStyle}>
             <Text style={styles.inputLabel}>Track Name *</Text>
             <TextInput
@@ -136,6 +144,11 @@ export default function TrackSubmitForm({ initialTrack, onCancel }) {
               autoCapitalize="words"
             />
             {errors.trackName ? <Text style={styles.errorText}>{errors.trackName}</Text> : null}
+          </View>
+
+          <View style={styles.formSectionHeader}>
+            <Text style={styles.formSectionEyebrow}>CONTACT & TRACK CONDITIONS</Text>
+            <Text style={styles.formSectionTitle}>Race-day information</Text>
           </View>
 
           <View style={halfFieldStyle}>
@@ -289,6 +302,11 @@ export default function TrackSubmitForm({ initialTrack, onCancel }) {
             />
           </View>
 
+          <View style={styles.formSectionHeader}>
+            <Text style={styles.formSectionEyebrow}>NOTES</Text>
+            <Text style={styles.formSectionTitle}>Anything else we should know</Text>
+          </View>
+
           <View style={styles.formFieldFull}>
             <Text style={styles.inputLabel}>Notes</Text>
             <TextInput
@@ -321,11 +339,11 @@ export default function TrackSubmitForm({ initialTrack, onCancel }) {
           <Pressable
             onPress={onCancel}
             style={({ pressed }) => [
-              styles.headerButton,
+              styles.submitBackButton,
               pressed && styles.buttonPressed,
             ]}
           >
-            <Text style={styles.headerButtonText}>Back</Text>
+            <Text style={styles.submitBackButtonText}>Back</Text>
           </Pressable>
         </View>
 

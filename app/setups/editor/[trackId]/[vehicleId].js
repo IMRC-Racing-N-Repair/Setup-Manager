@@ -273,7 +273,10 @@ function getEditorLayoutMetrics({ height, width, topInset = 0, bottomInset = 0, 
       marginTop: v(2, 0),
     },
     bottomBar: {
-      bottom: navHeight + Number(bottomInset || 0),
+      // StableSafeAreaView already removes the device bottom inset from this
+      // container. Anchor the action rail directly above the 66px nav so the
+      // two footer rows meet just like the RaceDay footer.
+      bottom: navHeight,
       paddingTop: tabletLandscape ? 4 : v(5, 2),
       paddingBottom: tabletLandscape ? 4 : Math.max(4, (mapScale < 0.78 ? 3 : 4)),
     },

@@ -336,25 +336,31 @@ export default function TracksScreen() {
           </View>
 
           <View style={modernTrackStyles.utilityRow}>
+            <View style={modernTrackStyles.utilitySide} />
+
             <Pressable
               onPress={openImportSheet}
               style={({ pressed }) => [
                 modernTrackStyles.utilityButton,
+                modernTrackStyles.importButton,
                 pressed && styles.buttonPressed,
               ]}
             >
-              <Text style={modernTrackStyles.utilityText}>IMPORT</Text>
+              <Text style={[modernTrackStyles.utilityText, modernTrackStyles.importText]}>IMPORT</Text>
             </Pressable>
 
-            <Pressable
-              onPress={openSubmitTrackScreen}
-              style={({ pressed }) => [
-                modernTrackStyles.utilityButton,
-                pressed && styles.buttonPressed,
-              ]}
-            >
-              <Text style={modernTrackStyles.utilityText}>SUBMIT TRACK</Text>
-            </Pressable>
+            <View style={[modernTrackStyles.utilitySide, modernTrackStyles.utilitySideRight]}>
+              <Pressable
+                onPress={openSubmitTrackScreen}
+                style={({ pressed }) => [
+                  modernTrackStyles.utilityButton,
+                  modernTrackStyles.submitButton,
+                  pressed && styles.buttonPressed,
+                ]}
+              >
+                <Text style={[modernTrackStyles.utilityText, modernTrackStyles.submitText]}>SUBMIT TRACK</Text>
+              </Pressable>
+            </View>
           </View>
         </View>
 
@@ -449,16 +455,28 @@ const modernTrackStyles = StyleSheet.create({
   },
   savedCount: { color: AppColors.mutedText, fontSize: 8, fontWeight: '900', letterSpacing: 0.6 },
   utilityRow: {
-    minHeight: 38,
+    minHeight: 48,
     flexDirection: 'row',
-    justifyContent: 'flex-end',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
     borderBottomWidth: 1,
     borderBottomColor: AppColors.borderStrong,
   },
-  utilityButton: { minHeight: 28, justifyContent: 'center', paddingHorizontal: 9, borderWidth: 1, borderColor: AppColors.borderStrong },
-  utilityText: { color: AppColors.primary, fontSize: 8, fontWeight: '900', letterSpacing: 0.45 },
+  utilitySide: { flex: 1, minWidth: 0 },
+  utilitySideRight: { alignItems: 'flex-end' },
+  utilityButton: {
+    minHeight: 34,
+    minWidth: 104,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    borderWidth: 1,
+  },
+  importButton: { backgroundColor: '#22C55E', borderColor: '#4ADE80' },
+  submitButton: { minWidth: 116, backgroundColor: AppColors.primary, borderColor: '#67AFFF' },
+  utilityText: { fontSize: 9, fontWeight: '900', letterSpacing: 0.55 },
+  importText: { color: '#04130A' },
+  submitText: { color: '#FFFFFF' },
   trackRow: {
     width: '100%',
     minHeight: 62,

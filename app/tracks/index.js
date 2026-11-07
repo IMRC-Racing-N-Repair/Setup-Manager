@@ -80,6 +80,7 @@ export default function TracksScreen() {
   const handledRouteActionRef = useRef('');
 
   const isLandscape = width > height;
+  const isTabletLandscape = width >= 700 && isLandscape;
   const bottomNavHeight = isLandscape && width < 700 ? 54 : 66;
   const isNew = !editingTrack?.id;
 
@@ -336,8 +337,6 @@ export default function TracksScreen() {
           </View>
 
           <View style={modernTrackStyles.utilityRow}>
-            <View style={[modernTrackStyles.utilitySide, !isLandscape && modernTrackStyles.utilitySideHidden]} />
-
             <Pressable
               onPress={openImportSheet}
               style={({ pressed }) => [
@@ -345,19 +344,25 @@ export default function TracksScreen() {
                 modernTrackStyles.importButton,
                 !isLandscape && modernTrackStyles.utilityButtonPortrait,
                 isLandscape && modernTrackStyles.utilityButtonLandscape,
+                isTabletLandscape && modernTrackStyles.utilityButtonTablet,
                 pressed && styles.buttonPressed,
               ]}
             >
-              <View style={[modernTrackStyles.utilityIconBox, modernTrackStyles.importIconBox]}>
+              <View style={[modernTrackStyles.utilityIconBox, modernTrackStyles.importIconBox, isTabletLandscape && modernTrackStyles.utilityIconBoxTablet]}>
                 <Text style={[modernTrackStyles.utilityIcon, modernTrackStyles.importIcon]}>⇩</Text>
               </View>
               <View>
-                <Text style={[modernTrackStyles.utilityText, modernTrackStyles.importText]}>IMPORT</Text>
-                <Text style={modernTrackStyles.utilityMeta}>TRACK FILE</Text>
+                <Text style={[modernTrackStyles.utilityText, modernTrackStyles.importText, isTabletLandscape && modernTrackStyles.utilityTextTablet]}>IMPORT</Text>
+                <Text style={[modernTrackStyles.utilityMeta, isTabletLandscape && modernTrackStyles.utilityMetaTablet]}>TRACK FILE</Text>
               </View>
             </Pressable>
 
-            <View style={[modernTrackStyles.utilitySide, modernTrackStyles.utilitySideRight]}>
+            <View style={[
+              modernTrackStyles.utilitySide,
+              modernTrackStyles.utilitySideRight,
+              isLandscape && modernTrackStyles.utilitySideLandscape,
+              isTabletLandscape && modernTrackStyles.utilitySideTablet,
+            ]}>
               <Pressable
                 onPress={openSubmitTrackScreen}
                 style={({ pressed }) => [
@@ -365,15 +370,16 @@ export default function TracksScreen() {
                   modernTrackStyles.submitButton,
                   !isLandscape && modernTrackStyles.submitButtonPortrait,
                   isLandscape && modernTrackStyles.submitButtonLandscape,
+                  isTabletLandscape && modernTrackStyles.submitButtonTablet,
                   pressed && styles.buttonPressed,
                 ]}
               >
-                <View style={[modernTrackStyles.utilityIconBox, modernTrackStyles.submitIconBox]}>
+                <View style={[modernTrackStyles.utilityIconBox, modernTrackStyles.submitIconBox, isTabletLandscape && modernTrackStyles.utilityIconBoxTablet]}>
                   <Text style={[modernTrackStyles.utilityIcon, modernTrackStyles.submitIcon]}>↗</Text>
                 </View>
                 <View>
-                  <Text style={[modernTrackStyles.utilityText, modernTrackStyles.submitText]}>SUBMIT TRACK</Text>
-                  <Text style={[modernTrackStyles.utilityMeta, modernTrackStyles.submitMeta]}>SHARE WITH IMRC</Text>
+                  <Text style={[modernTrackStyles.utilityText, modernTrackStyles.submitText, isTabletLandscape && modernTrackStyles.utilityTextTablet]}>SUBMIT TRACK</Text>
+                  <Text style={[modernTrackStyles.utilityMeta, modernTrackStyles.submitMeta, isTabletLandscape && modernTrackStyles.utilityMetaTablet]}>SHARE WITH IMRC</Text>
                 </View>
               </Pressable>
             </View>
@@ -474,13 +480,15 @@ const modernTrackStyles = StyleSheet.create({
     minHeight: 56,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 10,
     borderBottomWidth: 1,
     borderBottomColor: AppColors.borderStrong,
   },
   utilitySide: { flex: 1, minWidth: 0 },
-  utilitySideHidden: { display: 'none' },
   utilitySideRight: { alignItems: 'flex-end' },
+  utilitySideLandscape: { flex: 0, width: 164 },
+  utilitySideTablet: { width: 200 },
   utilityButton: {
     minHeight: 42,
     minWidth: 112,
@@ -493,11 +501,13 @@ const modernTrackStyles = StyleSheet.create({
     backgroundColor: AppColors.surface,
   },
   utilityButtonPortrait: { flex: 1, minWidth: 0, paddingHorizontal: 8 },
-  utilityButtonLandscape: { minWidth: 140, paddingHorizontal: 14 },
+  utilityButtonLandscape: { width: 164, minWidth: 164, paddingHorizontal: 14 },
+  utilityButtonTablet: { width: 200, minWidth: 200, minHeight: 46, paddingHorizontal: 16 },
   importButton: { borderColor: 'rgba(40,199,122,0.58)' },
   submitButton: { minWidth: 128, backgroundColor: AppColors.primarySoft, borderColor: AppColors.primary },
   submitButtonPortrait: { width: '100%', minWidth: 0, paddingHorizontal: 8 },
-  submitButtonLandscape: { minWidth: 164 },
+  submitButtonLandscape: { width: '100%', minWidth: 0 },
+  submitButtonTablet: { width: '100%', minWidth: 0, minHeight: 46 },
   utilityIconBox: {
     width: 24,
     height: 24,
@@ -506,13 +516,16 @@ const modernTrackStyles = StyleSheet.create({
     borderWidth: 1,
     backgroundColor: AppColors.backgroundSoft,
   },
+  utilityIconBoxTablet: { width: 28, height: 28 },
   importIconBox: { borderColor: 'rgba(40,199,122,0.5)' },
   submitIconBox: { borderColor: 'rgba(47,140,255,0.65)' },
   utilityIcon: { fontSize: 15, lineHeight: 17, fontWeight: '900' },
   importIcon: { color: AppColors.online },
   submitIcon: { color: AppColors.primary },
   utilityText: { fontSize: 9, lineHeight: 11, fontWeight: '900', letterSpacing: 0.55 },
+  utilityTextTablet: { fontSize: 10, lineHeight: 12 },
   utilityMeta: { marginTop: 2, color: AppColors.subtleText, fontSize: 6, lineHeight: 8, fontWeight: '800', letterSpacing: 0.35 },
+  utilityMetaTablet: { fontSize: 7, lineHeight: 9 },
   importText: { color: AppColors.textStrong },
   submitText: { color: AppColors.textStrong },
   submitMeta: { color: '#67AFFF' },

@@ -22,9 +22,13 @@ import {
   ToolCard,
   ToolScaffold,
   goBack,
+  TOOL_BG,
+  TOOL_CARD,
   TOOL_GREEN,
   TOOL_LINE,
+  TOOL_LINE_SOFT,
   TOOL_MUTED,
+  TOOL_PANEL,
   TOOL_TEXT,
 } from './ToolShared';
 import { STATIC_TRACKS } from './lib/trackSource';
@@ -845,14 +849,18 @@ export default function TrackNearMeScreen(props) {
       <ToolScaffold
       title="Tracks Near Me"
       onBack={() => goBack(props)}
-      right={<Text style={styles.count}>{resultCountText}</Text>}
+      right={(
+        <View style={styles.countPill}>
+          <Text style={styles.count}>{resultCountText}</Text>
+        </View>
+      )}
       listProps={{
         data: visibleTracks,
         initialNumToRender: 8,
         maxToRenderPerBatch: 8,
         windowSize: 7,
         keyExtractor: (track, index) => `${track.id}-${index}`,
-        renderItem: ({ item: track }) => {
+        renderItem: ({ item: track, index }) => {
           const live = livercUrl(track);
           const location = displayLocationLine(track);
           const miles = formatMiles(track.distance);
@@ -862,9 +870,12 @@ export default function TrackNearMeScreen(props) {
               onPress={() => openExternalUrl(mapUrlForTrack(track))}
               style={({ pressed }) => [styles.cardPressable, pressed && styles.pressed]}
             >
-              <ToolCard compact style={styles.trackCard}>
+              <View style={styles.trackCard}>
                 <View style={styles.trackAccent} />
                 <View style={styles.trackTopRow}>
+                  <View style={styles.trackNumberBox}>
+                    <Text style={styles.trackNumber}>{String(index + 1).padStart(2, '0')}</Text>
+                  </View>
                   <View style={styles.trackMain}>
                     <Text style={styles.trackName} numberOfLines={1}>{track.name}</Text>
                     <Text style={styles.trackLocation} numberOfLines={1}>{location}</Text>
@@ -877,14 +888,24 @@ export default function TrackNearMeScreen(props) {
                     <LiveRcButton url={live} />
                   </View>
                 </View>
-              </ToolCard>
+              </View>
             </Pressable>
           );
         },
       }}
     >
       <ToolCard compact style={styles.searchCard}>
-        <Text style={styles.help}>Pick filters, then search the IMRC Track Database.</Text>
+        <View style={styles.sectionHeadingRow}>
+          <View>
+            <Text style={styles.sectionEyebrow}>IMRC TRACK DATABASE</Text>
+            <Text style={styles.sectionHeading}>Find a track</Text>
+          </View>
+          <View style={[styles.readyBadge, loading && styles.readyBadgeActive]}>
+            {loading ? <ActivityIndicator size="small" color={TOOL_GREEN} /> : <View style={styles.readyDot} />}
+            <Text style={styles.readyText}>{loading ? 'SEARCHING' : 'READY'}</Text>
+          </View>
+        </View>
+        <Text style={styles.help}>Search by your location or enter a ZIP code, then narrow the results below.</Text>
 
         <View style={styles.searchButtons}>
           <ToolButton
@@ -905,7 +926,9 @@ export default function TrackNearMeScreen(props) {
           />
         </View>
 
-        <Text style={[styles.status, permissionDenied && styles.warning]}>{status}</Text>
+        <View style={[styles.statusRail, permissionDenied && styles.statusRailWarning]}>
+          <Text style={[styles.status, permissionDenied && styles.warning]}>{status}</Text>
+        </View>
 
         {!!currentLocationLine(currentPlace) && (
           <View style={styles.currentLocationBox}>
@@ -917,7 +940,10 @@ export default function TrackNearMeScreen(props) {
 
       <ToolCard compact style={styles.filterCard}>
         <View style={styles.filterHeader}>
-          <Text style={styles.filterHeaderTitle}>Filters</Text>
+          <View>
+            <Text style={styles.sectionEyebrow}>SEARCH FILTERS</Text>
+            <Text style={styles.filterHeaderTitle}>Refine results</Text>
+          </View>
           <Pressable onPress={resetFilters} style={({ pressed }) => [styles.resetFilters, pressed && styles.pressed]}>
             <Text style={styles.resetFiltersText}>Reset</Text>
           </Pressable>
@@ -929,6 +955,16 @@ export default function TrackNearMeScreen(props) {
           <DropdownFilter title="Style" value={styleFilter} onPress={() => setActiveFilter('style')} />
         </View>
       </ToolCard>
+
+      {searched ? (
+        <View style={styles.resultsHeader}>
+          <View>
+            <Text style={styles.sectionEyebrow}>TRACK DIRECTORY</Text>
+            <Text style={styles.resultsTitle}>Nearby results</Text>
+          </View>
+          <Text style={styles.resultsCount}>{filteredTracks.length} SHOWN</Text>
+        </View>
+      ) : null}
 
       {!searched && (
         <ToolCard compact style={styles.emptyCard}>
@@ -956,7 +992,15 @@ export default function TrackNearMeScreen(props) {
       >
         <View style={[styles.modalOverlay, modalBackdropStyle]}>
           <View style={[styles.filterModal, modalCardStyle, { width: '100%', height: filterModalHeight, maxHeight: filterModalHeight, flexShrink: 0 }]}>
-            <Text style={styles.filterModalTitle}>{activeFilterTitle}</Text>
+            <View style={styles.modalHeaderRow}>
+              <View style={styles.modalHeaderCopy}>
+                <Text style={styles.modalEyebrow}>FILTER TRACKS</Text>
+                <Text style={styles.filterModalTitle}>{activeFilterTitle}</Text>
+              </View>
+              <Pressable onPress={() => setActiveFilter(null)} style={styles.modalCloseButton}>
+                <Text style={styles.modalCloseText}>Close</Text>
+              </Pressable>
+            </View>
 
             <ScrollView style={styles.filterOptionScroll} contentContainerStyle={styles.filterOptionList} showsVerticalScrollIndicator>
               <FilterOption
@@ -987,11 +1031,20 @@ export default function TrackNearMeScreen(props) {
       <Modal visible={zipPromptVisible} transparent animationType="fade" onRequestClose={() => setZipPromptVisible(false)} presentationStyle="overFullScreen" statusBarTranslucent navigationBarTranslucent>
         <View style={[styles.modalOverlay, modalBackdropStyle]}>
           <View style={[styles.zipModal, modalCardStyle, { width: '100%', flexShrink: 0 }]}>
-            <Text style={styles.zipModalTitle}>Location Unavailable</Text>
+            <View style={styles.modalHeaderRow}>
+              <View style={styles.modalHeaderCopy}>
+                <Text style={styles.modalEyebrow}>SEARCH LOCATION</Text>
+                <Text style={styles.zipModalTitle}>Enter a ZIP code</Text>
+              </View>
+              <Pressable onPress={() => setZipPromptVisible(false)} style={styles.modalCloseButton}>
+                <Text style={styles.modalCloseText}>Close</Text>
+              </Pressable>
+            </View>
             <Text style={styles.zipModalText}>
-              Please enter a ZIP code so Tracks Near Me can search the IMRC Track Database by distance.
+              Location access is unavailable. Choose a five-digit ZIP code to sort the IMRC Track Database by distance.
             </Text>
 
+            <Text style={styles.zipInputLabel}>ZIP CODE</Text>
             <View style={styles.zipInputRow}>
               <TextInput
                 value={manualZip}
@@ -1002,7 +1055,7 @@ export default function TrackNearMeScreen(props) {
                 keyboardType="number-pad"
                 maxLength={5}
                 placeholder="ZIP code"
-                placeholderTextColor="rgba(243,255,247,0.32)"
+                placeholderTextColor="#718198"
                 style={styles.zipInput}
               />
             </View>
@@ -1027,18 +1080,55 @@ export default function TrackNearMeScreen(props) {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#07090c' },
-  count: { color: TOOL_GREEN, fontWeight: '900', fontSize: 12, textAlign: 'right' },
-  searchCard: { gap: 6, paddingVertical: 10 },
+  screen: { flex: 1, backgroundColor: TOOL_BG },
+  countPill: {
+    minHeight: 28,
+    paddingHorizontal: 9,
+    borderWidth: 1,
+    borderColor: TOOL_LINE,
+    backgroundColor: 'rgba(47,140,255,0.10)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  count: { color: TOOL_GREEN, fontWeight: '900', fontSize: 10, textAlign: 'right', textTransform: 'uppercase' },
+  searchCard: { gap: 8, paddingHorizontal: 12, paddingVertical: 11, backgroundColor: TOOL_PANEL, borderColor: TOOL_LINE_SOFT },
+  sectionHeadingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
+  sectionEyebrow: { color: TOOL_GREEN, fontSize: 9, lineHeight: 11, fontWeight: '900', letterSpacing: 1.15 },
+  sectionHeading: { color: TOOL_TEXT, fontSize: 17, lineHeight: 21, fontWeight: '900', marginTop: 1 },
+  readyBadge: {
+    minWidth: 76,
+    minHeight: 28,
+    paddingHorizontal: 8,
+    borderWidth: 1,
+    borderColor: TOOL_LINE_SOFT,
+    backgroundColor: TOOL_CARD,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  readyBadgeActive: { borderColor: TOOL_LINE, backgroundColor: 'rgba(47,140,255,0.10)' },
+  readyDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: TOOL_GREEN },
+  readyText: { color: TOOL_MUTED, fontSize: 8, fontWeight: '900', letterSpacing: 0.45 },
   help: { color: TOOL_MUTED, fontWeight: '700', lineHeight: 16, fontSize: 12 },
   searchButtons: { flexDirection: 'row', gap: 7 },
-  findButton: { flex: 1.55, minHeight: 38 },
-  zipButton: { flex: 1, minHeight: 38 },
+  findButton: { flex: 1.55, minHeight: 42 },
+  zipButton: { flex: 1, minHeight: 42 },
+  statusRail: {
+    minHeight: 30,
+    borderLeftWidth: 3,
+    borderLeftColor: TOOL_GREEN,
+    backgroundColor: 'rgba(47,140,255,0.08)',
+    paddingHorizontal: 9,
+    paddingVertical: 7,
+    justifyContent: 'center',
+  },
+  statusRailWarning: { borderLeftColor: '#F1BD2B', backgroundColor: 'rgba(241,189,43,0.08)' },
   status: { color: TOOL_MUTED, fontWeight: '800', lineHeight: 15, fontSize: 11 },
-  warning: { color: '#ffd46b' },
+  warning: { color: '#F1BD2B' },
 
   currentLocationBox: {
-    borderRadius: 5,
+    borderRadius: 0,
     paddingHorizontal: 10,
     paddingVertical: 7,
     backgroundColor: 'rgba(47,140,255,0.08)',
@@ -1046,34 +1136,35 @@ const styles = StyleSheet.create({
     borderColor: TOOL_LINE,
   },
   currentLocationLabel: { color: TOOL_MUTED, fontSize: 10, fontWeight: '900', textTransform: 'uppercase' },
-  currentLocationText: { color: TOOL_GREEN, fontSize: 13, fontWeight: '900', marginTop: 1 },
+  currentLocationText: { color: TOOL_TEXT, fontSize: 13, fontWeight: '900', marginTop: 1 },
 
-  filterCard: { gap: 7, paddingVertical: 10 },
+  filterCard: { gap: 9, paddingHorizontal: 12, paddingVertical: 11, backgroundColor: TOOL_PANEL, borderColor: TOOL_LINE_SOFT },
   filterHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   filterHeaderTitle: { color: TOOL_TEXT, fontSize: 14, fontWeight: '900' },
   resetFilters: {
     minHeight: 24,
     paddingHorizontal: 9,
-    borderRadius: 999,
+    borderRadius: 0,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(47,140,255,0.09)',
+    backgroundColor: 'rgba(47,140,255,0.08)',
     borderWidth: 1,
     borderColor: TOOL_LINE,
   },
   resetFiltersText: { color: TOOL_GREEN, fontWeight: '900', fontSize: 11 },
-  dropdownGrid: { flexDirection: 'row', gap: 7 },
+  dropdownGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
   dropdownFilter: {
     flex: 1,
+    minWidth: 105,
     minHeight: 43,
-    borderRadius: 5,
+    borderRadius: 0,
     paddingHorizontal: 9,
     paddingVertical: 6,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.045)',
+    backgroundColor: TOOL_CARD,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.10)',
+    borderColor: TOOL_LINE_SOFT,
   },
   dropdownTextWrap: { flex: 1 },
   dropdownLabel: { color: TOOL_MUTED, fontSize: 8, lineHeight: 10, fontWeight: '900', textTransform: 'uppercase' },
@@ -1084,27 +1175,46 @@ const styles = StyleSheet.create({
   emptyTitle: { color: TOOL_TEXT, fontSize: 15, fontWeight: '900' },
   emptyText: { color: TOOL_MUTED, fontSize: 12, fontWeight: '700', lineHeight: 17 },
 
-  cardPressable: { borderRadius: 6 },
+  resultsHeader: {
+    minHeight: 47,
+    paddingHorizontal: 4,
+    paddingTop: 7,
+    paddingBottom: 6,
+    borderTopWidth: 1,
+    borderTopColor: TOOL_LINE_SOFT,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  resultsTitle: { color: TOOL_TEXT, fontSize: 15, lineHeight: 18, fontWeight: '900', marginTop: 1 },
+  resultsCount: { color: TOOL_GREEN, fontSize: 9, fontWeight: '900', letterSpacing: 0.5 },
+
+  cardPressable: { borderRadius: 0 },
   pressed: { opacity: 0.9, transform: [{ scale: 0.99 }] },
   trackCard: {
     position: 'relative',
     overflow: 'hidden',
-    gap: 0,
-    paddingLeft: 11,
+    minHeight: 64,
+    paddingLeft: 10,
     paddingRight: 8,
-    paddingVertical: 6,
-    backgroundColor: 'rgba(17,25,22,0.96)',
+    paddingVertical: 7,
+    backgroundColor: 'transparent',
+    borderBottomWidth: 1,
+    borderBottomColor: TOOL_LINE_SOFT,
   },
-  trackAccent: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, backgroundColor: TOOL_GREEN, opacity: 0.92 },
+  trackAccent: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, backgroundColor: TOOL_GREEN },
   trackTopRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
+  trackNumberBox: { width: 30, alignItems: 'center', justifyContent: 'center' },
+  trackNumber: { color: '#718198', fontSize: 9, fontWeight: '900' },
   trackMain: { flex: 1, minWidth: 0 },
   trackName: { color: TOOL_TEXT, fontSize: 14, lineHeight: 16, fontWeight: '900' },
   trackLocation: { color: TOOL_MUTED, fontWeight: '800', fontSize: 11, lineHeight: 12, marginTop: 0 },
   trackRightCol: { width: 74, alignItems: 'center', justifyContent: 'center', gap: 4 },
-  trackDetails: { color: TOOL_GREEN, fontSize: 11, lineHeight: 12, fontWeight: '900', marginTop: 3 },
+  trackDetails: { color: '#7DB8FF', fontSize: 10, lineHeight: 13, fontWeight: '900', marginTop: 2 },
   distanceBox: {
     minWidth: 66,
-    borderRadius: 4,
+    borderRadius: 0,
     paddingHorizontal: 7,
     paddingVertical: 3,
     alignItems: 'center',
@@ -1112,11 +1222,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: TOOL_LINE,
   },
-  distance: { color: TOOL_GREEN, fontWeight: '900', fontSize: 12, lineHeight: 14 },
+  distance: { color: TOOL_TEXT, fontWeight: '900', fontSize: 11, lineHeight: 14 },
   liveButton: {
     minHeight: 27,
     minWidth: 70,
-    borderRadius: 4,
+    borderRadius: 0,
     paddingHorizontal: 9,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1138,34 +1248,48 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.42)',
   },
 
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.62)', alignItems: 'center', justifyContent: 'center', padding: 20 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(2,6,13,0.82)', alignItems: 'center', justifyContent: 'center', padding: 20 },
   filterModal: {
     width: '100%',
     maxWidth: 420,
     maxHeight: '78%',
     borderRadius: 8,
-    padding: 14,
-    backgroundColor: '#101915',
+    padding: 16,
+    backgroundColor: TOOL_BG,
     borderWidth: 1,
     borderColor: TOOL_LINE,
   },
-  filterModalTitle: { color: TOOL_TEXT, fontSize: 18, fontWeight: '900', textAlign: 'center', marginBottom: 10 },
+  modalHeaderRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 12 },
+  modalHeaderCopy: { flex: 1, minWidth: 0 },
+  modalEyebrow: { color: TOOL_GREEN, fontSize: 9, lineHeight: 11, fontWeight: '900', letterSpacing: 1.2 },
+  modalCloseButton: {
+    minWidth: 62,
+    minHeight: 38,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: TOOL_LINE_SOFT,
+    backgroundColor: TOOL_PANEL,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalCloseText: { color: TOOL_GREEN, fontSize: 10, fontWeight: '900' },
+  filterModalTitle: { color: TOOL_TEXT, fontSize: 20, lineHeight: 24, fontWeight: '900', marginTop: 2 },
   filterOptionList: { gap: 6 },
   filterOptionScroll: { flex: 1, minHeight: 0 },
   filterOption: {
     minHeight: 40,
-    borderRadius: 5,
+    borderRadius: 0,
     paddingHorizontal: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: 'rgba(255,255,255,0.045)',
+    backgroundColor: TOOL_PANEL,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.10)',
+    borderColor: TOOL_LINE_SOFT,
   },
   filterOptionSelected: { backgroundColor: 'rgba(47,140,255,0.14)', borderColor: TOOL_LINE },
   filterOptionText: { color: TOOL_TEXT, fontSize: 14, fontWeight: '900' },
-  filterOptionTextSelected: { color: TOOL_GREEN },
+  filterOptionTextSelected: { color: TOOL_TEXT },
   filterOptionCheck: { color: TOOL_GREEN, fontSize: 16, fontWeight: '900' },
   filterCancelButton: { minHeight: 40, marginTop: 12 },
 
@@ -1174,18 +1298,18 @@ const styles = StyleSheet.create({
     maxWidth: 420,
     borderRadius: 8,
     padding: 16,
-    backgroundColor: '#101915',
+    backgroundColor: TOOL_BG,
     borderWidth: 1,
     borderColor: TOOL_LINE,
   },
-  zipModalTitle: { color: TOOL_TEXT, fontSize: 20, fontWeight: '900', textAlign: 'center' },
-  zipModalText: { color: TOOL_MUTED, fontSize: 13, fontWeight: '700', lineHeight: 18, textAlign: 'center', marginTop: 8 },
+  zipModalTitle: { color: TOOL_TEXT, fontSize: 21, lineHeight: 25, fontWeight: '900', marginTop: 2 },
+  zipModalText: { color: TOOL_MUTED, fontSize: 12, fontWeight: '700', lineHeight: 18, marginBottom: 13 },
+  zipInputLabel: { color: TOOL_GREEN, fontSize: 9, lineHeight: 11, fontWeight: '900', letterSpacing: 1.1, marginBottom: 5 },
   zipInputRow: {
-    marginTop: 14,
-    borderRadius: 5,
+    borderRadius: 0,
     borderWidth: 1,
     borderColor: TOOL_LINE,
-    backgroundColor: 'rgba(255,255,255,0.055)',
+    backgroundColor: TOOL_PANEL,
   },
   zipInput: { minHeight: 48, paddingHorizontal: 14, color: TOOL_TEXT, fontSize: 19, fontWeight: '900', textAlign: 'center' },
   zipError: { color: '#ff7878', fontSize: 12, fontWeight: '800', lineHeight: 16, textAlign: 'center', marginTop: 8 },

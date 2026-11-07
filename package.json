@@ -1,6 +1,6 @@
 {
   "name": "imrc-setup-manager",
-  "version": "2.1.11",
+  "version": "2.1.12",
   "main": "./index.js",
   "packageManager": "npm@10.9.2",
   "engines": {

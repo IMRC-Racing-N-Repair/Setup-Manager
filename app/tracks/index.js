@@ -336,13 +336,14 @@ export default function TracksScreen() {
           </View>
 
           <View style={modernTrackStyles.utilityRow}>
-            <View style={modernTrackStyles.utilitySide} />
+            <View style={[modernTrackStyles.utilitySide, !isLandscape && modernTrackStyles.utilitySideHidden]} />
 
             <Pressable
               onPress={openImportSheet}
               style={({ pressed }) => [
                 modernTrackStyles.utilityButton,
                 modernTrackStyles.importButton,
+                !isLandscape && modernTrackStyles.utilityButtonPortrait,
                 isLandscape && modernTrackStyles.utilityButtonLandscape,
                 pressed && styles.buttonPressed,
               ]}
@@ -362,6 +363,7 @@ export default function TracksScreen() {
                 style={({ pressed }) => [
                   modernTrackStyles.utilityButton,
                   modernTrackStyles.submitButton,
+                  !isLandscape && modernTrackStyles.submitButtonPortrait,
                   isLandscape && modernTrackStyles.submitButtonLandscape,
                   pressed && styles.buttonPressed,
                 ]}
@@ -477,6 +479,7 @@ const modernTrackStyles = StyleSheet.create({
     borderBottomColor: AppColors.borderStrong,
   },
   utilitySide: { flex: 1, minWidth: 0 },
+  utilitySideHidden: { display: 'none' },
   utilitySideRight: { alignItems: 'flex-end' },
   utilityButton: {
     minHeight: 42,
@@ -489,9 +492,11 @@ const modernTrackStyles = StyleSheet.create({
     borderWidth: 1,
     backgroundColor: AppColors.surface,
   },
+  utilityButtonPortrait: { flex: 1, minWidth: 0, paddingHorizontal: 8 },
   utilityButtonLandscape: { minWidth: 140, paddingHorizontal: 14 },
   importButton: { borderColor: 'rgba(40,199,122,0.58)' },
   submitButton: { minWidth: 128, backgroundColor: AppColors.primarySoft, borderColor: AppColors.primary },
+  submitButtonPortrait: { width: '100%', minWidth: 0, paddingHorizontal: 8 },
   submitButtonLandscape: { minWidth: 164 },
   utilityIconBox: {
     width: 24,

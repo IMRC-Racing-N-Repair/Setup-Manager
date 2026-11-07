@@ -1131,9 +1131,9 @@ export const trackStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: trackColors.blueBorder,
     backgroundColor: trackColors.background,
-    paddingHorizontal: 14,
-    paddingTop: 12,
-    paddingBottom: 12,
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 14,
   },
 
   importModalHeader: {
@@ -1173,26 +1173,87 @@ export const trackStyles = StyleSheet.create({
   },
 
   importCloseButton: {
-    width: 40,
+    minWidth: 62,
     height: 40,
-    borderRadius: 6,
-    backgroundColor: trackColors.panelSoft,
+    borderRadius: 0,
+    borderWidth: 1,
+    borderColor: trackColors.border,
+    backgroundColor: trackColors.panel,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 10,
   },
 
   importCloseText: {
+    color: trackColors.blue,
+    fontSize: 9,
+    lineHeight: 11,
+    fontWeight: '900',
+    letterSpacing: 0.45,
+  },
+
+  importDirectoryHeadingRow: {
+    minHeight: 43,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+    marginBottom: 6,
+  },
+
+  importSectionEyebrow: {
+    color: trackColors.blue,
+    fontSize: 8,
+    lineHeight: 10,
+    fontWeight: '900',
+    letterSpacing: 0.8,
+  },
+
+  importSectionTitle: {
     color: trackColors.text,
-    fontSize: 32,
-    lineHeight: 34,
-    fontWeight: '500',
+    fontSize: 15,
+    lineHeight: 18,
+    fontWeight: '900',
+    marginTop: 2,
+  },
+
+  importDirectoryStatus: {
+    minWidth: 76,
+    minHeight: 30,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    borderWidth: 1,
+    borderColor: trackColors.border,
+    backgroundColor: trackColors.panel,
+    paddingHorizontal: 9,
+  },
+
+  importDirectoryStatusActive: {
+    borderColor: trackColors.blueBorder,
+    backgroundColor: trackColors.blueSoft,
+  },
+
+  importDirectoryStatusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: trackColors.blue,
+  },
+
+  importDirectoryStatusText: {
+    color: trackColors.muted,
+    fontSize: 8,
+    fontWeight: '900',
+    letterSpacing: 0.45,
   },
 
   importSearchRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginBottom: 10,
+    marginBottom: 8,
   },
 
   importSearchInput: {
@@ -1235,12 +1296,29 @@ export const trackStyles = StyleSheet.create({
   },
 
   importFilterPanel: {
-    borderRadius: 6,
+    borderRadius: 0,
     borderWidth: 1,
     borderColor: trackColors.border,
     backgroundColor: trackColors.panel,
     padding: 10,
     marginBottom: 10,
+  },
+
+  importResultsHeader: {
+    minHeight: 45,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+    borderTopWidth: 1,
+    borderTopColor: trackColors.border,
+  },
+
+  importResultsCount: {
+    color: trackColors.blue,
+    fontSize: 8,
+    fontWeight: '900',
+    letterSpacing: 0.55,
   },
 
   importFilterHeader: {
@@ -1321,8 +1399,8 @@ export const trackStyles = StyleSheet.create({
   importListContent: {
     paddingVertical: 2,
     paddingRight: 3,
-    paddingBottom: TRACK_SAFE_BOTTOM + 22,
-    gap: 8,
+    paddingBottom: 8,
+    gap: 0,
   },
 
   importLoadingWrap: {
@@ -1364,23 +1442,22 @@ export const trackStyles = StyleSheet.create({
 
   importVehicleCard: {
     width: '100%',
-    minHeight: 66,
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: trackColors.border,
-    backgroundColor: trackColors.card,
-    paddingLeft: 14,
-    paddingRight: 10,
-    paddingVertical: 9,
+    minHeight: 58,
+    borderRadius: 0,
+    borderBottomWidth: 1,
+    borderBottomColor: trackColors.border,
+    backgroundColor: trackColors.background,
+    paddingLeft: 12,
+    paddingRight: 8,
+    paddingVertical: 7,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
     overflow: 'hidden',
   },
 
   importVehicleCardSelected: {
-    borderColor: trackColors.blueBorder,
-    backgroundColor: 'rgba(30, 139, 255, 0.10)',
+    backgroundColor: trackColors.blueSoft,
   },
 
   importCardBlueBar: {
@@ -1388,8 +1465,20 @@ export const trackStyles = StyleSheet.create({
     left: 0,
     top: 0,
     bottom: 0,
-    width: 4,
+    width: 3,
     backgroundColor: trackColors.blue,
+  },
+
+  importCardNumber: {
+    width: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  importCardNumberText: {
+    color: trackColors.mutedDark,
+    fontSize: 9,
+    fontWeight: '900',
   },
 
   importCardLeft: {
@@ -1399,10 +1488,10 @@ export const trackStyles = StyleSheet.create({
 
   importCardTitle: {
     color: trackColors.text,
-    fontSize: 15,
-    lineHeight: 18,
+    fontSize: 14,
+    lineHeight: 17,
     fontWeight: '900',
-    marginBottom: 4,
+    marginBottom: 2,
   },
 
   importCardSubLine: {
@@ -1415,10 +1504,16 @@ export const trackStyles = StyleSheet.create({
 
   importCardBottomLine: {
     color: trackColors.mutedDark,
-    fontSize: 11,
-    lineHeight: 15,
+    fontSize: 10,
+    lineHeight: 13,
     fontWeight: '800',
     marginTop: 1,
+  },
+
+  importCardClassification: {
+    width: 64,
+    alignItems: 'flex-end',
+    justifyContent: 'center',
   },
 
   importCardRightPill: {
@@ -1440,63 +1535,131 @@ export const trackStyles = StyleSheet.create({
   },
 
   importCardRightStyle: {
-    color: trackColors.white,
-    fontSize: 13,
-    lineHeight: 16,
+    color: trackColors.text,
+    fontSize: 10,
+    lineHeight: 13,
     fontWeight: '900',
-    textAlign: 'center',
+    textAlign: 'right',
   },
 
   importCardRightSurface: {
     color: trackColors.muted,
-    fontSize: 10,
-    lineHeight: 13,
+    fontSize: 8,
+    lineHeight: 11,
     fontWeight: '900',
-    textAlign: 'center',
+    textAlign: 'right',
     marginTop: 1,
   },
 
-  importSubmitRow: {
-    flexDirection: 'row',
+  importSelectMark: {
+    width: 30,
+    height: 30,
+    borderWidth: 1,
+    borderColor: trackColors.border,
+    backgroundColor: trackColors.panel,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    marginTop: 10,
-    marginBottom: 10,
   },
 
-  importSubmitText: {
-    color: trackColors.mutedDark,
-    fontSize: 12,
+  importSelectMarkActive: {
+    borderColor: trackColors.blue,
+    backgroundColor: trackColors.blue,
+  },
+
+  importSelectMarkText: {
+    color: trackColors.muted,
+    fontSize: 18,
+    lineHeight: 20,
     fontWeight: '900',
   },
 
+  importSelectMarkTextActive: {
+    color: trackColors.white,
+    fontSize: 15,
+  },
+
+  importSelectedSummary: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    minHeight: 60,
+    marginTop: 8,
+    marginBottom: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: trackColors.blue,
+    backgroundColor: trackColors.blueSoft,
+  },
+
+  importSelectedSummaryIcon: {
+    width: 30,
+    height: 30,
+    borderWidth: 1,
+    borderColor: trackColors.blueBorder,
+    backgroundColor: trackColors.panel,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  importSelectedSummaryIconText: {
+    color: trackColors.blue,
+    fontSize: 16,
+    fontWeight: '900',
+  },
+
+  importSelectedSummaryCopy: { flex: 1, minWidth: 0 },
+
+  importSelectedSummaryTitle: {
+    color: trackColors.text,
+    fontSize: 14,
+    lineHeight: 17,
+    fontWeight: '900',
+    marginTop: 2,
+  },
+
+  importSelectedSummaryMeta: {
+    color: trackColors.muted,
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: '700',
+    marginTop: 2,
+  },
+
   importSubmitButton: {
-    minHeight: 32,
-    borderRadius: 999,
+    flex: 1,
+    minHeight: 36,
+    borderRadius: 0,
     borderWidth: 1,
     borderColor: trackColors.blueBorder,
     backgroundColor: trackColors.blueSoft,
-    paddingHorizontal: 11,
+    paddingHorizontal: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
 
   importSubmitButtonText: {
     color: '#B8DAFF',
-    fontSize: 12,
+    fontSize: 9,
     fontWeight: '900',
+    letterSpacing: 0.45,
   },
 
   importFooterRow: {
+    width: '100%',
+  },
+
+  importSecondaryActions: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 8,
+    marginTop: 8,
   },
 
   importRefreshButton: {
-    minHeight: 43,
-    borderRadius: 6,
-    backgroundColor: trackColors.panelSoft,
+    flex: 1,
+    minHeight: 36,
+    borderRadius: 0,
+    backgroundColor: trackColors.panel,
     borderWidth: 1,
     borderColor: trackColors.border,
     paddingHorizontal: 14,
@@ -1505,15 +1668,16 @@ export const trackStyles = StyleSheet.create({
   },
 
   importRefreshText: {
-    color: trackColors.white,
-    fontSize: 13,
+    color: trackColors.muted,
+    fontSize: 9,
     fontWeight: '900',
+    letterSpacing: 0.45,
   },
 
   importSelectedButton: {
-    flex: 1,
-    minHeight: 43,
-    borderRadius: 6,
+    width: '100%',
+    minHeight: 44,
+    borderRadius: 0,
     backgroundColor: trackColors.blue,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1526,7 +1690,7 @@ export const trackStyles = StyleSheet.create({
 
   importSelectedText: {
     color: trackColors.white,
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '900',
   },
 

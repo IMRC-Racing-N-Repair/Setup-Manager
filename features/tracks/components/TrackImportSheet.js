@@ -206,7 +206,7 @@ export default function TrackImportSheet({
                 <Text style={styles.importModalEyebrow}>TRACK IMPORT</Text>
                 <Text style={styles.importModalTitle}>Import Track</Text>
                 <Text style={styles.importModalDescription}>
-                  Search online tracks from your GitHub folder and import them locally.
+                  Select a track from the IMRC online directory and add it locally.
                 </Text>
               </View>
 
@@ -217,8 +217,19 @@ export default function TrackImportSheet({
                   pressed && styles.buttonPressed,
                 ]}
               >
-                <Text style={styles.importCloseText}>×</Text>
+                <Text style={styles.importCloseText}>Close</Text>
               </Pressable>
+            </View>
+
+            <View style={styles.importDirectoryHeadingRow}>
+              <View>
+                <Text style={styles.importSectionEyebrow}>ONLINE TRACK DIRECTORY</Text>
+                <Text style={styles.importSectionTitle}>Find a track</Text>
+              </View>
+              <View style={[styles.importDirectoryStatus, loading && styles.importDirectoryStatusActive]}>
+                {loading ? <ActivityIndicator size="small" color={TRACK_BLUE} /> : <View style={styles.importDirectoryStatusDot} />}
+                <Text style={styles.importDirectoryStatusText}>{loading ? 'LOADING' : 'READY'}</Text>
+              </View>
             </View>
 
             <View style={styles.importSearchRow}>
@@ -335,6 +346,14 @@ export default function TrackImportSheet({
               </View>
             ) : null}
 
+            <View style={styles.importResultsHeader}>
+              <View>
+                <Text style={styles.importSectionEyebrow}>AVAILABLE TRACKS</Text>
+                <Text style={styles.importSectionTitle}>Select a track</Text>
+              </View>
+              <Text style={styles.importResultsCount}>{loading ? 'LOADING' : `${filteredTracks.length} FOUND`}</Text>
+            </View>
+
             {loading ? (
               <View style={styles.importLoadingWrap}>
                 <ActivityIndicator color={TRACK_BLUE} />
@@ -355,7 +374,7 @@ export default function TrackImportSheet({
                 keyboardShouldPersistTaps="handled"
                 keyboardDismissMode="none"
               >
-                {filteredTracks.map(item => {
+                {filteredTracks.map((item, index) => {
                   const selected = item.id === selectedId;
                   const track = item.track;
                   const location = getLocationLabel(track);
@@ -374,6 +393,10 @@ export default function TrackImportSheet({
                     >
                       <View style={styles.importCardBlueBar} />
 
+                      <View style={styles.importCardNumber}>
+                        <Text style={styles.importCardNumberText}>{String(index + 1).padStart(2, '0')}</Text>
+                      </View>
+
                       <View style={styles.importCardLeft}>
                         <Text style={styles.importCardTitle} numberOfLines={1}>
                           {track.trackName || 'Unnamed Track'}
@@ -384,18 +407,13 @@ export default function TrackImportSheet({
                         </Text>
                       </View>
 
-                      <View
-                        style={[
-                          styles.importCardRightPill,
-                          selected && styles.importCardRightPillSelected,
-                        ]}
-                      >
-                        <Text style={styles.importCardRightStyle} numberOfLines={1}>
-                          {trackStyle}
-                        </Text>
-                        <Text style={styles.importCardRightSurface} numberOfLines={1}>
-                          {surface}
-                        </Text>
+                      <View style={styles.importCardClassification}>
+                        <Text style={styles.importCardRightStyle} numberOfLines={1}>{trackStyle}</Text>
+                        <Text style={styles.importCardRightSurface} numberOfLines={1}>{surface}</Text>
+                      </View>
+
+                      <View style={[styles.importSelectMark, selected && styles.importSelectMarkActive]}>
+                        <Text style={[styles.importSelectMarkText, selected && styles.importSelectMarkTextActive]}>{selected ? '✓' : '›'}</Text>
                       </View>
                     </Pressable>
                   );
@@ -403,34 +421,20 @@ export default function TrackImportSheet({
               </ScrollView>
             )}
 
-            <View style={styles.importSubmitRow}>
-              <Text style={styles.importSubmitText}>Don’t see your track?</Text>
-              <Pressable
-                onPress={handleSubmitTrack}
-                style={({ pressed }) => [
-                  styles.importSubmitButton,
-                  pressed && styles.buttonPressed,
-                ]}
-              >
-                <Text style={styles.importSubmitButtonText}>Submit Track</Text>
-              </Pressable>
-            </View>
+            {selectedRemoteTrack ? (
+              <View style={styles.importSelectedSummary}>
+                <View style={styles.importSelectedSummaryIcon}><Text style={styles.importSelectedSummaryIconText}>✓</Text></View>
+                <View style={styles.importSelectedSummaryCopy}>
+                  <Text style={styles.importSectionEyebrow}>SELECTED TRACK</Text>
+                  <Text style={styles.importSelectedSummaryTitle} numberOfLines={1}>{selectedRemoteTrack.track?.trackName || 'Track selected'}</Text>
+                  <Text style={styles.importSelectedSummaryMeta} numberOfLines={1}>
+                    {getLocationLabel(selectedRemoteTrack.track) || 'Ready to import locally'}
+                  </Text>
+                </View>
+              </View>
+            ) : null}
 
             <View style={styles.importFooterRow}>
-              <Pressable
-                onPress={loadTracks}
-                disabled={loading || importing}
-                style={({ pressed }) => [
-                  styles.importRefreshButton,
-                  (loading || importing) && styles.disabledButton,
-                  pressed && !(loading || importing) && styles.buttonPressed,
-                ]}
-              >
-                <Text style={styles.importRefreshText}>
-                  {loading ? 'Loading...' : 'Refresh'}
-                </Text>
-              </Pressable>
-
               <Pressable
                 onPress={importSelected}
                 disabled={!selectedRemoteTrack || importing}
@@ -446,8 +450,29 @@ export default function TrackImportSheet({
                     (!selectedRemoteTrack || importing) && styles.importSelectedTextDisabled,
                   ]}
                 >
-                  {importing ? 'Importing...' : 'Import Selected'}
+                  {importing ? 'Importing Track…' : 'Import Selected Track'}
                 </Text>
+              </Pressable>
+            </View>
+
+            <View style={styles.importSecondaryActions}>
+              <Pressable
+                onPress={loadTracks}
+                disabled={loading || importing}
+                style={({ pressed }) => [
+                  styles.importRefreshButton,
+                  (loading || importing) && styles.disabledButton,
+                  pressed && !(loading || importing) && styles.buttonPressed,
+                ]}
+              >
+                <Text style={styles.importRefreshText}>{loading ? 'LOADING…' : 'REFRESH DIRECTORY'}</Text>
+              </Pressable>
+
+              <Pressable
+                onPress={handleSubmitTrack}
+                style={({ pressed }) => [styles.importSubmitButton, pressed && styles.buttonPressed]}
+              >
+                <Text style={styles.importSubmitButtonText}>SUBMIT A TRACK</Text>
               </Pressable>
             </View>
           </View>

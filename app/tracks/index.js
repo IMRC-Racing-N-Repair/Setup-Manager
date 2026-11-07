@@ -343,10 +343,17 @@ export default function TracksScreen() {
               style={({ pressed }) => [
                 modernTrackStyles.utilityButton,
                 modernTrackStyles.importButton,
+                isLandscape && modernTrackStyles.utilityButtonLandscape,
                 pressed && styles.buttonPressed,
               ]}
             >
-              <Text style={[modernTrackStyles.utilityText, modernTrackStyles.importText]}>IMPORT</Text>
+              <View style={[modernTrackStyles.utilityIconBox, modernTrackStyles.importIconBox]}>
+                <Text style={[modernTrackStyles.utilityIcon, modernTrackStyles.importIcon]}>⇩</Text>
+              </View>
+              <View>
+                <Text style={[modernTrackStyles.utilityText, modernTrackStyles.importText]}>IMPORT</Text>
+                <Text style={modernTrackStyles.utilityMeta}>TRACK FILE</Text>
+              </View>
             </Pressable>
 
             <View style={[modernTrackStyles.utilitySide, modernTrackStyles.utilitySideRight]}>
@@ -355,10 +362,17 @@ export default function TracksScreen() {
                 style={({ pressed }) => [
                   modernTrackStyles.utilityButton,
                   modernTrackStyles.submitButton,
+                  isLandscape && modernTrackStyles.submitButtonLandscape,
                   pressed && styles.buttonPressed,
                 ]}
               >
-                <Text style={[modernTrackStyles.utilityText, modernTrackStyles.submitText]}>SUBMIT TRACK</Text>
+                <View style={[modernTrackStyles.utilityIconBox, modernTrackStyles.submitIconBox]}>
+                  <Text style={[modernTrackStyles.utilityIcon, modernTrackStyles.submitIcon]}>↗</Text>
+                </View>
+                <View>
+                  <Text style={[modernTrackStyles.utilityText, modernTrackStyles.submitText]}>SUBMIT TRACK</Text>
+                  <Text style={[modernTrackStyles.utilityMeta, modernTrackStyles.submitMeta]}>SHARE WITH IMRC</Text>
+                </View>
               </Pressable>
             </View>
           </View>
@@ -455,7 +469,7 @@ const modernTrackStyles = StyleSheet.create({
   },
   savedCount: { color: AppColors.mutedText, fontSize: 8, fontWeight: '900', letterSpacing: 0.6 },
   utilityRow: {
-    minHeight: 48,
+    minHeight: 56,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
@@ -465,18 +479,38 @@ const modernTrackStyles = StyleSheet.create({
   utilitySide: { flex: 1, minWidth: 0 },
   utilitySideRight: { alignItems: 'flex-end' },
   utilityButton: {
-    minHeight: 34,
-    minWidth: 104,
+    minHeight: 42,
+    minWidth: 112,
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 12,
+    gap: 8,
+    paddingHorizontal: 10,
     borderWidth: 1,
+    backgroundColor: AppColors.surface,
   },
-  importButton: { backgroundColor: '#22C55E', borderColor: '#4ADE80' },
-  submitButton: { minWidth: 116, backgroundColor: AppColors.primary, borderColor: '#67AFFF' },
-  utilityText: { fontSize: 9, fontWeight: '900', letterSpacing: 0.55 },
-  importText: { color: '#04130A' },
-  submitText: { color: '#FFFFFF' },
+  utilityButtonLandscape: { minWidth: 140, paddingHorizontal: 14 },
+  importButton: { borderColor: 'rgba(40,199,122,0.58)' },
+  submitButton: { minWidth: 128, backgroundColor: AppColors.primarySoft, borderColor: AppColors.primary },
+  submitButtonLandscape: { minWidth: 164 },
+  utilityIconBox: {
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    backgroundColor: AppColors.backgroundSoft,
+  },
+  importIconBox: { borderColor: 'rgba(40,199,122,0.5)' },
+  submitIconBox: { borderColor: 'rgba(47,140,255,0.65)' },
+  utilityIcon: { fontSize: 15, lineHeight: 17, fontWeight: '900' },
+  importIcon: { color: AppColors.online },
+  submitIcon: { color: AppColors.primary },
+  utilityText: { fontSize: 9, lineHeight: 11, fontWeight: '900', letterSpacing: 0.55 },
+  utilityMeta: { marginTop: 2, color: AppColors.subtleText, fontSize: 6, lineHeight: 8, fontWeight: '800', letterSpacing: 0.35 },
+  importText: { color: AppColors.textStrong },
+  submitText: { color: AppColors.textStrong },
+  submitMeta: { color: '#67AFFF' },
   trackRow: {
     width: '100%',
     minHeight: 62,

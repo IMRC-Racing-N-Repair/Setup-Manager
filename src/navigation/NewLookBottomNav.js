@@ -13,9 +13,20 @@ export default function NewLookBottomNav({ active = 'home', router, onRaceDay, b
   const { width, height } = useWindowDimensions();
   const compact = height < 620 || width > height;
   const tabletLandscape = width >= 700 && width > height;
+  const safeBottom = Math.max(0, Number(bottomOffset) || 0);
 
   return (
-    <View style={[styles.bottomNav, compact && styles.bottomNavCompact, tabletLandscape && styles.bottomNavTabletLandscape, { bottom: Math.max(0, Number(bottomOffset) || 0) }]}>
+    <View
+      style={[
+        styles.bottomNav,
+        compact && styles.bottomNavCompact,
+        tabletLandscape && styles.bottomNavTabletLandscape,
+        safeBottom > 0 && {
+          minHeight: (tabletLandscape ? 66 : compact ? 54 : 66) + safeBottom,
+          paddingBottom: (tabletLandscape ? 5 : compact ? 4 : 6) + safeBottom,
+        },
+      ]}
+    >
       {items.map((item) => (
         <Pressable
           key={item.key}

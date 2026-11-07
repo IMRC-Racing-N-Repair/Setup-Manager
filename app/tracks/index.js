@@ -80,6 +80,7 @@ export default function TracksScreen() {
   const handledRouteActionRef = useRef('');
 
   const isLandscape = width > height;
+  const bottomNavHeight = isLandscape && width < 700 ? 54 : 66;
   const isNew = !editingTrack?.id;
 
   useEffect(() => () => {
@@ -315,7 +316,7 @@ export default function TracksScreen() {
         isLandscape && styles.screenContentLandscape,
         {
           paddingTop: Math.max(insets.top + 6, 10),
-          paddingBottom: Math.max(insets.bottom + 8, 16),
+          paddingBottom: bottomNavHeight + insets.bottom,
           paddingLeft: Math.max(insets.left + (isLandscape ? 12 : 8), isLandscape ? 18 : 14),
           paddingRight: Math.max(insets.right + (isLandscape ? 12 : 8), isLandscape ? 18 : 14),
         },
@@ -410,7 +411,7 @@ export default function TracksScreen() {
         )}
       </View>
 
-      <NewLookBottomNav active="garage" router={router} />
+      <NewLookBottomNav active="garage" router={router} bottomOffset={insets.bottom} />
 
       <TrackEditSheet
         visible={sheetVisible}

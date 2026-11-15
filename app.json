@@ -2,9 +2,9 @@
   "expo": {
     "name": "imrc-setup-manager",
     "slug": "imrc-setup-manager",
-    "version": "2.1.12",
+    "version": "2.1.14",
     "android": {
-      "versionCode": 2112,
+      "versionCode": 2114,
       "package": "com.joshy788.imrcsetupmanager",
       "permissions": [
         "ACCESS_COARSE_LOCATION",
@@ -13,7 +13,7 @@
       "softwareKeyboardLayoutMode": "resize"
     },
     "ios": {
-      "buildNumber": "2112",
+      "buildNumber": "2114",
       "bundleIdentifier": "com.joshy788.imrcsetupmanager",
       "usesAppleSignIn": true,
       "infoPlist": {
@@ -123,6 +123,6 @@
     "updates": {
       "enabled": false
     },
-    "runtimeVersion": "2.1.12"
+    "runtimeVersion": "2.1.14"
   }
 }

@@ -40,37 +40,86 @@ function rowMatchesName(rowText = '', searchName = '') {
   return textKey(rowText).includes(textKey(searchName));
 }
 
-export function findDriverInEntryList(entryHtml = '', { transponder, fullName, nickname } = {}, { debug } = {}) {
+function classMatchesSelection(detectedClass = '', selectedClass = '') {
+  const selectedKey = textKey(selectedClass);
+  if (!selectedKey) return true;
+  const detectedKey = textKey(detectedClass);
+  if (!detectedKey) return false;
+  return detectedKey.includes(selectedKey) || selectedKey.includes(detectedKey);
+}
+
+function getRowTransponder(rowText = '') {
+  return String(rowText || '').match(/\b(\d{5,9})\b/)?.[1] || '';
+}
+
+function buildDriverMatch(table, row, search = {}, matchedBy = '') {
+  const rowText = stripTags(row.rowHtml);
+  const detectedFullName = parseHiddenName(row.rowHtml) || String(search.fullName || '').toUpperCase();
+  const detectedNickname = extractDriverNickname(row.rowHtml, detectedFullName)
+    || cleanDriverNickname(search.nickname, detectedFullName)
+    || detectedFullName;
+  const detectedClass = cleanClassName(findClassForRowInTable(table.tableHtml, row.rowIndex));
+
+  if (matchedBy === 'driver-class' && !classMatchesSelection(detectedClass, search.className)) return null;
+
+  return {
+    transponder: getRowTransponder(rowText) || search.transponder || '',
+    fullName: detectedFullName,
+    nickname: detectedNickname,
+    displayName: detectedNickname || detectedFullName,
+    className: detectedClass,
+    matchedBy,
+    tableIndex: table.tableIndex,
+    rowIndex: row.rowIndex,
+    rowText,
+  };
+}
+
+export function findDriverInEntryList(entryHtml = '', {
+  transponder,
+  fullName,
+  nickname,
+  className,
+  raceClass,
+  selectedClass,
+} = {}, { debug } = {}) {
   const tables = parseEntryTables(entryHtml);
   const tx = String(transponder || '').replace(/[^0-9]/g, '');
-  debug?.add?.('driverFinder:start', { tx, fullName, nickname, tableCount: tables.length });
+  const expectedClass = cleanClassName(className || raceClass || selectedClass || '');
+  const search = { transponder: tx, fullName, nickname, className: expectedClass };
+  debug?.add?.('driverFinder:start', { tx, fullName, nickname, expectedClass, tableCount: tables.length });
 
-  for (const table of tables) {
-    for (const row of table.rows) {
-      const rowText = stripTags(row.rowHtml);
-      const txMatch = rowMatchesTransponder(rowText, tx);
-      const nameMatch = !tx && (rowMatchesName(rowText, nickname) || rowMatchesName(rowText, fullName));
-      if (!txMatch && !nameMatch) continue;
+  // First choice: an exact TX/transponder match.
+  if (tx) {
+    for (const table of tables) {
+      for (const row of table.rows) {
+        const rowText = stripTags(row.rowHtml);
+        if (!rowMatchesTransponder(rowText, tx)) continue;
+        const result = buildDriverMatch(table, row, search, 'transponder');
+        debug?.add?.('driverFinder:matched', result);
+        return result;
+      }
+    }
+    debug?.add?.('driverFinder:txNotFound', { tx });
+  }
 
-      const detectedFullName = parseHiddenName(row.rowHtml) || String(fullName || '').toUpperCase();
-      const detectedNickname = extractDriverNickname(row.rowHtml, detectedFullName) || cleanDriverNickname(nickname, detectedFullName) || detectedFullName;
-      const detectedClass = cleanClassName(findClassForRowInTable(table.tableHtml, row.rowIndex));
-
-      const result = {
-        transponder: tx,
-        fullName: detectedFullName,
-        nickname: detectedNickname,
-        displayName: detectedNickname || detectedFullName,
-        className: detectedClass,
-        tableIndex: table.tableIndex,
-        rowIndex: row.rowIndex,
-        rowText,
-      };
-      debug?.add?.('driverFinder:matched', result);
-      return result;
+  // Second choice: the selected driver in the selected class. This keeps a
+  // stale vehicle TX from blocking RaceDay while avoiding same-name matches in
+  // another class.
+  if (fullName || nickname) {
+    for (const table of tables) {
+      for (const row of table.rows) {
+        const rowText = stripTags(row.rowHtml);
+        if (!rowMatchesName(rowText, nickname) && !rowMatchesName(rowText, fullName)) continue;
+        const result = buildDriverMatch(table, row, search, 'driver-class');
+        if (!result) continue;
+        debug?.add?.('driverFinder:matched', result);
+        return result;
+      }
     }
   }
 
-  debug?.add?.('driverFinder:notFound', { tx, fullName, nickname });
+  debug?.add?.('driverFinder:notFound', { tx, fullName, nickname, expectedClass });
   return null;
 }
+

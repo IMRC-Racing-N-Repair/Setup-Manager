@@ -192,7 +192,7 @@ function getRaceHeadingBeforeTable(prefixHtml = '', fallback = {}) {
   // Only inspect the text after that page title so the round number cannot be
   // mistaken for the actual race number.
   const headingText = prefixText.split(/Race\s+Lineup/i).pop() || prefixText;
-  const matches = Array.from(headingText.matchAll(/(?:^|\s)(\d{1,3})\s+(.+?)\s+Length\s*:/gi));
+  const matches = Array.from(headingText.matchAll(/(?:^|\s)(?:Race\s*#?\s*)?(\d{1,3})\s*[:\-]?\s+(.+?)\s+(?:Length|Status)\s*:/gi));
   const match = matches[matches.length - 1];
   const raceNumber = clean(match?.[1] || fallback.raceNumber || '');
   const heading = clean(match?.[2] || '');
@@ -322,12 +322,17 @@ function classMatches(link = {}, row = {}, target = {}) {
   return rowKey.includes(target.classKey) || target.classKey.includes(rowKey);
 }
 
-function rowMatchesTarget(row = {}, target = {}, link = {}) {
-  const txOk = target.tx && row.tx && target.tx === row.tx;
+function rowMatchesTransponder(row = {}, target = {}) {
+  return Boolean(target.tx && row.tx && target.tx === row.tx);
+}
+
+function rowMatchesDriverAndClass(row = {}, target = {}, link = {}) {
   const driverOk = target.driver && row.driverKey && (row.driverKey === target.driver || row.driverKey.includes(target.driver) || target.driver.includes(row.driverKey));
   const fullNameOk = target.fullName && row.driverKey && (row.driverKey === target.fullName || row.driverKey.includes(target.fullName) || target.fullName.includes(row.driverKey));
 
-  return classMatches(link, row, target) && (txOk || driverOk || fullNameOk);
+  // A name-only fallback can select the wrong racer when the same driver name
+  // appears in more than one class. Require the selected/detected class.
+  return Boolean(target.classKey && (driverOk || fullNameOk) && classMatches(link, row, target));
 }
 
 function buildBestLineup(currentBest, candidate) {
@@ -362,7 +367,10 @@ export async function findRaceLineupsForVehicles(options = {}) {
 
     for (const target of targets) {
       if (!target.vehicleId) continue;
-      const matchedRow = rows.find((row) => rowMatchesTarget(row, target, link));
+      // Heat sheets often omit TX numbers. Still honor TX first when LiveRC
+      // provides one, then fall back to the selected driver + class.
+      const matchedRow = rows.find((row) => rowMatchesTransponder(row, target))
+        || rows.find((row) => rowMatchesDriverAndClass(row, target, link));
       if (!matchedRow) continue;
 
       const lineup = {
@@ -392,3 +400,4 @@ export function getBestLineupForVehicle(lineups = [], vehicle = {}, entryMatch =
   const matches = (lineups || []).filter((lineup) => String(lineup.vehicleId || '') === target.vehicleId);
   return matches.reduce((best, lineup) => pickPreferredLineup(best, lineup), null);
 }
+

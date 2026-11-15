@@ -14,6 +14,12 @@ function getVehicleNames(vehicle = {}) {
   return {
     fullName: vehicle.driverName || vehicle.fullName || vehicle.ownerName || '',
     nickname: vehicle.driverNickname || vehicle.nickname || vehicle.driver || '',
+    className: vehicle.className
+      || vehicle.raceClass
+      || vehicle.vehicleClass
+      || vehicle.selectedClass
+      || vehicle.name
+      || '',
   };
 }
 
@@ -176,9 +182,9 @@ export async function syncLiveRcForVehicle({
     driverName: driver.displayName || driver.nickname || driver.fullName,
     fullName: driver.fullName,
     nickname: driver.nickname,
-    message: transponder
+    message: driver.matchedBy === 'transponder'
       ? `Found TX ${transponder}. Driver: ${driver.displayName || driver.fullName}.`
-      : `Found driver ${driver.displayName || driver.fullName}.`,
+      : `TX ${transponder || 'not set'} did not match; found ${driver.displayName || driver.fullName} in ${driver.className || names.className}.`,
   });
 
   emitProgress(onProgress, {
@@ -505,3 +511,4 @@ export async function syncLiveRcRaceDay({ raceDay, track, vehicles = [], eventUr
     runs: allRuns,
   };
 }
+

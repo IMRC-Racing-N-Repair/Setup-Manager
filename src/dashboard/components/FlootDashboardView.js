@@ -188,9 +188,9 @@ export default function FlootDashboardView({
         {showWorkspace ? <View style={styles.primaryGrid}>
           <View style={[styles.racePanel, compactLayout && styles.racePanelCompact]}>
             <View style={styles.sectionHeader}>
-              <View>
+              <View style={styles.sectionHeaderCopy}>
                 <Text style={styles.microLabel}>{loading ? 'CHECKING RACEDAY' : liveActive ? 'LIVE RACEDAY' : 'RACEDAY'}</Text>
-                <Text style={styles.sectionTitle}>{raceDayTrackName}</Text>
+                <Text style={styles.sectionTitle} numberOfLines={2}>{raceDayTrackName}</Text>
               </View>
               <View style={[styles.liveBadge, (loading || !liveActive) && styles.idleBadge]}>
                 <View style={[styles.liveDot, (loading || !liveActive) && styles.idleDot]} />

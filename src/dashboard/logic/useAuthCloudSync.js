@@ -9,6 +9,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState, Platform } from 'react-native';
 import * as Application from 'expo-application';
+import Constants from 'expo-constants';
 
 import {
   listenToAuth,
@@ -87,7 +88,7 @@ function getDotColor({ authUser, syncStatus, syncBusy, cloudBusy, syncSettling, 
 }
 
 export function useAuthCloudSync({ onDashboardRefresh, onRaceDayRefresh } = {}) {
-  const version = Application.nativeApplicationVersion || '—';
+  const version = Constants.expoConfig?.version || Application.nativeApplicationVersion || '—';
 
   const [authUser, setAuthUser] = useState(null);
   const [justSignedIn, setJustSignedIn] = useState(false);

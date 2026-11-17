@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as cloudSync from '../../../app/services/cloudSync';
 import { archiveRaceDaySession } from './raceDayNotesStorage';
+import { clearRaceDayEventVehicleLinks } from './raceDayEventVehicleLinkStorage';
 import {
   RACE_DAY_KEYS,
   RACE_DAY_CLEAR_KEYS,
@@ -267,6 +268,10 @@ export async function endRaceDay() {
     } catch (error) {
       console.warn('[RaceDayStorage] Failed to archive RaceDay session before ending', error);
     }
+  }
+
+  if (active?.id || active?.raceDayId) {
+    await clearRaceDayEventVehicleLinks(active);
   }
 
   await AsyncStorage.multiRemove(RACE_DAY_CLEAR_KEYS);

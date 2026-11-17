@@ -11,7 +11,7 @@ function isDone(item = {}) {
 }
 
 function isWorking(item = {}) {
-  return !isDone(item) && !isFailed(item) && item.status !== 'pending';
+  return !isDone(item) && !isFailed(item) && item.status !== 'pending' && item.status !== 'needs-selection';
 }
 
 function getRowTitle(item = {}) {
@@ -22,6 +22,7 @@ function getRowTitle(item = {}) {
 function getStageLabel(item = {}) {
   if (isDone(item)) return 'Done';
   if (isFailed(item)) return 'Needs review';
+  if (item.status === 'needs-selection') return 'Choose class';
   if (item.status === 'pending' || item.phase === 'queued') return 'Waiting';
 
   if (item.phase === 'start') return 'Preparing';
@@ -67,12 +68,17 @@ function ProgressIcon({ item }) {
     return <Text style={[styles.statusIconText, { color: raceDayColors.danger }]}>!</Text>;
   }
 
+  if (item.status === 'needs-selection') {
+    return <Text style={[styles.statusIconText, { color: raceDayColors.blue }]}>?</Text>;
+  }
+
   return <View style={styles.pendingDot} />;
 }
 
-function ProgressRow({ item }) {
+function ProgressRow({ item, onSelectClass }) {
   const title = getRowTitle(item);
   const showVehicleName = item.className && item.vehicleName && item.className !== item.vehicleName;
+  const selectionDriverName = item.status === 'needs-selection' ? String(item.driverName || '').trim() : '';
   const statusLabel = getStageLabel(item);
   const milestones = getMilestones(item);
   const detail = String(item.message || '').trim();
@@ -97,18 +103,33 @@ function ProgressRow({ item }) {
         </View>
         {showVehicleName || milestones ? (
           <Text style={styles.progressVehicle} numberOfLines={1}>
-            {[showVehicleName ? item.vehicleName : '', milestones].filter(Boolean).join('  ·  ')}
+            {[showVehicleName ? item.vehicleName : '', selectionDriverName, milestones].filter(Boolean).join('  ·  ')}
           </Text>
         ) : null}
         {detail ? <Text style={styles.progressDetail} numberOfLines={2}>{detail}</Text> : null}
+        {item.status === 'needs-selection' && Array.isArray(item.classOptions) ? (
+          <View style={styles.classOptions}>
+            {item.classOptions.map((option) => (
+              <Pressable
+                key={`${item.vehicleId || item.vehicleName}_${option.className}`}
+                style={styles.classOptionButton}
+                onPress={() => onSelectClass?.(item, option)}
+                accessibilityRole="button"
+                accessibilityLabel={`Link ${item.vehicleName || 'vehicle'} to ${option.className}`}
+              >
+                <Text style={styles.classOptionText}>USE {String(option.className || '').toUpperCase()}</Text>
+              </Pressable>
+            ))}
+          </View>
+        ) : null}
       </View>
     </View>
   );
 }
 
-export default function RaceDayAutoSyncOverlay({ visible, progress = [], onCancel }) {
+export default function RaceDayAutoSyncOverlay({ visible, progress = [], onCancel, onSelectClass }) {
   const activeItem = useMemo(
-    () => [...progress].reverse().find((item) => isWorking(item)),
+    () => [...progress].reverse().find((item) => isWorking(item) || item.status === 'needs-selection'),
     [progress],
   );
   const currentLabel = activeItem
@@ -126,9 +147,11 @@ export default function RaceDayAutoSyncOverlay({ visible, progress = [], onCance
       accessibilityLabel="Refreshing RaceDay"
     >
       <View style={raceDayStyles.autoSyncCard}>
-        <Pressable style={styles.cancelButton} onPress={onCancel} accessibilityRole="button" accessibilityLabel="Cancel RaceDay refresh">
-          <Text style={styles.cancelButtonText}>×</Text>
-        </Pressable>
+        {typeof onCancel === 'function' ? (
+          <Pressable style={styles.cancelButton} onPress={onCancel} accessibilityRole="button" accessibilityLabel="Cancel RaceDay refresh">
+            <Text style={styles.cancelButtonText}>×</Text>
+          </Pressable>
+        ) : null}
         <View style={raceDayStyles.autoSyncLogoWrap}>
           <ActivityIndicator
             size="large"
@@ -149,7 +172,7 @@ export default function RaceDayAutoSyncOverlay({ visible, progress = [], onCance
           showsVerticalScrollIndicator={progress.length > 5}
         >
           {progress.map((item) => (
-            <ProgressRow key={String(item.key || item.vehicleId || item.vehicleName || item.phase)} item={item} />
+            <ProgressRow key={String(item.key || item.vehicleId || item.vehicleName || item.phase)} item={item} onSelectClass={onSelectClass} />
           ))}
         </ScrollView>
       </View>
@@ -253,6 +276,26 @@ const styles = StyleSheet.create({
     color: raceDayColors.muted,
     fontSize: 8,
     lineHeight: 11,
+  },
+  classOptions: {
+    marginTop: 6,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 5,
+  },
+  classOptionButton: {
+    minHeight: 28,
+    justifyContent: 'center',
+    paddingHorizontal: 9,
+    borderWidth: 1,
+    borderColor: raceDayColors.blue,
+    backgroundColor: raceDayColors.blueSoft,
+  },
+  classOptionText: {
+    color: raceDayColors.blue,
+    fontSize: 8,
+    lineHeight: 11,
+    fontWeight: '900',
   },
   progressStatus: {
     flexShrink: 0,

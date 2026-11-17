@@ -25,7 +25,9 @@ function detailLabel(liveState) {
     ? 'Main'
     : roundCode === 'Q'
       ? 'Qualifier'
-      : liveState.roundType || (roundCode && roundCode !== 'OP' ? `Round ${roundCode}` : '');
+      : roundCode === 'S'
+        ? 'Seeding'
+        : liveState.roundType || (roundCode && roundCode !== 'OP' ? `Round ${roundCode}` : '');
   if (heat && heat !== liveState.className) details.push(heat);
   if (roundLabel && !heat.toLowerCase().includes(roundLabel.toLowerCase())) details.push(roundLabel);
   if (liveState.raceStatus && liveState.mode === 'race') {

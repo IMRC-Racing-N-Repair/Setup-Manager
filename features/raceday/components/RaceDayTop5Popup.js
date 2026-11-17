@@ -72,9 +72,13 @@ function isQualifierRound(value = '') {
   return /Qualifier\s+Round\s+\d+/i.test(String(value || ''));
 }
 
+function isSeedingRound(value = '') {
+  return /Seeding\s+Round\s+\d+/i.test(String(value || ''));
+}
+
 function isMainRound(value = '') {
   const text = String(value || '');
-  return /Main\s+Events?|A-?Main|B-?Main|C-?Main|Final\s+Results?|Main$/i.test(text) && !isQualifierRound(text);
+  return /Main\s+Events?|A-?Main|B-?Main|C-?Main|Final\s+Results?|Main$/i.test(text) && !isQualifierRound(text) && !isSeedingRound(text);
 }
 
 function makeRowKey(row = {}, index = 0) {
@@ -161,7 +165,8 @@ export default function RaceDayTop5Popup({ visible, run, onClose }) {
 
   const roundLabel = run?.roundLabel || 'Race';
   const className = run?.className || '';
-  const shouldBuildQualifierTop5 = visible && run?.eventUrl && isQualifierRound(roundLabel);
+  const isPreRound = isSeedingRound(roundLabel) || isQualifierRound(roundLabel);
+  const shouldBuildQualifierTop5 = visible && run?.eventUrl && isPreRound;
   const shouldBuildMainTop5 = visible && run?.eventUrl && isMainRound(roundLabel);
   const shouldBuildTop5 = shouldBuildQualifierTop5 || shouldBuildMainTop5;
 
@@ -189,6 +194,7 @@ export default function RaceDayTop5Popup({ visible, run, onClose }) {
         visible,
         hasEventUrl: Boolean(run?.eventUrl),
         isQualifierRound: isQualifierRound(roundLabel),
+        isSeedingRound: isSeedingRound(roundLabel),
         isMainRound: isMainRound(roundLabel),
       });
       return () => {
@@ -206,13 +212,13 @@ export default function RaceDayTop5Popup({ visible, run, onClose }) {
           fallbackRows: savedRows.length,
         });
         setRows(nextRows?.length ? nextRows : savedRows);
-        setMessage(nextRows?.length ? '' : (shouldBuildMainTop5 ? 'No Final Results data found yet.' : 'No Qualifier Round ranking data found yet.'));
+        setMessage(nextRows?.length ? '' : (shouldBuildMainTop5 ? 'No Final Results data found yet.' : `No ${isSeedingRound(roundLabel) ? 'Seeding' : 'Qualifier'} Round ranking data found yet.`));
       })
       .catch((error) => {
         if (cancelled) return;
         top5PopupDebug('build error', { error: error?.message || String(error) });
         setRows(savedRows);
-        setMessage(error?.message || (shouldBuildMainTop5 ? 'Could not build Main Top 5.' : 'Could not build Qualifier Round Top 5.'));
+        setMessage(error?.message || (shouldBuildMainTop5 ? 'Could not build Main Top 5.' : `Could not build ${isSeedingRound(roundLabel) ? 'Seeding' : 'Qualifier'} Round Top 5.`));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -236,7 +242,7 @@ export default function RaceDayTop5Popup({ visible, run, onClose }) {
     >
       {loading ? (
         <View style={raceDayStyles.empty}>
-          <Text style={raceDayStyles.emptyText}>{shouldBuildMainTop5 ? 'Building Main Top 5...' : 'Building Qualifier Round Top 5...'}</Text>
+          <Text style={raceDayStyles.emptyText}>{shouldBuildMainTop5 ? 'Building Main Top 5...' : `Building ${isSeedingRound(roundLabel) ? 'Seeding' : 'Qualifier'} Round Top 5...`}</Text>
         </View>
       ) : rows.length ? (
         <View style={localStyles.shell}>

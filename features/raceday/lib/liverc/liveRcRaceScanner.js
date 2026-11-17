@@ -3,8 +3,8 @@ import { resolveLiveRcUrl } from './liveRcUrls';
 import { getAnchors, getRows, stripTags } from './liveRcHtml';
 import { classMatches } from './liveRcClassFinder';
 
-const ROUND_LABEL_RE = /(Main\s+Events?|Qualifier\s+Round\s+\d+|Final\s+Results?|Practice\s+Round\s+\d+)/i;
-const ROUND_LABEL_GLOBAL_RE = /(Main\s+Events?|Qualifier\s+Round\s+\d+|Final\s+Results?|Practice\s+Round\s+\d+)/gi;
+const ROUND_LABEL_RE = /(Main\s+Events?|Seeding\s+Round\s+\d+|Qualifier\s+Round\s+\d+|Final\s+Results?|Practice\s+Round\s+\d+)/i;
+const ROUND_LABEL_GLOBAL_RE = /(Main\s+Events?|Seeding\s+Round\s+\d+|Qualifier\s+Round\s+\d+|Final\s+Results?|Practice\s+Round\s+\d+)/gi;
 
 function cleanSpaces(value = '') {
   return String(value || '').replace(/\s+/g, ' ').trim();
@@ -61,6 +61,7 @@ function extractRaceNumber(text = '', href = '') {
 function extractRoundLabel(html = '', fallback = '') {
   const pageText = stripTags(html);
   const labels = [
+    pageText.match(/Seeding\s+Round\s+\d+/i)?.[0],
     pageText.match(/Qualifier\s+Round\s+\d+/i)?.[0],
     pageText.match(/Main\s+Events?/i)?.[0],
     pageText.match(/Final\s+Results?/i)?.[0],
@@ -74,6 +75,7 @@ function getResultType(label = '', text = '', href = '') {
   const value = `${label} ${text} ${href}`.toLowerCase();
   if (value.includes('final')) return 'final';
   if (value.includes('main')) return 'main';
+  if (value.includes('seed')) return 'seeding';
   if (value.includes('qual')) return 'qualifier';
   if (value.includes('practice')) return 'practice';
   return 'race';

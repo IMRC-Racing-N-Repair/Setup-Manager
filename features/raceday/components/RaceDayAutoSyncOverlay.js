@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { raceDayColors, raceDayStyles } from '../styles/raceDayStyles';
 
 function isFailed(item = {}) {
@@ -11,12 +11,48 @@ function isDone(item = {}) {
 }
 
 function isWorking(item = {}) {
-  return !isDone(item) && !isFailed(item) && item.status !== 'pending';
+  return !isDone(item) && !isFailed(item) && item.status !== 'pending' && item.status !== 'needs-selection';
 }
 
 function getRowTitle(item = {}) {
   if (item.phase === 'lineups') return 'Race lineups';
   return item.className || item.vehicleName || 'Vehicle';
+}
+
+function getStageLabel(item = {}) {
+  if (isDone(item)) return 'Done';
+  if (isFailed(item)) return 'Needs review';
+  if (item.status === 'needs-selection') return 'Choose class';
+  if (item.status === 'pending' || item.phase === 'queued') return 'Waiting';
+
+  if (item.phase === 'start') return 'Preparing';
+  if (item.phase === 'entryList' || item.phase === 'transponder') {
+    return item.transponder ? 'Searching TX' : 'Searching driver';
+  }
+  if (item.phase === 'driver') return item.status === 'matched' ? 'Driver found' : 'Searching driver';
+  if (item.phase === 'class') return item.status === 'matched' ? 'Class found' : 'Searching class';
+  if (item.phase === 'raceScanner') return 'Searching rounds';
+  if (item.phase === 'raceParser') {
+    const round = String(item.roundLabel || '').trim();
+    return round ? `Checking ${round}` : 'Checking results';
+  }
+  if (item.phase === 'lineups') return 'Checking lineups';
+  return 'Checking';
+}
+
+function getMilestones(item = {}) {
+  if (item.phase === 'lineups') return item.lineupsFound != null ? `${item.lineupsFound} lineups found` : 'Current race assignments';
+
+  const steps = [];
+  if (item.transponder) steps.push(`TX ${item.transponder}${item.transponderFound ? ' ✓' : ''}`);
+  if (item.driverFound || item.driverName) steps.push('Driver ✓');
+  if (item.classFound || item.className) steps.push('Class ✓');
+  if (item.phase === 'raceScanner' || item.phase === 'raceParser' || isDone(item)) {
+    const checked = Number(item.roundsChecked ?? item.racesComplete ?? item.runsFound ?? 0);
+    const total = Number(item.roundsToCheck ?? item.raceCandidates ?? 0);
+    steps.push(total ? `Rounds ${checked}/${total}` : 'Rounds');
+  }
+  return steps.join('  ·  ');
 }
 
 function ProgressIcon({ item }) {
@@ -32,13 +68,20 @@ function ProgressIcon({ item }) {
     return <Text style={[styles.statusIconText, { color: raceDayColors.danger }]}>!</Text>;
   }
 
+  if (item.status === 'needs-selection') {
+    return <Text style={[styles.statusIconText, { color: raceDayColors.blue }]}>?</Text>;
+  }
+
   return <View style={styles.pendingDot} />;
 }
 
-function ProgressRow({ item }) {
+function ProgressRow({ item, onSelectClass }) {
   const title = getRowTitle(item);
   const showVehicleName = item.className && item.vehicleName && item.className !== item.vehicleName;
-  const statusLabel = isDone(item) ? 'Done' : isFailed(item) ? 'Could not verify' : isWorking(item) ? 'Checking…' : 'Waiting';
+  const selectionDriverName = item.status === 'needs-selection' ? String(item.driverName || '').trim() : '';
+  const statusLabel = getStageLabel(item);
+  const milestones = getMilestones(item);
+  const detail = String(item.message || '').trim();
 
   return (
     <View style={[
@@ -50,25 +93,47 @@ function ProgressRow({ item }) {
         <ProgressIcon item={item} />
       </View>
       <View style={styles.progressTextWrap}>
-        <Text style={styles.progressTitle} numberOfLines={1}>{title}</Text>
-        {showVehicleName ? <Text style={styles.progressVehicle} numberOfLines={1}>{item.vehicleName}</Text> : null}
+        <View style={styles.progressHeading}>
+          <Text style={styles.progressTitle} numberOfLines={1}>{title}</Text>
+          <Text style={[
+            styles.progressStatus,
+            isDone(item) && styles.progressStatusDone,
+            isFailed(item) && styles.progressStatusFailed,
+          ]} numberOfLines={1}>{statusLabel}</Text>
+        </View>
+        {showVehicleName || milestones ? (
+          <Text style={styles.progressVehicle} numberOfLines={1}>
+            {[showVehicleName ? item.vehicleName : '', selectionDriverName, milestones].filter(Boolean).join('  ·  ')}
+          </Text>
+        ) : null}
+        {detail ? <Text style={styles.progressDetail} numberOfLines={2}>{detail}</Text> : null}
+        {item.status === 'needs-selection' && Array.isArray(item.classOptions) ? (
+          <View style={styles.classOptions}>
+            {item.classOptions.map((option) => (
+              <Pressable
+                key={`${item.vehicleId || item.vehicleName}_${option.className}`}
+                style={styles.classOptionButton}
+                onPress={() => onSelectClass?.(item, option)}
+                accessibilityRole="button"
+                accessibilityLabel={`Link ${item.vehicleName || 'vehicle'} to ${option.className}`}
+              >
+                <Text style={styles.classOptionText}>USE {String(option.className || '').toUpperCase()}</Text>
+              </Pressable>
+            ))}
+          </View>
+        ) : null}
       </View>
-      <Text style={[
-        styles.progressStatus,
-        isDone(item) && styles.progressStatusDone,
-        isFailed(item) && styles.progressStatusFailed,
-      ]}>{statusLabel}</Text>
     </View>
   );
 }
 
-export default function RaceDayAutoSyncOverlay({ visible, progress = [] }) {
+export default function RaceDayAutoSyncOverlay({ visible, progress = [], onCancel, onSelectClass }) {
   const activeItem = useMemo(
-    () => [...progress].reverse().find((item) => isWorking(item)),
+    () => [...progress].reverse().find((item) => isWorking(item) || item.status === 'needs-selection'),
     [progress],
   );
   const currentLabel = activeItem
-    ? `Checking ${getRowTitle(activeItem)}…`
+    ? (activeItem.message || `${getStageLabel(activeItem)}: ${getRowTitle(activeItem)}`)
     : progress.length && progress.every((item) => isDone(item) || isFailed(item))
       ? 'Refresh complete'
       : 'Preparing LiveRC refresh…';
@@ -82,6 +147,11 @@ export default function RaceDayAutoSyncOverlay({ visible, progress = [] }) {
       accessibilityLabel="Refreshing RaceDay"
     >
       <View style={raceDayStyles.autoSyncCard}>
+        {typeof onCancel === 'function' ? (
+          <Pressable style={styles.cancelButton} onPress={onCancel} accessibilityRole="button" accessibilityLabel="Cancel RaceDay refresh">
+            <Text style={styles.cancelButtonText}>×</Text>
+          </Pressable>
+        ) : null}
         <View style={raceDayStyles.autoSyncLogoWrap}>
           <ActivityIndicator
             size="large"
@@ -102,7 +172,7 @@ export default function RaceDayAutoSyncOverlay({ visible, progress = [] }) {
           showsVerticalScrollIndicator={progress.length > 5}
         >
           {progress.map((item) => (
-            <ProgressRow key={String(item.key || item.vehicleId || item.vehicleName || item.phase)} item={item} />
+            <ProgressRow key={String(item.key || item.vehicleId || item.vehicleName || item.phase)} item={item} onSelectClass={onSelectClass} />
           ))}
         </ScrollView>
       </View>
@@ -115,20 +185,39 @@ export { RaceDayAutoSyncOverlay };
 const styles = StyleSheet.create({
   progressList: {
     width: '100%',
-    maxHeight: 238,
-    marginTop: 14,
+    maxHeight: 276,
+    marginTop: 10,
+  },
+  cancelButton: {
+    position: 'absolute',
+    top: 9,
+    right: 9,
+    zIndex: 2,
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: raceDayColors.border,
+    backgroundColor: raceDayColors.cardAlt,
+  },
+  cancelButtonText: {
+    color: raceDayColors.text,
+    fontSize: 23,
+    lineHeight: 25,
+    fontWeight: '700',
   },
   progressListContent: {
-    gap: 7,
+    gap: 5,
   },
   progressRow: {
-    minHeight: 46,
+    minHeight: 44,
     width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-    borderRadius: 11,
+    paddingHorizontal: 9,
+    paddingVertical: 6,
+    borderRadius: 4,
     borderWidth: 1,
     borderColor: raceDayColors.border,
     backgroundColor: raceDayColors.cardAlt,
@@ -163,7 +252,14 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
   },
+  progressHeading: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
   progressTitle: {
+    flex: 1,
     color: raceDayColors.text,
     fontSize: 12,
     lineHeight: 15,
@@ -171,16 +267,43 @@ const styles = StyleSheet.create({
   },
   progressVehicle: {
     color: raceDayColors.muted,
-    fontSize: 9,
-    lineHeight: 12,
+    fontSize: 8,
+    lineHeight: 11,
     fontWeight: '700',
   },
-  progressStatus: {
+  progressDetail: {
+    marginTop: 2,
     color: raceDayColors.muted,
-    fontSize: 9,
-    lineHeight: 12,
+    fontSize: 8,
+    lineHeight: 11,
+  },
+  classOptions: {
+    marginTop: 6,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 5,
+  },
+  classOptionButton: {
+    minHeight: 28,
+    justifyContent: 'center',
+    paddingHorizontal: 9,
+    borderWidth: 1,
+    borderColor: raceDayColors.blue,
+    backgroundColor: raceDayColors.blueSoft,
+  },
+  classOptionText: {
+    color: raceDayColors.blue,
+    fontSize: 8,
+    lineHeight: 11,
     fontWeight: '900',
-    marginLeft: 8,
+  },
+  progressStatus: {
+    flexShrink: 0,
+    color: raceDayColors.blue,
+    fontSize: 8,
+    lineHeight: 11,
+    fontWeight: '900',
+    textAlign: 'right',
   },
   progressStatusDone: {
     color: raceDayColors.accent,

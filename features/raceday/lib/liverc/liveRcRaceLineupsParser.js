@@ -24,6 +24,7 @@ function normalizeClass(value = '') {
   return clean(value)
     .replace(/\bentries\s*:?\s*\d+\b/gi, '')
     .replace(/\bRace\s*#?\s*\d+\b/gi, '')
+    .replace(/\bSeeding\s+Round\s+\d+\b/gi, '')
     .replace(/\bQualifier\s+Round\s+\d+\b/gi, '')
     .replace(/\bMain Events?\b/gi, '')
     .replace(/\b[A-Z]-?Main\b/gi, '')
@@ -61,6 +62,12 @@ function getRoundFromText(text = '') {
     return { roundType: 'main', roundNum: 999, roundLabel: mainLabel };
   }
 
+  const seedMatch = haystack.match(/\bSeeding\s+Round\s+(\d+)\b/i);
+  if (seedMatch) return { roundType: 'seeding', roundNum: Number(seedMatch[1]) || 0, roundLabel: `Seeding Round ${seedMatch[1]}` };
+
+  const shortSeedMatch = haystack.match(/\bS\s*(\d+)\b/i);
+  if (shortSeedMatch) return { roundType: 'seeding', roundNum: Number(shortSeedMatch[1]) || 0, roundLabel: `Seeding Round ${shortSeedMatch[1]}` };
+
   const qualMatch = haystack.match(/\bQualifier\s+Round\s+(\d+)\b/i);
   if (qualMatch) return { roundType: 'qualifier', roundNum: Number(qualMatch[1]) || 0, roundLabel: `Qualifier Round ${qualMatch[1]}` };
 
@@ -71,8 +78,15 @@ function getRoundFromText(text = '') {
 }
 
 function compareRoundPriority(a = {}, b = {}) {
-  const aPriority = a.roundType === 'main' ? 10000 : Number(a.roundNum || 0);
-  const bPriority = b.roundType === 'main' ? 10000 : Number(b.roundNum || 0);
+  const score = (round = {}) => round.roundType === 'main'
+    ? 1_000_000
+    : round.roundType === 'qualifier'
+      ? 100_000 + Number(round.roundNum || 0)
+      : round.roundType === 'seeding'
+        ? 10_000 + Number(round.roundNum || 0)
+        : Number(round.roundNum || 0);
+  const aPriority = score(a);
+  const bPriority = score(b);
   return bPriority - aPriority;
 }
 
@@ -103,7 +117,7 @@ function getAnchorContext(sectionHtml = '', anchorRaw = '') {
   const before = sectionHtml.slice(Math.max(0, index - 2600), index);
   const after = sectionHtml.slice(index, Math.min(sectionHtml.length, index + 1200));
   const beforeText = stripTags(before);
-  const roundMatches = Array.from(beforeText.matchAll(/\b(?:Qualifier\s+Round\s+\d+|Q\s*\d+|Main Events?|[A-Z]-?Main|Finals?)\b/gi));
+  const roundMatches = Array.from(beforeText.matchAll(/\b(?:Seeding\s+Round\s+\d+|S\s*\d+|Qualifier\s+Round\s+\d+|Q\s*\d+|Main Events?|[A-Z]-?Main|Finals?)\b/gi));
   const nearestRound = clean(roundMatches[roundMatches.length - 1]?.[0] || '');
   const rowStart = before.lastIndexOf('<tr');
   const rowEnd = after.search(/<\/tr>/i);
@@ -125,13 +139,13 @@ function isLikelyLineupLink(anchor = {}, context = '') {
   // the yellow Race # badge.
   if (/view_heat_sheet/i.test(href) || /[?&]p=view_heat_sheet\b/i.test(href)) return true;
   if (/view_(race_)?lineup|lineup/i.test(href)) return true;
-  if (/\bRace\s*#?\s*\d+\b/i.test(combined) && /\bQualifier\s+Round\s+\d+\b|\bMain Events?\b|\b[A-Z]-?Main\b/i.test(combined)) return true;
+  if (/\bRace\s*#?\s*\d+\b/i.test(combined) && /(?:\bSeeding\s+Round\s+\d+\b|\bQualifier\s+Round\s+\d+\b|\bMain Events?\b|\b[A-Z]-?Main\b)/i.test(combined)) return true;
   return false;
 }
 
 function extractClassFromLineupContext(context = '') {
   const text = clean(context);
-  const racePattern = /(?:Race\s*#?\s*\d+\s*[:\-]?\s*)([^|\n\r<>]+?)(?=\s*(?:\bRace\s*#?\s*\d+\b|\bQualifier\s+Round\s+\d+\b|\bMain Events?\b|$))/i;
+  const racePattern = /(?:Race\s*#?\s*\d+\s*[:\-]?\s*)([^|\n\r<>]+?)(?=\s*(?:\bRace\s*#?\s*\d+\b|\bSeeding\s+Round\s+\d+\b|\bQualifier\s+Round\s+\d+\b|\bMain Events?\b|$))/i;
   const raceMatch = text.match(racePattern);
   if (raceMatch?.[1]) return normalizeClass(raceMatch[1]);
 

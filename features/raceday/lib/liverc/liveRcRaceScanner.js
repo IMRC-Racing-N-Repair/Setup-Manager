@@ -61,12 +61,12 @@ function extractRaceNumber(text = '', href = '') {
 function extractRoundLabel(html = '', fallback = '') {
   const pageText = stripTags(html);
   const labels = [
+    String(fallback || '').match(ROUND_LABEL_RE)?.[0],
     pageText.match(/Seeding\s+Round\s+\d+/i)?.[0],
     pageText.match(/Qualifier\s+Round\s+\d+/i)?.[0],
     pageText.match(/Main\s+Events?/i)?.[0],
     pageText.match(/Final\s+Results?/i)?.[0],
     pageText.match(/Practice\s+Round\s+\d+/i)?.[0],
-    String(fallback || '').match(ROUND_LABEL_RE)?.[0],
   ].filter(Boolean);
   return normalizeRoundLabel(labels[0] || fallback || 'Race Result');
 }

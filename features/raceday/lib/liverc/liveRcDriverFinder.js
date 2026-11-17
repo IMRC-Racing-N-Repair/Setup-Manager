@@ -95,6 +95,10 @@ export function findDriverInEntryList(entryHtml = '', {
       for (const row of table.rows) {
         const rowText = stripTags(row.rowHtml);
         if (!rowMatchesTransponder(rowText, tx)) continue;
+        if ((fullName || nickname) && !rowMatchesName(rowText, nickname) && !rowMatchesName(rowText, fullName)) {
+          debug?.add?.('driverFinder:txNameMismatch', { tx, fullName, nickname, rowText });
+          continue;
+        }
         const result = buildDriverMatch(table, row, search, 'transponder');
         debug?.add?.('driverFinder:matched', result);
         return result;
@@ -121,5 +125,29 @@ export function findDriverInEntryList(entryHtml = '', {
 
   debug?.add?.('driverFinder:notFound', { tx, fullName, nickname, expectedClass });
   return null;
+}
+
+export function findDriverClassCandidatesInEntryList(entryHtml = '', {
+  fullName,
+  nickname,
+} = {}) {
+  if (!fullName && !nickname) return [];
+  const matches = [];
+  const seen = new Set();
+
+  for (const table of parseEntryTables(entryHtml)) {
+    for (const row of table.rows) {
+      const rowText = stripTags(row.rowHtml);
+      if (!rowMatchesName(rowText, nickname) && !rowMatchesName(rowText, fullName)) continue;
+      const match = buildDriverMatch(table, row, { fullName, nickname }, 'driver-class');
+      if (!match?.className) continue;
+      const key = `${textKey(match.fullName || match.displayName)}|${textKey(match.className)}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      matches.push(match);
+    }
+  }
+
+  return matches;
 }
 

@@ -49,7 +49,7 @@ function getRaceNumber(text = '', href = '') {
   return (
     value.match(/\brace\s*#?\s*(\d+)\b/i)?.[1] ||
     value.match(/\br(?:ace)?[_-]?(\d+)\b/i)?.[1] ||
-    value.match(/[?&]race(?:_id|Id)?=(\d+)/i)?.[1] ||
+    value.match(/[?&](?:race(?:_id|Id)?|r)=(\d+)/i)?.[1] ||
     ''
   );
 }
@@ -294,7 +294,7 @@ function parseLineupRowsFromHtml(html = '', fallback = {}) {
 
 function getTargetInfo(vehicle = {}, entryMatch = {}) {
   const vehicleId = getVehicleId(vehicle) || String(entryMatch.vehicleId || entryMatch.id || '').trim();
-  const tx = getVehicleTx(vehicle) || normalizeTx(entryMatch.tx || entryMatch.transponder || entryMatch.transponderNumber || '');
+  const tx = normalizeTx(entryMatch.tx || entryMatch.transponder || entryMatch.transponderNumber || '') || getVehicleTx(vehicle);
   const driver = normalizeDriver(
     entryMatch.driver ||
     entryMatch.driverName ||

@@ -1,14 +1,15 @@
 import { fetchEntryListHtml } from './liveRcEntryList';
-import { findDriverInEntryList } from './liveRcDriverFinder';
+import { findDriverClassCandidatesInEntryList, findDriverInEntryList } from './liveRcDriverFinder';
 import { scanRaceLinks } from './liveRcRaceScanner';
 import { parseQualifierResult } from './liveRcQualifierParser';
 import { parseMainResult } from './liveRcMainParser';
 import { createLiveRcDebug } from './liveRcDebug';
 import { normalizeLiveRcEventUrl, normalizeLiveRcSiteUrl } from './liveRcUrls';
-import { getVehicleTransponder, getVehicleDisplayName } from '../raceDayModel';
+import { getVehicleTransponder, getVehicleDisplayName, normalizeId } from '../raceDayModel';
 import { addRaceDayRuns } from '../raceDayResultStorage';
 import { findRaceLineupsForVehicles } from './liveRcRaceLineupsParser';
 import { mergeRaceDayLineups } from '../raceDayLineupStorage';
+import { getRaceDayEventVehicleLink } from '../raceDayEventVehicleLinkStorage';
 
 function getVehicleNames(vehicle = {}) {
   return {
@@ -18,7 +19,6 @@ function getVehicleNames(vehicle = {}) {
       || vehicle.raceClass
       || vehicle.vehicleClass
       || vehicle.selectedClass
-      || vehicle.name
       || '',
   };
 }
@@ -55,6 +55,36 @@ function makeVehicleProgressBase({ raceDay, track, vehicle, vehicleName, transpo
   };
 }
 
+function throwIfCancelled(shouldCancel) {
+  if (typeof shouldCancel !== 'function' || !shouldCancel()) return;
+  const error = new Error('RaceDay refresh cancelled.');
+  error.code = 'RACEDAY_SYNC_CANCELLED';
+  throw error;
+}
+
+function sameSavedRace(saved = {}, candidate = {}) {
+  const savedUrl = normalizeId(saved?.raceUrl);
+  const candidateUrl = normalizeId(candidate?.raceUrl);
+  if (savedUrl && candidateUrl && savedUrl === candidateUrl) return true;
+
+  const savedRound = normalizeId(saved?.roundLabel);
+  const candidateRound = normalizeId(candidate?.roundLabel);
+  const savedRace = normalizeId(saved?.raceNumber || saved?.raceNo || saved?.race);
+  const candidateRace = normalizeId(candidate?.raceNumber || candidate?.raceNo || candidate?.race);
+  const savedType = normalizeId(saved?.resultType);
+  const candidateType = normalizeId(candidate?.resultType);
+  return !!(savedRound && candidateRound && savedRound === candidateRound
+    && savedRace && candidateRace && savedRace === candidateRace
+    && (!savedType || !candidateType || savedType === candidateType));
+}
+
+function isCompleteSavedResult(run = {}) {
+  return Boolean(
+    String(run?.lapsTime || run?.stats?.lapsTime || '').trim()
+    || (String(run?.laps || run?.lapCount || '').trim() && String(run?.totalTime || run?.time || '').trim())
+  );
+}
+
 export async function syncLiveRcForVehicle({
   raceDay,
   track,
@@ -63,7 +93,10 @@ export async function syncLiveRcForVehicle({
   siteUrl,
   save = true,
   onProgress,
+  existingRuns = [],
+  shouldCancel,
 } = {}) {
+  throwIfCancelled(shouldCancel);
   const debug = createLiveRcDebug();
   const normalizedSiteUrl = normalizeLiveRcSiteUrl(siteUrl || raceDay?.siteUrl || track?.liveRcUrl || track?.livercUrl || '');
   const normalizedEventUrl = normalizeLiveRcEventUrl(eventUrl || raceDay?.eventUrl || '', normalizedSiteUrl);
@@ -71,6 +104,7 @@ export async function syncLiveRcForVehicle({
   const vehicleName = getVehicleDisplayName(vehicle);
   const names = getVehicleNames(vehicle);
   const progressBase = makeVehicleProgressBase({ raceDay, track, vehicle, vehicleName, transponder });
+  const vehicleId = vehicle.id || vehicle.vehicleId;
 
   debug.add('sync:start', {
     vehicleName,
@@ -99,26 +133,35 @@ export async function syncLiveRcForVehicle({
 
   emitProgress(onProgress, {
     ...progressBase,
-    phase: 'entryList',
+    phase: transponder ? 'transponder' : 'driver',
     status: 'working',
     message: transponder
-      ? `Opening Entry List and searching for TX ${transponder}.`
-      : 'Opening Entry List and searching by driver name.',
+      ? `Searching the event Entry List for TX ${transponder}.`
+      : `Searching the event Entry List for ${names.fullName || names.nickname || vehicleName}.`,
   });
 
   const { html: entryHtml, entryListUrl } = await fetchEntryListHtml(normalizedEventUrl, { debug });
+  throwIfCancelled(shouldCancel);
 
   emitProgress(onProgress, {
     ...progressBase,
-    phase: 'entryList',
+    phase: transponder ? 'transponder' : 'driver',
     status: 'working',
     entryListUrl,
     message: transponder
-      ? `Entry List loaded. Locating transponder ${transponder}.`
-      : 'Entry List loaded. Locating driver.',
+      ? `Entry List loaded. Searching for TX ${transponder}.`
+      : 'Entry List loaded. Searching for the driver.',
   });
 
-  const driver = findDriverInEntryList(entryHtml, { transponder, ...names }, { debug });
+  const savedEventLink = await getRaceDayEventVehicleLink(raceDay, normalizedEventUrl, vehicleId);
+  const linkedNames = savedEventLink
+    ? { ...names, className: savedEventLink.className, fullName: savedEventLink.fullName || names.fullName, nickname: savedEventLink.nickname || savedEventLink.driverName || names.nickname }
+    : names;
+  let driver = findDriverInEntryList(entryHtml, { transponder, ...linkedNames }, { debug });
+  const classCandidates = driver?.matchedBy === 'transponder'
+    ? []
+    : findDriverClassCandidatesInEntryList(entryHtml, names);
+  if (!driver && !savedEventLink && classCandidates.length) driver = classCandidates[0];
   if (!driver) {
     emitProgress(onProgress, {
       ...progressBase,
@@ -138,17 +181,70 @@ export async function syncLiveRcForVehicle({
     };
   }
 
+
+  const transponderMatched = driver.matchedBy === 'transponder';
+  if (!transponderMatched && !savedEventLink) {
+    if (classCandidates.length) {
+      const classOptions = classCandidates.map((candidate) => ({
+        className: candidate.className,
+        driverName: candidate.displayName || candidate.nickname || candidate.fullName,
+        fullName: candidate.fullName,
+        nickname: candidate.nickname,
+        transponder: candidate.transponder,
+      }));
+      emitProgress(onProgress, {
+        ...progressBase,
+        phase: 'class',
+        status: 'needs-selection',
+        driverFound: true,
+        transponderFound: false,
+        driverName: driver.displayName || driver.nickname || driver.fullName,
+        fullName: driver.fullName,
+        nickname: driver.nickname,
+        classOptions,
+        message: transponder
+          ? `${driver.displayName || driver.fullName} was found, but TX ${transponder} did not match. Choose the class for this vehicle.`
+          : `${driver.displayName || driver.fullName} was found without a TX match. Choose the class for this vehicle.`,
+      });
+      return {
+        ok: false,
+        needsClassSelection: true,
+        vehicleId,
+        vehicleName,
+        driver,
+        classOptions,
+        message: 'Choose a LiveRC class to link for this event.',
+        debug: debug.all(),
+      };
+    }
+  }
+
   emitProgress(onProgress, {
     ...progressBase,
     phase: 'driver',
     status: 'matched',
+    transponderFound: transponderMatched,
+    driverFound: true,
     entryListUrl,
     driverName: driver.displayName || driver.nickname || driver.fullName,
     fullName: driver.fullName,
     nickname: driver.nickname,
     message: driver.matchedBy === 'transponder'
-      ? `Entry List matched TX ${transponder} to ${driver.displayName || driver.fullName}.`
+      ? `Found TX ${transponder}. Driver: ${driver.displayName || driver.fullName}.`
       : `TX ${transponder || 'not set'} did not match; found ${driver.displayName || driver.fullName} in ${driver.className || names.className}.`,
+  });
+
+  emitProgress(onProgress, {
+    ...progressBase,
+    phase: 'class',
+    status: 'working',
+    entryListUrl,
+    transponderFound: transponderMatched,
+    driverFound: true,
+    driverName: driver.displayName || driver.nickname || driver.fullName,
+    fullName: driver.fullName,
+    nickname: driver.nickname,
+    message: `Searching for ${driver.displayName || driver.fullName}'s class.`,
   });
 
   const className = driver.className;
@@ -177,12 +273,15 @@ export async function syncLiveRcForVehicle({
     ...progressBase,
     phase: 'class',
     status: 'matched',
+    transponderFound: transponderMatched,
+    driverFound: true,
+    classFound: true,
     entryListUrl,
     driverName: driver.displayName || driver.nickname || driver.fullName,
     fullName: driver.fullName,
     nickname: driver.nickname,
     className,
-    message: `Class matched from the same Entry List table: ${className}.`,
+    message: `Found class: ${className}.`,
   });
 
   emitProgress(onProgress, {
@@ -194,10 +293,23 @@ export async function syncLiveRcForVehicle({
     fullName: driver.fullName,
     nickname: driver.nickname,
     className,
-    message: `Scanning race result links for ${className}.`,
+    transponderFound: transponderMatched,
+    driverFound: true,
+    classFound: true,
+    message: `Searching completed rounds for ${className}.`,
   });
 
-  const raceLinks = await scanRaceLinks(normalizedEventUrl, className, { debug });
+  const savedRuns = (Array.isArray(existingRuns) ? existingRuns : []).filter((run) => (
+    normalizeId(run?.vehicleId) === normalizeId(vehicle?.id || vehicle?.vehicleId)
+    && isCompleteSavedResult(run)
+  ));
+  const raceLinks = await scanRaceLinks(normalizedEventUrl, className, {
+    debug,
+    shouldCancel,
+    skipRace: (candidate) => savedRuns.some((saved) => sameSavedRace(saved, candidate)),
+  });
+  const skippedSavedCount = Number(raceLinks?.skippedSavedCount || 0);
+  const totalCandidateCount = Number(raceLinks?.totalCandidateCount || raceLinks.length);
 
   emitProgress(onProgress, {
     ...progressBase,
@@ -208,40 +320,75 @@ export async function syncLiveRcForVehicle({
     fullName: driver.fullName,
     nickname: driver.nickname,
     className,
+    transponderFound: transponderMatched,
+    driverFound: true,
+    classFound: true,
     racesComplete: 0,
-    raceCandidates: raceLinks.length,
+    raceCandidates: totalCandidateCount,
+    roundsChecked: 0,
+    roundsToCheck: raceLinks.length,
     runsFound: 0,
-    message: `Found ${raceLinks.length} ${className} race candidate${raceLinks.length === 1 ? '' : 's'} under Race Results. Checking the driver in each race.`,
+    skippedSavedCount,
+    message: skippedSavedCount
+      ? `${skippedSavedCount} saved result${skippedSavedCount === 1 ? '' : 's'} retained. Checking ${raceLinks.length} new race${raceLinks.length === 1 ? '' : 's'}.`
+      : `Found ${raceLinks.length} ${className} race candidate${raceLinks.length === 1 ? '' : 's'} under Race Results. Checking the driver in each race.`,
   });
 
   const runs = [];
 
-  for (const race of raceLinks) {
+  for (let raceIndex = 0; raceIndex < raceLinks.length; raceIndex += 1) {
+    const race = raceLinks[raceIndex];
+    throwIfCancelled(shouldCancel);
+    emitProgress(onProgress, {
+      ...progressBase,
+      phase: 'raceParser',
+      status: 'working',
+      entryListUrl,
+      driverName: driver.displayName || driver.nickname || driver.fullName,
+      fullName: driver.fullName,
+      nickname: driver.nickname,
+      className,
+      transponderFound: transponderMatched,
+      driverFound: true,
+      classFound: true,
+      roundsChecked: raceIndex,
+      roundsToCheck: raceLinks.length,
+      racesComplete: runs.length,
+      raceCandidates: totalCandidateCount,
+      runsFound: runs.length,
+      skippedSavedCount,
+      roundLabel: race.roundLabel,
+      raceNumber: race.raceNumber,
+      message: `Searching ${race.roundLabel || 'round'}${race.raceNumber ? ` · Race ${race.raceNumber}` : ''} for ${driver.displayName || driver.fullName}.`,
+    });
     const parserMeta = {
       raceUrl: race.raceUrl,
       raceNumber: race.raceNumber,
       roundLabel: race.roundLabel,
       className,
+      transponderFound: transponderMatched,
+      driverFound: true,
+      classFound: true,
       resultType: race.resultType,
     };
     const parsed = race.resultType === 'main' || race.resultType === 'final'
       ? parseMainResult(race.html, driver, parserMeta)
       : parseQualifierResult(race.html, driver, parserMeta);
 
-    if (!parsed) continue;
-
-    runs.push(flattenRun(parsed, {
-      vehicleId: vehicle.id || vehicle.vehicleId,
-      vehicleName,
-      trackId: raceDay?.trackId || track?.id || track?.trackId,
-      raceDayId: raceDay?.raceDayId || raceDay?.id,
-      eventUrl: normalizedEventUrl,
-      siteUrl: normalizedSiteUrl,
-      entryListUrl,
-      syncedAt: new Date().toISOString(),
-      raceNumber: race.raceNumber,
-      driver,
-    }));
+    if (parsed) {
+      runs.push(flattenRun(parsed, {
+        vehicleId: vehicle.id || vehicle.vehicleId,
+        vehicleName,
+        trackId: raceDay?.trackId || track?.id || track?.trackId,
+        raceDayId: raceDay?.raceDayId || raceDay?.id,
+        eventUrl: normalizedEventUrl,
+        siteUrl: normalizedSiteUrl,
+        entryListUrl,
+        syncedAt: new Date().toISOString(),
+        raceNumber: race.raceNumber,
+        driver,
+      }));
+    }
 
     emitProgress(onProgress, {
       ...progressBase,
@@ -252,12 +399,18 @@ export async function syncLiveRcForVehicle({
       fullName: driver.fullName,
       nickname: driver.nickname,
       className,
+      transponderFound: transponderMatched,
+      driverFound: true,
+      classFound: true,
+      roundsChecked: raceIndex + 1,
+      roundsToCheck: raceLinks.length,
       racesComplete: runs.length,
-      raceCandidates: raceLinks.length,
+      raceCandidates: totalCandidateCount,
       runsFound: runs.length,
+      skippedSavedCount,
       roundLabel: race.roundLabel,
       raceNumber: race.raceNumber,
-      message: `Matched ${runs.length} race${runs.length === 1 ? '' : 's'} for ${driver.displayName || driver.fullName}.`,
+      message: `${race.roundLabel || 'Round'}${race.raceNumber ? ` · Race ${race.raceNumber}` : ''} checked. Found ${runs.length} result${runs.length === 1 ? '' : 's'} so far.`,
     });
   }
 
@@ -277,12 +430,20 @@ export async function syncLiveRcForVehicle({
     fullName: driver.fullName,
     nickname: driver.nickname,
     className,
+    transponderFound: transponderMatched,
+    driverFound: true,
+    classFound: true,
+    roundsChecked: raceLinks.length,
+    roundsToCheck: raceLinks.length,
     racesComplete: runs.length,
-    raceCandidates: raceLinks.length,
+    raceCandidates: totalCandidateCount,
     runsFound: runs.length,
+    skippedSavedCount,
     message: runs.length
-      ? `Matched ${runs.length} race result${runs.length === 1 ? '' : 's'} for ${driver.displayName || driver.fullName}.`
-      : `Driver and class matched, but no race results were found yet.`,
+      ? `Added ${runs.length} new race result${runs.length === 1 ? '' : 's'}; retained ${skippedSavedCount} saved.`
+      : skippedSavedCount
+        ? `No new results. Retained ${skippedSavedCount} saved race result${skippedSavedCount === 1 ? '' : 's'}.`
+        : `Driver and class matched, but no race results were found yet.`,
   });
 
   if (save && raceDay?.id) {
@@ -300,12 +461,14 @@ export async function syncLiveRcForVehicle({
   };
 }
 
-export async function syncLiveRcRaceDay({ raceDay, track, vehicles = [], eventUrl, siteUrl, onProgress } = {}) {
+export async function syncLiveRcRaceDay({ raceDay, track, vehicles = [], eventUrl, siteUrl, onProgress, existingRuns = [], shouldCancel } = {}) {
   const results = [];
   for (const vehicle of vehicles) {
+    throwIfCancelled(shouldCancel);
     try {
-      results.push(await syncLiveRcForVehicle({ raceDay, track, vehicle, eventUrl, siteUrl, save: false, onProgress }));
+      results.push(await syncLiveRcForVehicle({ raceDay, track, vehicle, eventUrl, siteUrl, save: false, onProgress, existingRuns, shouldCancel }));
     } catch (error) {
+      if (error?.code === 'RACEDAY_SYNC_CANCELLED') throw error;
       const vehicleName = getVehicleDisplayName(vehicle);
       emitProgress(onProgress, {
         vehicleId: vehicle.id || vehicle.vehicleId,
@@ -334,6 +497,7 @@ export async function syncLiveRcRaceDay({ raceDay, track, vehicles = [], eventUr
   // result parsing: it reads LiveRC Race Lineups & Entry List only, then saves
   // the current race number per vehicle under @raceDayLineups_<raceDayId>.
   if (raceDay?.id) {
+    throwIfCancelled(shouldCancel);
     const normalizedSiteUrl = normalizeLiveRcSiteUrl(siteUrl || raceDay?.siteUrl || track?.liveRcUrl || track?.livercUrl || '');
     const normalizedEventUrl = normalizeLiveRcEventUrl(eventUrl || raceDay?.eventUrl || '', normalizedSiteUrl);
     const entryMatches = results
@@ -349,6 +513,7 @@ export async function syncLiveRcRaceDay({ raceDay, track, vehicles = [], eventUr
     // posts heat sheets before the first race has run, so the lineup parser
     // must be allowed to match directly from the vehicle TX/name/class data.
     if (normalizedEventUrl && vehicles.length) {
+      throwIfCancelled(shouldCancel);
       emitProgress(onProgress, {
         key: 'race-lineups',
         vehicleName: 'Race lineups',
@@ -363,6 +528,7 @@ export async function syncLiveRcRaceDay({ raceDay, track, vehicles = [], eventUr
           vehicles,
           entryMatches,
         });
+        throwIfCancelled(shouldCancel);
         await mergeRaceDayLineups(raceDay.id, lineups);
         emitProgress(onProgress, {
           key: 'race-lineups',
@@ -373,6 +539,7 @@ export async function syncLiveRcRaceDay({ raceDay, track, vehicles = [], eventUr
           message: `Race lineup check complete. Found ${lineups.length} current lineup${lineups.length === 1 ? '' : 's'}.`,
         });
       } catch (error) {
+        if (error?.code === 'RACEDAY_SYNC_CANCELLED') throw error;
         console.warn('[RaceDayLineups] Failed to update lineup badges', error);
         emitProgress(onProgress, {
           key: 'race-lineups',
@@ -389,6 +556,6 @@ export async function syncLiveRcRaceDay({ raceDay, track, vehicles = [], eventUr
     ok: results.some((result) => result.ok),
     results,
     runs: allRuns,
+    needsClassSelection: results.filter((result) => result?.needsClassSelection),
   };
 }
-

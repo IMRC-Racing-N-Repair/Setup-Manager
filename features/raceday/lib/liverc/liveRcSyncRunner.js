@@ -1,5 +1,5 @@
 import { fetchEntryListHtml } from './liveRcEntryList';
-import { findDriverInEntryList } from './liveRcDriverFinder';
+import { findDriverClassCandidatesInEntryList, findDriverInEntryList } from './liveRcDriverFinder';
 import { scanRaceLinks } from './liveRcRaceScanner';
 import { parseQualifierResult } from './liveRcQualifierParser';
 import { parseMainResult } from './liveRcMainParser';
@@ -9,6 +9,7 @@ import { getVehicleTransponder, getVehicleDisplayName, normalizeId } from '../ra
 import { addRaceDayRuns } from '../raceDayResultStorage';
 import { findRaceLineupsForVehicles } from './liveRcRaceLineupsParser';
 import { mergeRaceDayLineups } from '../raceDayLineupStorage';
+import { getRaceDayEventVehicleLink } from '../raceDayEventVehicleLinkStorage';
 
 function getVehicleNames(vehicle = {}) {
   return {
@@ -18,7 +19,6 @@ function getVehicleNames(vehicle = {}) {
       || vehicle.raceClass
       || vehicle.vehicleClass
       || vehicle.selectedClass
-      || vehicle.name
       || '',
   };
 }
@@ -104,6 +104,7 @@ export async function syncLiveRcForVehicle({
   const vehicleName = getVehicleDisplayName(vehicle);
   const names = getVehicleNames(vehicle);
   const progressBase = makeVehicleProgressBase({ raceDay, track, vehicle, vehicleName, transponder });
+  const vehicleId = vehicle.id || vehicle.vehicleId;
 
   debug.add('sync:start', {
     vehicleName,
@@ -152,7 +153,15 @@ export async function syncLiveRcForVehicle({
       : 'Entry List loaded. Searching for the driver.',
   });
 
-  const driver = findDriverInEntryList(entryHtml, { transponder, ...names }, { debug });
+  const savedEventLink = await getRaceDayEventVehicleLink(raceDay, normalizedEventUrl, vehicleId);
+  const linkedNames = savedEventLink
+    ? { ...names, className: savedEventLink.className, fullName: savedEventLink.fullName || names.fullName, nickname: savedEventLink.nickname || savedEventLink.driverName || names.nickname }
+    : names;
+  let driver = findDriverInEntryList(entryHtml, { transponder, ...linkedNames }, { debug });
+  const classCandidates = driver?.matchedBy === 'transponder'
+    ? []
+    : findDriverClassCandidatesInEntryList(entryHtml, names);
+  if (!driver && !savedEventLink && classCandidates.length) driver = classCandidates[0];
   if (!driver) {
     emitProgress(onProgress, {
       ...progressBase,
@@ -172,11 +181,49 @@ export async function syncLiveRcForVehicle({
     };
   }
 
+
+  const transponderMatched = driver.matchedBy === 'transponder';
+  if (!transponderMatched && !savedEventLink) {
+    if (classCandidates.length) {
+      const classOptions = classCandidates.map((candidate) => ({
+        className: candidate.className,
+        driverName: candidate.displayName || candidate.nickname || candidate.fullName,
+        fullName: candidate.fullName,
+        nickname: candidate.nickname,
+        transponder: candidate.transponder,
+      }));
+      emitProgress(onProgress, {
+        ...progressBase,
+        phase: 'class',
+        status: 'needs-selection',
+        driverFound: true,
+        transponderFound: false,
+        driverName: driver.displayName || driver.nickname || driver.fullName,
+        fullName: driver.fullName,
+        nickname: driver.nickname,
+        classOptions,
+        message: transponder
+          ? `${driver.displayName || driver.fullName} was found, but TX ${transponder} did not match. Choose the class for this vehicle.`
+          : `${driver.displayName || driver.fullName} was found without a TX match. Choose the class for this vehicle.`,
+      });
+      return {
+        ok: false,
+        needsClassSelection: true,
+        vehicleId,
+        vehicleName,
+        driver,
+        classOptions,
+        message: 'Choose a LiveRC class to link for this event.',
+        debug: debug.all(),
+      };
+    }
+  }
+
   emitProgress(onProgress, {
     ...progressBase,
     phase: 'driver',
     status: 'matched',
-    transponderFound: Boolean(transponder),
+    transponderFound: transponderMatched,
     driverFound: true,
     entryListUrl,
     driverName: driver.displayName || driver.nickname || driver.fullName,
@@ -192,7 +239,7 @@ export async function syncLiveRcForVehicle({
     phase: 'class',
     status: 'working',
     entryListUrl,
-    transponderFound: Boolean(transponder),
+    transponderFound: transponderMatched,
     driverFound: true,
     driverName: driver.displayName || driver.nickname || driver.fullName,
     fullName: driver.fullName,
@@ -226,7 +273,7 @@ export async function syncLiveRcForVehicle({
     ...progressBase,
     phase: 'class',
     status: 'matched',
-    transponderFound: Boolean(transponder),
+    transponderFound: transponderMatched,
     driverFound: true,
     classFound: true,
     entryListUrl,
@@ -246,7 +293,7 @@ export async function syncLiveRcForVehicle({
     fullName: driver.fullName,
     nickname: driver.nickname,
     className,
-    transponderFound: Boolean(transponder),
+    transponderFound: transponderMatched,
     driverFound: true,
     classFound: true,
     message: `Searching completed rounds for ${className}.`,
@@ -273,7 +320,7 @@ export async function syncLiveRcForVehicle({
     fullName: driver.fullName,
     nickname: driver.nickname,
     className,
-    transponderFound: Boolean(transponder),
+    transponderFound: transponderMatched,
     driverFound: true,
     classFound: true,
     racesComplete: 0,
@@ -301,7 +348,7 @@ export async function syncLiveRcForVehicle({
       fullName: driver.fullName,
       nickname: driver.nickname,
       className,
-      transponderFound: Boolean(transponder),
+      transponderFound: transponderMatched,
       driverFound: true,
       classFound: true,
       roundsChecked: raceIndex,
@@ -319,7 +366,7 @@ export async function syncLiveRcForVehicle({
       raceNumber: race.raceNumber,
       roundLabel: race.roundLabel,
       className,
-      transponderFound: Boolean(transponder),
+      transponderFound: transponderMatched,
       driverFound: true,
       classFound: true,
       resultType: race.resultType,
@@ -352,7 +399,7 @@ export async function syncLiveRcForVehicle({
       fullName: driver.fullName,
       nickname: driver.nickname,
       className,
-      transponderFound: Boolean(transponder),
+      transponderFound: transponderMatched,
       driverFound: true,
       classFound: true,
       roundsChecked: raceIndex + 1,
@@ -383,7 +430,7 @@ export async function syncLiveRcForVehicle({
     fullName: driver.fullName,
     nickname: driver.nickname,
     className,
-    transponderFound: Boolean(transponder),
+    transponderFound: transponderMatched,
     driverFound: true,
     classFound: true,
     roundsChecked: raceLinks.length,
@@ -509,6 +556,6 @@ export async function syncLiveRcRaceDay({ raceDay, track, vehicles = [], eventUr
     ok: results.some((result) => result.ok),
     results,
     runs: allRuns,
+    needsClassSelection: results.filter((result) => result?.needsClassSelection),
   };
 }
-

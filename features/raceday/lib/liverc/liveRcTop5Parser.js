@@ -908,7 +908,7 @@ function findQualifierRankingUrlFromEventHtml(eventHtml = '', eventUrl = '', rou
 
   const fallback = anchors.find((anchor) => {
     const combined = `${stripTags(anchor.text || '')} ${anchor.href || ''}`;
-    return new RegExp(`Round\\s+${roundNum}`, 'i').test(combined) && /rank/i.test(combined);
+    return new RegExp(`${round.name}\\s+Round\\s+${roundNum}`, 'i').test(combined) && /rank/i.test(combined);
   });
 
   return fallback?.href ? resolveLiveRcUrl(eventUrl, fallback.href) : '';

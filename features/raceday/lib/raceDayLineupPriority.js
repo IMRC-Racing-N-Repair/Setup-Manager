@@ -35,6 +35,7 @@ export function getLineupRoundInfo(lineup = {}) {
   const explicitType = clean(lineup?.roundType).toLowerCase();
   if (explicitType === 'main') return { type: 'main', number: 999, shortLabel: 'MAIN' };
   if (explicitType === 'qualifier') return { type: 'qualifier', number: explicitNumber, shortLabel: explicitNumber ? `Q${explicitNumber}` : 'QUAL' };
+  if (explicitType === 'seeding') return { type: 'seeding', number: explicitNumber, shortLabel: explicitNumber ? `S${explicitNumber}` : 'SEED' };
 
   return { type: explicitType, number: explicitNumber, shortLabel: '' };
 }

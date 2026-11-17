@@ -266,7 +266,7 @@ function looksLikeClassSectionHeading(lines = [], index = 0) {
   const line = cleanSpaces(lines[index] || '');
   if (!line || !/[a-z]/i.test(line)) return false;
   if (/^(pos|position|driver|rank by|laps\/time|top \d|fastest lap|avg lap|heat)$/i.test(line)) return false;
-  if (/\b(Qualifier|Round|Overall|Ranking|Race Results|Entry List|Toggle navigation|Register|Log In|Switch Tracks)\b/i.test(line)) return false;
+  if (/\b(Seeding|Qualifier|Round|Overall|Ranking|Race Results|Entry List|Toggle navigation|Register|Log In|Switch Tracks)\b/i.test(line)) return false;
   if (/^P?\d+$/.test(line)) return false;
   return findNextRankingHeaderIndex(lines, index + 1, 8) >= 0;
 }
@@ -403,7 +403,7 @@ function findRankingSection(html = '', roundLabel = '', className = '') {
   const round = cleanSpaces(roundLabel);
   const patterns = [
     round ? new RegExp(`${escapeRegExp(round)}\\s+(?:Overall\\s+)?Rankings?`, 'i') : null,
-    /Qualifier\s+Round\s+\d+\s+(?:Overall\s+)?Rankings?/i,
+    /(?:Seeding|Qualifier)\s+Round\s+\d+\s+(?:Overall\s+)?Rankings?/i,
     /Main\s+Events?\s+(?:Overall\s+)?Rankings?/i,
     /Final\s+Results?\s+(?:Overall\s+)?Rankings?/i,
   ].filter(Boolean);
@@ -423,14 +423,14 @@ function findRankingSection(html = '', roundLabel = '', className = '') {
   // result pages because heat positions are not overall qualifying positions.
   if (start < 0) {
     const plain = stripTags(text);
-    if (/rankings?|overall|qualifying\s+points|qualifier\s+round/i.test(plain) && (!className || classMatches(plain, className))) {
+    if (/rankings?|overall|qualifying\s+points|(?:seeding|qualifier)\s+round/i.test(plain) && (!className || classMatches(plain, className))) {
       return text;
     }
     return '';
   }
 
   const rest = text.slice(start);
-  const next = rest.slice(20).search(/(Qualifier\s+Round\s+\d+\s+(?:Overall\s+)?Rankings?|Main\s+Events?\s+(?:Overall\s+)?Rankings?|Final\s+Results?\s+(?:Overall\s+)?Rankings?|Race\s+Results|Entry\s+List)/i);
+  const next = rest.slice(20).search(/((?:Seeding|Qualifier)\s+Round\s+\d+\s+(?:Overall\s+)?Rankings?|Main\s+Events?\s+(?:Overall\s+)?Rankings?|Final\s+Results?\s+(?:Overall\s+)?Rankings?|Race\s+Results|Entry\s+List)/i);
   return next > 0 ? rest.slice(0, next + 20) : rest;
 }
 
@@ -440,7 +440,7 @@ function looksLikeDriverCell(value = '') {
   if (!key) return false;
   if (/^(pos|position|rank|driver|name|car|tx|transponder|laps|time|fast|avg|points|tie|class|entries?)$/i.test(text)) return false;
   if (/^(p?\d+|\d+\.\d+|\d+\/\d+:\d{2}\.\d{1,3}|\d+:\d{2}\.\d{1,3})$/i.test(text)) return false;
-  if (/\b(Qualifier|Round|Rankings?|Main|Final|Race Results|Entry List|Entries:)\b/i.test(text)) return false;
+  if (/\b(Seeding|Qualifier|Round|Rankings?|Main|Final|Race Results|Entry List|Entries:)\b/i.test(text)) return false;
   if (/\d+:\d{2}|\d+\.\d{3}|\d+\/\d+/.test(text)) return false;
   return /[a-z]/i.test(text);
 }
@@ -807,13 +807,13 @@ export function buildTop5ByRoundFromRaceLinks(raceLinks = [], { className = '', 
 }
 
 
-const QUAL_ROUND_RE = /Qualifier\s+Round\s+(\d+)/i;
-const ROUND_LABEL_RE = /(Main\s+Events?|Qualifier\s+Round\s+\d+|Final\s+Results?|Practice\s+Round\s+\d+)/i;
-const ROUND_LABEL_GLOBAL_RE = /(Main\s+Events?|Qualifier\s+Round\s+\d+|Final\s+Results?|Practice\s+Round\s+\d+)/gi;
+const PRE_ROUND_RE = /(Seeding|Qualifier)\s+Round\s+(\d+)/i;
+const ROUND_LABEL_RE = /(Main\s+Events?|Seeding\s+Round\s+\d+|Qualifier\s+Round\s+\d+|Final\s+Results?|Practice\s+Round\s+\d+)/i;
+const ROUND_LABEL_GLOBAL_RE = /(Main\s+Events?|Seeding\s+Round\s+\d+|Qualifier\s+Round\s+\d+|Final\s+Results?|Practice\s+Round\s+\d+)/gi;
 
-function getQualifierRoundNumber(value = '') {
-  const match = String(value || '').match(QUAL_ROUND_RE);
-  return match ? String(match[1]) : '';
+function getPreRoundInfo(value = '') {
+  const match = String(value || '').match(PRE_ROUND_RE);
+  return match ? { type: match[1].toLowerCase() === 'seeding' ? 'seeding' : 'qualifier', name: match[1], number: String(match[2]) } : null;
 }
 
 function normalizeRoundLabel(value = '') {
@@ -865,32 +865,33 @@ function isRoundRankingHref(href = '') {
   return /p=view_round_ranking/i.test(String(href || '')) || /ranking/i.test(String(href || ''));
 }
 
-function sameQualifierRound(labelA = '', labelB = '') {
-  const a = getQualifierRoundNumber(labelA);
-  const b = getQualifierRoundNumber(labelB);
-  return Boolean(a && b && a === b);
+function samePreRound(labelA = '', labelB = '') {
+  const a = getPreRoundInfo(labelA);
+  const b = getPreRoundInfo(labelB);
+  return Boolean(a && b && a.type === b.type && a.number === b.number);
 }
 
 function findQualifierRankingUrlFromEventHtml(eventHtml = '', eventUrl = '', roundLabel = '') {
-  const roundNum = getQualifierRoundNumber(roundLabel);
-  if (!roundNum) return '';
+  const round = getPreRoundInfo(roundLabel);
+  if (!round) return '';
+  const roundNum = round.number;
 
   const anchors = getAnchors(eventHtml);
   const exact = anchors.find((anchor) => {
     const text = stripTags(anchor.text || '');
     const combined = `${text} ${anchor.href || ''}`;
     return isRoundRankingHref(anchor.href || '') &&
-      new RegExp(`Qualifier\\s+Round\\s+${roundNum}`, 'i').test(combined) &&
+      new RegExp(`${round.name}\\s+Round\\s+${roundNum}`, 'i').test(combined) &&
       /rank/i.test(combined);
   });
 
   if (exact?.href) return resolveLiveRcUrl(eventUrl, exact.href);
 
-  // Some LiveRC event pages put the ranking link in a Qualifier Round section,
+  // Some LiveRC event pages put the ranking link in a pre-round section,
   // but the link text itself is only "Overall Ranking". Search by section so
-  // Qual Round 1 opens the Qual Round 1 ranking page, Qual Round 2 opens Q2, etc.
+  // so each Seeding or Qualifier round opens its matching ranking page.
   const roundSections = splitEventRaceResultsRounds(eventHtml)
-    .filter((section) => sameQualifierRound(section.label, roundLabel));
+    .filter((section) => samePreRound(section.label, roundLabel));
   for (const section of roundSections) {
     const sectionAnchor = getAnchors(section.html).find((anchor) => isRoundRankingHref(anchor.href || ''));
     if (sectionAnchor?.href) return resolveLiveRcUrl(eventUrl, sectionAnchor.href);
@@ -899,7 +900,7 @@ function findQualifierRankingUrlFromEventHtml(eventHtml = '', eventUrl = '', rou
   const overallStart = String(eventHtml || '').search(/Overall\s+Results|Rankings?/i);
   const overallHtml = overallStart >= 0 ? String(eventHtml || '').slice(overallStart) : String(eventHtml || '');
   const overallSections = splitEventRaceResultsRounds(overallHtml)
-    .filter((section) => sameQualifierRound(section.label, roundLabel));
+    .filter((section) => samePreRound(section.label, roundLabel));
   for (const section of overallSections) {
     const sectionAnchor = getAnchors(section.html).find((anchor) => isRoundRankingHref(anchor.href || ''));
     if (sectionAnchor?.href) return resolveLiveRcUrl(eventUrl, sectionAnchor.href);
@@ -914,11 +915,11 @@ function findQualifierRankingUrlFromEventHtml(eventHtml = '', eventUrl = '', rou
 }
 
 function findRoundRaceLinksFromEventHtml(eventHtml = '', eventUrl = '', { roundLabel = '', className = '' } = {}) {
-  const roundNum = getQualifierRoundNumber(roundLabel);
-  if (!roundNum) return [];
+  const preRound = getPreRoundInfo(roundLabel);
+  if (!preRound) return [];
 
   const rounds = splitEventRaceResultsRounds(eventHtml)
-    .filter((round) => sameQualifierRound(round.label, roundLabel));
+    .filter((round) => samePreRound(round.label, roundLabel));
 
   const links = [];
   const seen = new Set();
@@ -940,7 +941,7 @@ function findRoundRaceLinksFromEventHtml(eventHtml = '', eventUrl = '', { roundL
         roundLabel: round.label,
         className,
         linkText: combined,
-        resultType: 'qualifier',
+        resultType: preRound.type,
       });
     };
 
@@ -1016,7 +1017,8 @@ export async function buildQualifierTop5ForRun(run = {}, { eventHtml, rankingHtm
   const className = run?.className || run?.raceClassName || '';
   const driver = run?.driver || {};
   const eventUrl = run?.eventUrl || '';
-  const roundNum = getQualifierRoundNumber(roundLabel);
+  const preRound = getPreRoundInfo(roundLabel);
+  const roundNum = preRound?.number || '';
 
   top5Debug('start', {
     runKeys: Object.keys(run || {}),
@@ -1105,7 +1107,7 @@ export async function buildQualifierTop5ForRun(run = {}, { eventHtml, rankingHtm
         raceNumber: race.raceNumber,
         roundLabel: race.roundLabel,
         className,
-        resultType: 'qualifier',
+        resultType: preRound?.type || 'qualifier',
       });
       top5Debug('race racerLaps parsed', {
         raceNumber: race.raceNumber,

@@ -1,0 +1,21 @@
+name: Build Main Production Apps
+
+on:
+  push:
+    branches:
+      - codex/seeding-rounds-main
+
+jobs:
+  build_android:
+    name: Build Android Production AAB
+    type: build
+    params:
+      platform: android
+      profile: production
+
+  build_ios:
+    name: Build iOS Production App
+    type: build
+    params:
+      platform: ios
+      profile: production

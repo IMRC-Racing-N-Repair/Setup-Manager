@@ -121,16 +121,6 @@ export async function syncLiveRcForVehicle({
   });
 
   if (!normalizedEventUrl) throw new Error('LiveRC event URL is required.');
-  if (!transponder && !names.fullName && !names.nickname) {
-    emitProgress(onProgress, {
-      ...progressBase,
-      phase: 'driver',
-      status: 'failed',
-      message: `No TX/transponder or driver name found for ${vehicleName}.`,
-    });
-    throw new Error(`No transponder or driver name found for ${vehicleName}.`);
-  }
-
   emitProgress(onProgress, {
     ...progressBase,
     phase: transponder ? 'transponder' : 'driver',
@@ -154,36 +144,41 @@ export async function syncLiveRcForVehicle({
   });
 
   const savedEventLink = await getRaceDayEventVehicleLink(raceDay, normalizedEventUrl, vehicleId);
+  const hasSavedClassLink = Boolean(String(savedEventLink?.className || '').trim());
   const linkedNames = savedEventLink
     ? { ...names, className: savedEventLink.className, fullName: savedEventLink.fullName || names.fullName, nickname: savedEventLink.nickname || savedEventLink.driverName || names.nickname }
     : names;
   let driver = findDriverInEntryList(entryHtml, { transponder, ...linkedNames }, { debug });
   const classCandidates = driver?.matchedBy === 'transponder'
     ? []
-    : findDriverClassCandidatesInEntryList(entryHtml, names);
-  if (!driver && !savedEventLink && classCandidates.length) driver = classCandidates[0];
+    : findDriverClassCandidatesInEntryList(entryHtml, linkedNames);
+  if (!driver && !hasSavedClassLink && classCandidates.length) driver = classCandidates[0];
   if (!driver) {
     emitProgress(onProgress, {
       ...progressBase,
       phase: 'driver',
-      status: 'failed',
+      status: 'needs-driver-name',
       entryListUrl,
+      transponderFound: false,
+      requestedDriverName: savedEventLink?.driverName || names.fullName || names.nickname || '',
       message: transponder
-        ? `TX ${transponder} was not found in the Entry List for ${vehicleName}.`
-        : `Driver was not found in the Entry List for ${vehicleName}.`,
+        ? `TX ${transponder} and the saved driver name were not found. Enter the LiveRC driver name to search again.`
+        : `Vehicle was not found. Enter the driver name exactly as it appears on LiveRC.`,
     });
     return {
       ok: false,
-      vehicleId: vehicle.id || vehicle.vehicleId,
+      needsDriverName: true,
+      vehicleId,
       vehicleName,
-      message: `Driver not found in entry list for ${vehicleName}.`,
+      requestedDriverName: savedEventLink?.driverName || names.fullName || names.nickname || '',
+      message: `Enter a LiveRC driver name for ${vehicleName}.`,
       debug: debug.all(),
     };
   }
 
 
   const transponderMatched = driver.matchedBy === 'transponder';
-  if (!transponderMatched && !savedEventLink) {
+  if (!transponderMatched && !hasSavedClassLink) {
     if (classCandidates.length) {
       const classOptions = classCandidates.map((candidate) => ({
         className: candidate.className,
@@ -557,5 +552,7 @@ export async function syncLiveRcRaceDay({ raceDay, track, vehicles = [], eventUr
     results,
     runs: allRuns,
     needsClassSelection: results.filter((result) => result?.needsClassSelection),
+    needsDriverName: results.filter((result) => result?.needsDriverName),
+    needsUserInput: results.filter((result) => result?.needsClassSelection || result?.needsDriverName),
   };
 }

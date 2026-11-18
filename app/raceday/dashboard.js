@@ -23,7 +23,7 @@ import useLiveRcLiveFeed from '../../features/raceday/hooks/useLiveRcLiveFeed';
 import { hydrateActiveRaceDay, endRaceDay, saveRaceDayEvent } from '../../features/raceday/lib/raceDayStorage';
 import { getRaceDayRuns, getLatestRunForVehicle, getRunsForVehicleFromList } from '../../features/raceday/lib/raceDayResultStorage';
 import { getRaceDayLineups } from '../../features/raceday/lib/raceDayLineupStorage';
-import { saveRaceDayEventVehicleLink } from '../../features/raceday/lib/raceDayEventVehicleLinkStorage';
+import { saveRaceDayEventVehicleDriverName, saveRaceDayEventVehicleLink } from '../../features/raceday/lib/raceDayEventVehicleLinkStorage';
 import {
   getRaceDaySelectedPracticeDay,
   getPracticeDayKey,
@@ -235,7 +235,7 @@ export default function RaceDayDashboardScreen() {
             if (!cancelled) setAutoSyncProgress((previous) => mergeSyncProgress(previous, update));
           },
         });
-        waitingForClassSelection = Boolean(result?.needsClassSelection?.length);
+        waitingForClassSelection = Boolean(result?.needsUserInput?.length);
         if (!cancelled) await load({ showLoading: false });
         // Keep the completed checklist visible briefly so the final car and
         // lineup steps visibly reach Done instead of disappearing immediately.
@@ -473,8 +473,8 @@ export default function RaceDayDashboardScreen() {
 
       await load({ showLoading: false });
       if (result?.progress?.length) setSyncProgress(result.progress);
-      waitingForClassSelection = Boolean(result?.needsClassSelection?.length);
-      setSyncSummary(waitingForClassSelection ? 'Choose a class below to link this vehicle for the event.' : 'Complete.');
+      waitingForClassSelection = Boolean(result?.needsUserInput?.length);
+      setSyncSummary(waitingForClassSelection ? 'Enter a Driver Name or choose a class below to continue.' : 'Complete.');
     } catch (error) {
       setSyncSummary(error?.message || 'LiveRC sync failed.');
     } finally {
@@ -504,6 +504,34 @@ export default function RaceDayDashboardScreen() {
       className: option.className,
       classFound: true,
       message: `${option.driverName || item.driverName || 'Driver'} linked to ${option.className} for this event. Re-checking Race #.`,
+    }));
+    setAutoSyncing(false);
+    setSyncStatusOpen(false);
+    await new Promise((resolve) => setTimeout(resolve, 80));
+    runLiveRcSync();
+  }
+
+  async function handleEventDriverName(item, driverName) {
+    const raceDayId = active?.id || active?.raceDayId;
+    const eventUrl = active?.eventUrl;
+    const vehicleId = item?.vehicleId;
+    const cleanName = String(driverName || '').replace(/\s+/g, ' ').trim();
+    if (!raceDayId || !eventUrl || !vehicleId || !cleanName) return;
+
+    await saveRaceDayEventVehicleDriverName(active, eventUrl, vehicleId, cleanName);
+    setAutoSyncProgress((previous) => mergeSyncProgress(previous, {
+      ...item,
+      phase: 'driver',
+      status: 'working',
+      driverName: cleanName,
+      message: `Searching LiveRC again for ${cleanName}.`,
+    }));
+    setSyncProgress((previous) => mergeSyncProgress(previous, {
+      ...item,
+      phase: 'driver',
+      status: 'working',
+      driverName: cleanName,
+      message: `Searching LiveRC again for ${cleanName}.`,
     }));
     setAutoSyncing(false);
     setSyncStatusOpen(false);
@@ -725,12 +753,14 @@ export default function RaceDayDashboardScreen() {
         summary={syncSummary}
         onClose={() => setSyncStatusOpen(false)}
         onSelectClass={handleEventClassSelection}
+        onSubmitDriverName={handleEventDriverName}
       />
 
       <RaceDayAutoSyncOverlay
         visible={autoSyncing}
         progress={autoSyncProgress}
         onSelectClass={handleEventClassSelection}
+        onSubmitDriverName={handleEventDriverName}
       />
     </View>
   );

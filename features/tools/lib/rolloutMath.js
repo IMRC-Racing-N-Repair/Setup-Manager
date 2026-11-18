@@ -171,6 +171,66 @@ export function chooseTargetGearCenter({
   };
 }
 
+export function chooseTargetFdrGearCenter({
+  internalRatio = 1,
+  currentPinion = 0,
+  currentSpur = 0,
+  targetFdr = 0,
+}) {
+  const internal = toNumber(internalRatio, 1);
+  const target = toNumber(targetFdr);
+  const pinion = Math.round(toNumber(currentPinion));
+  const spur = Math.round(toNumber(currentSpur));
+
+  if (internal <= 0 || target <= 0) {
+    return {
+      canBuild: false,
+      priority: '',
+      centerPinion: 0,
+      centerSpur: 0,
+      idealPinion: 0,
+      idealSpur: 0,
+      anchorLabel: 'enter target FDR',
+    };
+  }
+
+  if (spur > 0) {
+    const idealPinion = (spur * internal) / target;
+    return {
+      canBuild: idealPinion > 0,
+      priority: 'spur',
+      centerPinion: Math.max(1, Math.round(idealPinion)),
+      centerSpur: spur,
+      idealPinion: round(idealPinion, 2),
+      idealSpur: spur,
+      anchorLabel: `Spur priority: ${spur}T`,
+    };
+  }
+
+  if (pinion > 0) {
+    const idealSpur = (target * pinion) / internal;
+    return {
+      canBuild: idealSpur > 0,
+      priority: 'pinion',
+      centerPinion: pinion,
+      centerSpur: Math.max(1, Math.round(idealSpur)),
+      idealPinion: pinion,
+      idealSpur: round(idealSpur, 2),
+      anchorLabel: `Pinion priority: ${pinion}T`,
+    };
+  }
+
+  return {
+    canBuild: false,
+    priority: '',
+    centerPinion: 0,
+    centerSpur: 0,
+    idealPinion: 0,
+    idealSpur: 0,
+    anchorLabel: 'enter pinion or spur',
+  };
+}
+
 export function rolloutForGears({ tireDiameter = 0, tireUnit = 'in', spur = 0, internalRatio = 1, pinion = 0 }) {
   return calculateRollout({ tireDiameter, tireUnit, spur, internalRatio, pinion });
 }
@@ -197,11 +257,15 @@ export function makeGearMatrix({
   pinionRadius = 3,
   spurRadius = 2,
   targetRolloutMm = 0,
+  targetFdr = 0,
+  targetMode = 'rollout',
 }) {
   const pinionCenter = Math.round(toNumber(centerPinion));
   const spurCenter = Math.round(toNumber(spur));
   const target = toNumber(targetRolloutMm);
-  if (pinionCenter <= 0 || spurCenter <= 0 || toNumber(tireDiameter) <= 0 || toNumber(internalRatio, 1) <= 0) {
+  const fdrTarget = toNumber(targetFdr);
+  const useFdrTarget = targetMode === 'fdr';
+  if (pinionCenter <= 0 || spurCenter <= 0 || (!useFdrTarget && toNumber(tireDiameter) <= 0) || toNumber(internalRatio, 1) <= 0) {
     return { spurs: [], rows: [], bestCell: null };
   }
 
@@ -214,17 +278,22 @@ export function makeGearMatrix({
     const cells = spurs.map((s) => {
       const result = rolloutForGears({ tireDiameter, tireUnit, internalRatio, pinion: p, spur: s });
       const deltaMm = target > 0 ? result.rolloutMm - target : 0;
+      const deltaFdr = fdrTarget > 0 ? result.finalDriveRatio - fdrTarget : 0;
       const cell = {
         spur: s,
         pinion: p,
         deltaMm: round(deltaMm, 3),
         deltaIn: round(deltaMm / 25.4, 3),
         absDeltaMm: Math.abs(deltaMm),
+        deltaFdr: round(deltaFdr, 3),
+        absDeltaFdr: Math.abs(deltaFdr),
         isCenter: p === pinionCenter && s === spurCenter,
         ...result,
       };
-      if (target > 0 && result.rolloutMm > 0) {
-        if (!bestCell || cell.absDeltaMm < bestCell.absDeltaMm) bestCell = cell;
+      if (useFdrTarget ? fdrTarget > 0 : target > 0) {
+        const candidateDelta = useFdrTarget ? cell.absDeltaFdr : cell.absDeltaMm;
+        const bestDelta = bestCell ? (useFdrTarget ? bestCell.absDeltaFdr : bestCell.absDeltaMm) : Number.POSITIVE_INFINITY;
+        if (!bestCell || candidateDelta < bestDelta) bestCell = cell;
       }
       return cell;
     });

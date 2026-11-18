@@ -537,6 +537,88 @@ export default function GearToothCounterScreen(props) {
     }));
   };
 
+  const changeOutsideDiameter = (value) => {
+    setState((prev) => {
+      const next = { ...prev, outsideDiameter: value };
+      const nextEstimate = estimateToothCount(next);
+      return {
+        ...next,
+        toothCount: nextEstimate.nearest ? String(nextEstimate.nearest) : '',
+      };
+    });
+  };
+
+  const changeToothCount = (value) => {
+    setState((prev) => {
+      const next = { ...prev, toothCount: value };
+      const nextOd = outsideDiameterForTeeth(next);
+      const calculated = prev.diameterUnit === 'mm' ? nextOd.odMm : nextOd.odIn;
+      return {
+        ...next,
+        outsideDiameter: Number(calculated) > 0
+          ? fmt(calculated, prev.diameterUnit === 'mm' ? 2 : 4)
+          : prev.outsideDiameter,
+      };
+    });
+  };
+
+  const changePitch = (pitchType) => {
+    setState((prev) => {
+      const next = { ...prev, pitchType };
+      if (Number(prev.outsideDiameter) > 0) {
+        const nextEstimate = estimateToothCount(next);
+        return { ...next, toothCount: nextEstimate.nearest ? String(nextEstimate.nearest) : '' };
+      }
+      if (Number(prev.toothCount) > 0) {
+        const nextOd = outsideDiameterForTeeth(next);
+        const calculated = prev.diameterUnit === 'mm' ? nextOd.odMm : nextOd.odIn;
+        return {
+          ...next,
+          outsideDiameter: Number(calculated) > 0
+            ? fmt(calculated, prev.diameterUnit === 'mm' ? 2 : 4)
+            : prev.outsideDiameter,
+        };
+      }
+      return next;
+    });
+  };
+
+  const changeTapCount = (nextCount) => {
+    const count = Math.max(0, Math.round(Number(nextCount) || 0));
+    setState((prev) => {
+      const next = { ...prev, count, toothCount: count ? String(count) : '' };
+      const nextOd = outsideDiameterForTeeth(next);
+      const calculated = prev.diameterUnit === 'mm' ? nextOd.odMm : nextOd.odIn;
+      return {
+        ...next,
+        outsideDiameter: count > 0 && Number(calculated) > 0
+          ? fmt(calculated, prev.diameterUnit === 'mm' ? 2 : 4)
+          : prev.outsideDiameter,
+      };
+    });
+  };
+
+  const changeCustomPitch = (value) => {
+    setState((prev) => {
+      const next = { ...prev, customPitch: value };
+      if (Number(prev.outsideDiameter) > 0) {
+        const nextEstimate = estimateToothCount(next);
+        return { ...next, toothCount: nextEstimate.nearest ? String(nextEstimate.nearest) : '' };
+      }
+      if (Number(prev.toothCount) > 0) {
+        const nextOd = outsideDiameterForTeeth(next);
+        const calculated = prev.diameterUnit === 'mm' ? nextOd.odMm : nextOd.odIn;
+        return {
+          ...next,
+          outsideDiameter: Number(calculated) > 0
+            ? fmt(calculated, prev.diameterUnit === 'mm' ? 2 : 4)
+            : prev.outsideDiameter,
+        };
+      }
+      return next;
+    });
+  };
+
   const estimate = useMemo(() => estimateToothCount(state), [state]);
   const odForTeeth = useMemo(() => outsideDiameterForTeeth(state), [state]);
   const selectedPitch = useMemo(() => pitchInfo(state.pitchType, state.customPitch), [state.pitchType, state.customPitch]);
@@ -706,42 +788,50 @@ export default function GearToothCounterScreen(props) {
   const autoUsable = !!state.autoUsable || !!state.autoVerified || autoConfidence >= 72;
   return (
     <ToolScaffold title="Gear Counter" subtitle="pitch helper + verified photo count" onBack={() => goBack(props)}>
-      <ToolCard compact style={styles.resultsCard}>
-        <ToolSectionTitle right={selectedPitch.label}>Results</ToolSectionTitle>
-        <View style={styles.resultsGrid}>
-          <MiniResult
-            label="Counted"
-            value={`${counted}T`}
-            note="active count"
-          />
-          <MiniResult
-            label="Auto Photo"
-            value={autoCount ? `${autoCount}T` : '—'}
-            note={autoCount ? `${autoConfidence}% ${state.autoVerified ? 'verified' : 'photo'}` : 'take photo'}
-            accent={!!autoCount}
-          />
-          <MiniResult
-            label="From OD"
-            value={hasEstimate ? `${estimate.nearest}T` : '—'}
-            note={hasEstimate ? `${fmt(estimate.estimated, 2)} calc` : 'enter OD'}
-          />
-        </View>
-        <View style={styles.resultsGridTwo}>
-          <MiniResult
-            label="Expected OD"
-            value={displayExpected}
-            note={hasEstimate ? `Δ ${fmt(delta, state.diameterUnit === 'mm' ? 2 : 4)} ${state.diameterUnit}` : 'nearest tooth'}
-          />
-          <MiniResult
-            label="OD From Tooth Count"
-            value={displayOdForTeeth}
-            note={hasOd ? `${odForTeeth.pitchLabel} selected` : 'optional'}
-          />
-        </View>
-      </ToolCard>
-
       <ToolCard compact>
-        <ToolSectionTitle>Measure / Calculate</ToolSectionTitle>
+        <ToolSectionTitle right={selectedPitch.label}>Pitch</ToolSectionTitle>
+        <Text style={styles.pitchGroupLabel}>Inch pitch</Text>
+        <View style={styles.pitchGrid}>
+          {DP_OPTIONS.map((option) => (
+            <PitchChip
+              key={option.value}
+              option={option}
+              selected={state.pitchType === option.value}
+              onPress={() => changePitch(option.value)}
+            />
+          ))}
+        </View>
+        <Text style={styles.pitchGroupLabel}>Metric module</Text>
+        <View style={styles.pitchGrid}>
+          {MOD_OPTIONS.map((option) => (
+            <PitchChip
+              key={option.value}
+              option={option}
+              selected={state.pitchType === option.value}
+              onPress={() => changePitch(option.value)}
+            />
+          ))}
+          {CUSTOM_OPTIONS.map((option) => (
+            <PitchChip
+              key={option.value}
+              option={option}
+              selected={state.pitchType === option.value}
+              onPress={() => changePitch(option.value)}
+            />
+          ))}
+        </View>
+        {state.pitchType === 'customMod' && (
+          <ToolInput
+            label="Custom Module"
+            value={state.customPitch}
+            onChangeText={changeCustomPitch}
+            suffix="M"
+            placeholder="0.75"
+          />
+        )}
+
+        <View style={styles.measureDivider} />
+        <ToolSectionTitle right={hasEstimate ? `${estimate.nearest}T calculated` : ''}>Measure / Calculate</ToolSectionTitle>
         <Segmented
           value={state.diameterUnit}
           onChange={setDiameterUnit}
@@ -755,7 +845,7 @@ export default function GearToothCounterScreen(props) {
             <ToolInput
               label="Outside Dia"
               value={state.outsideDiameter}
-              onChangeText={(v) => setField('outsideDiameter', v)}
+              onChangeText={changeOutsideDiameter}
               suffix={state.diameterUnit}
             />
           </View>
@@ -763,55 +853,14 @@ export default function GearToothCounterScreen(props) {
             <ToolInput
               label="Tooth Count"
               value={state.toothCount}
-              onChangeText={(v) => setField('toothCount', v)}
+              onChangeText={changeToothCount}
               suffix="T"
             />
           </View>
         </View>
-      </ToolCard>
-
-
-      <ToolCard compact>
-        <ToolSectionTitle>Pitch</ToolSectionTitle>
-        <Text style={styles.pitchGroupLabel}>Inch pitch</Text>
-        <View style={styles.pitchGrid}>
-          {DP_OPTIONS.map((option) => (
-            <PitchChip
-              key={option.value}
-              option={option}
-              selected={state.pitchType === option.value}
-              onPress={() => setField('pitchType', option.value)}
-            />
-          ))}
-        </View>
-        <Text style={styles.pitchGroupLabel}>Metric module</Text>
-        <View style={styles.pitchGrid}>
-          {MOD_OPTIONS.map((option) => (
-            <PitchChip
-              key={option.value}
-              option={option}
-              selected={state.pitchType === option.value}
-              onPress={() => setField('pitchType', option.value)}
-            />
-          ))}
-          {CUSTOM_OPTIONS.map((option) => (
-            <PitchChip
-              key={option.value}
-              option={option}
-              selected={state.pitchType === option.value}
-              onPress={() => setField('pitchType', option.value)}
-            />
-          ))}
-        </View>
-        {state.pitchType === 'customMod' && (
-          <ToolInput
-            label="Custom Module"
-            value={state.customPitch}
-            onChangeText={(v) => setField('customPitch', v)}
-            suffix="M"
-            placeholder="0.75"
-          />
-        )}
+        <Text style={styles.measureHint}>
+          Enter outside diameter to calculate tooth count, or enter tooth count to calculate outside diameter.
+        </Text>
       </ToolCard>
 
       <ToolCard compact>
@@ -819,9 +868,9 @@ export default function GearToothCounterScreen(props) {
         <View style={styles.counterRow}>
           <Text style={styles.counter}>{counted}</Text>
           <View style={styles.counterButtons}>
-            <ToolButton label="+ Tooth" onPress={() => setField('count', counted + 1)} style={styles.plusButton} />
-            <ToolButton label="-" secondary onPress={() => setField('count', Math.max(0, counted - 1))} style={styles.smallButton} />
-            <ToolButton label="Clear" secondary onPress={() => setField('count', 0)} style={styles.smallButton} />
+            <ToolButton label="+ Tooth" onPress={() => changeTapCount(counted + 1)} style={styles.plusButton} />
+            <ToolButton label="-" secondary onPress={() => changeTapCount(counted - 1)} style={styles.smallButton} />
+            <ToolButton label="Clear" secondary onPress={() => changeTapCount(0)} style={styles.smallButton} />
           </View>
         </View>
       </ToolCard>
@@ -1211,6 +1260,19 @@ const styles = StyleSheet.create({
     lineHeight: 13,
     fontWeight: '800',
     marginTop: 1,
+  },
+  measureDivider: {
+    height: 1,
+    marginTop: 7,
+    marginBottom: 8,
+    backgroundColor: TOOL_LINE_SOFT,
+  },
+  measureHint: {
+    color: TOOL_MUTED,
+    fontWeight: '800',
+    fontSize: 9,
+    lineHeight: 13,
+    marginTop: 3,
   },
   pitchGroupLabel: {
     color: TOOL_MUTED,

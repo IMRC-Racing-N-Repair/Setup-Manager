@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 
@@ -9,8 +9,8 @@ import {
   markVehicleViewed,
 } from '../vehicles/logic/vehicleStorage';
 import { getTracks } from '../tracks/storage/trackStorage';
-import { getSetups } from '../setups/lib/setupStorage';
-import { getEntityId, getTrackDisplayName } from '../setups/lib/setupModel';
+import { getSetups, saveSetupCopyToTarget } from '../setups/lib/setupStorage';
+import { getEntityId, getTrackDisplayName, getVehicleDisplayName } from '../setups/lib/setupModel';
 import StableSafeAreaView from '../../src/layout/StableSafeAreaView';
 import AppScreenHeader from '../../src/layout/AppScreenHeader';
 import NewLookBottomNav from '../../src/navigation/NewLookBottomNav';
@@ -55,6 +55,9 @@ export default function GarageScreen() {
   const [setups, setSetups] = useState([]);
   const [selectedVehicleId, setSelectedVehicleId] = useState('');
   const [showVehicleTracks, setShowVehicleTracks] = useState(false);
+  const [copySource, setCopySource] = useState(null);
+  const [copyTargetTrackId, setCopyTargetTrackId] = useState('');
+  const [copyBusy, setCopyBusy] = useState(false);
 
   const loadGarage = useCallback(async () => {
     setLoading(true);
@@ -138,6 +141,36 @@ export default function GarageScreen() {
     if (!selectedVehicleId || !trackId) return;
     router.push(`/setups/editor/${encodeURIComponent(trackId)}/${encodeURIComponent(selectedVehicleId)}?returnTo=garage&returnVehicleId=${encodeURIComponent(selectedVehicleId)}`);
   }, [router, selectedVehicleId]);
+
+  const openCopySetup = useCallback((row) => {
+    const firstTarget = tracks.find((track) => clean(getEntityId(track)) !== clean(row?.trackId));
+    setCopySource(row);
+    setCopyTargetTrackId(clean(getEntityId(firstTarget)));
+  }, [tracks]);
+
+  const confirmCopySetup = useCallback(async () => {
+    if (!copySource?.setup || !copyTargetTrackId || !selectedVehicle) return;
+    const targetTrack = tracks.find((track) => clean(getEntityId(track)) === clean(copyTargetTrackId));
+    if (!targetTrack) return;
+
+    setCopyBusy(true);
+    try {
+      await saveSetupCopyToTarget(copySource.setup, {
+        vehicle: selectedVehicle,
+        vehicleId: selectedVehicleId,
+        track: targetTrack,
+        trackId: copyTargetTrackId,
+        source: 'garage-copy',
+      });
+      await loadGarage();
+      setCopySource(null);
+      Alert.alert('Setup Copied', `Copied ${getVehicleDisplayName(selectedVehicle)} to ${getTrackDisplayName(targetTrack)}.`);
+    } catch (error) {
+      Alert.alert('Copy Failed', error?.message || 'The setup could not be copied.');
+    } finally {
+      setCopyBusy(false);
+    }
+  }, [copySource, copyTargetTrackId, loadGarage, selectedVehicle, selectedVehicleId, tracks]);
 
   const addSetup = useCallback(() => {
     if (!selectedVehicleId) return;
@@ -259,6 +292,9 @@ export default function GarageScreen() {
                       <Text style={styles.trackMeta} numberOfLines={1}>{trackMeta(track)}</Text>
                       <Text style={[styles.trackStatus, styles.trackStatusSaved]}>{savedLabel(setup)}</Text>
                     </Pressable>
+                    <Pressable style={styles.copyAction} onPress={() => openCopySetup({ track, trackId, setup })}>
+                      <Text style={styles.copyActionText}>COPY</Text>
+                    </Pressable>
                     <Pressable style={[styles.trackAction, styles.trackActionSaved]} onPress={() => openVehicleTrack(trackId)}>
                       <Text style={[styles.trackActionText, styles.trackActionTextSaved]}>OPEN</Text>
                     </Pressable>
@@ -274,6 +310,48 @@ export default function GarageScreen() {
             </>
           )}
         </ScrollView>
+
+        <Modal visible={Boolean(copySource)} transparent animationType="fade" onRequestClose={() => !copyBusy && setCopySource(null)}>
+          <View style={styles.modalBackdrop}>
+            <View style={styles.modalCard}>
+              <Text style={styles.modalKicker}>COPY SETUP</Text>
+              <Text style={styles.modalTitle}>Copy to Track</Text>
+              <Text style={styles.modalCopy}>Choose where to copy {selectedVehicle?.name || 'this vehicle'}’s setup. The original stays unchanged.</Text>
+
+              <View style={styles.copySourceCard}>
+                <Text style={styles.copySourceLabel}>FROM</Text>
+                <Text style={styles.copySourceTitle}>{getTrackDisplayName(copySource?.track)}</Text>
+              </View>
+
+              <ScrollView style={styles.copyTrackList} contentContainerStyle={styles.copyTrackListContent}>
+                {tracks.filter((track) => clean(getEntityId(track)) !== clean(copySource?.trackId)).map((track) => {
+                  const id = clean(getEntityId(track));
+                  const selected = id === clean(copyTargetTrackId);
+                  return (
+                    <Pressable key={id} style={[styles.copyTrackRow, selected && styles.copyTrackRowSelected]} onPress={() => setCopyTargetTrackId(id)}>
+                      <View style={styles.copyTrackIdentity}>
+                        <Text style={styles.copyTrackName}>{getTrackDisplayName(track)}</Text>
+                        <Text style={styles.copyTrackMeta} numberOfLines={1}>{trackMeta(track)}</Text>
+                      </View>
+                      <Text style={[styles.copyTrackChoice, selected && styles.copyTrackChoiceSelected]}>{selected ? 'SELECTED' : 'CHOOSE'}</Text>
+                    </Pressable>
+                  );
+                })}
+                {tracks.filter((track) => clean(getEntityId(track)) !== clean(copySource?.trackId)).length === 0 ? (
+                  <Text style={styles.noCopyTargets}>Add another track before copying this setup.</Text>
+                ) : null}
+              </ScrollView>
+
+              <Pressable disabled={copyBusy || !copyTargetTrackId} style={[styles.modalPrimary, (copyBusy || !copyTargetTrackId) && styles.modalDisabled]} onPress={confirmCopySetup}>
+                <Text style={styles.modalPrimaryText}>{copyBusy ? 'COPYING…' : 'COPY SETUP'}</Text>
+              </Pressable>
+              <Pressable disabled={copyBusy} style={styles.modalSecondary} onPress={() => setCopySource(null)}>
+                <Text style={styles.modalSecondaryText}>CANCEL</Text>
+              </Pressable>
+            </View>
+          </View>
+        </Modal>
+
         <NewLookBottomNav active="garage" router={router} />
       </View>
     </StableSafeAreaView>
@@ -336,6 +414,8 @@ const styles = StyleSheet.create({
   trackStatusSaved: { color: AppColors.primary },
   trackAction: { minWidth: 58, minHeight: 31, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 7, borderWidth: 1, borderColor: AppColors.borderStrong, backgroundColor: AppColors.surface },
   trackActionSaved: { borderColor: AppColors.primary, backgroundColor: AppColors.primarySoft },
+  copyAction: { minWidth: 48, minHeight: 31, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6, borderWidth: 1, borderColor: AppColors.borderStrong, backgroundColor: AppColors.surface },
+  copyActionText: { color: AppColors.mutedText, fontSize: 8, fontWeight: '900', letterSpacing: 0.35 },
   trackActionText: { color: AppColors.text, fontSize: 8, fontWeight: '900', letterSpacing: 0.35 },
   trackActionTextSaved: { color: AppColors.primary },
   emptyPanel: { marginTop: 18, padding: 14, borderWidth: 1, borderColor: AppColors.border, backgroundColor: AppColors.card },
@@ -344,5 +424,28 @@ const styles = StyleSheet.create({
   emptyCopy: { marginTop: 4, color: AppColors.mutedText, fontSize: 10, lineHeight: 15 },
   primaryButton: { minHeight: 36, alignItems: 'center', justifyContent: 'center', marginTop: 12, backgroundColor: AppColors.primary },
   primaryButtonText: { color: '#FFFFFF', fontSize: 10, fontWeight: '900' },
+  modalBackdrop: { flex: 1, justifyContent: 'center', padding: 18, backgroundColor: 'rgba(0,0,0,0.78)' },
+  modalCard: { width: '100%', maxWidth: 520, maxHeight: '78%', alignSelf: 'center', padding: 18, borderWidth: 1, borderColor: AppColors.borderStrong, backgroundColor: AppColors.card },
+  modalKicker: { color: AppColors.primary, fontSize: 8, fontWeight: '900', letterSpacing: 1.1 },
+  modalTitle: { marginTop: 4, color: AppColors.textStrong, fontSize: 23, fontWeight: '900' },
+  modalCopy: { marginTop: 7, color: AppColors.mutedText, fontSize: 11, lineHeight: 16 },
+  copySourceCard: { marginTop: 14, padding: 11, borderLeftWidth: 2, borderLeftColor: AppColors.primary, backgroundColor: AppColors.surface },
+  copySourceLabel: { color: AppColors.primary, fontSize: 7, fontWeight: '900', letterSpacing: 0.8 },
+  copySourceTitle: { marginTop: 3, color: AppColors.textStrong, fontSize: 15, fontWeight: '900' },
+  copyTrackList: { maxHeight: 270, marginTop: 12 },
+  copyTrackListContent: { gap: 7 },
+  copyTrackRow: { minHeight: 54, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 10, borderWidth: 1, borderColor: AppColors.border, backgroundColor: AppColors.surface },
+  copyTrackRowSelected: { borderColor: AppColors.primary, backgroundColor: AppColors.primarySoft },
+  copyTrackIdentity: { flex: 1, minWidth: 0 },
+  copyTrackName: { color: AppColors.textStrong, fontSize: 13, fontWeight: '900' },
+  copyTrackMeta: { marginTop: 2, color: AppColors.mutedText, fontSize: 9 },
+  copyTrackChoice: { color: AppColors.mutedText, fontSize: 7, fontWeight: '900' },
+  copyTrackChoiceSelected: { color: AppColors.primary },
+  noCopyTargets: { paddingVertical: 18, color: AppColors.mutedText, fontSize: 11, textAlign: 'center' },
+  modalPrimary: { minHeight: 42, alignItems: 'center', justifyContent: 'center', marginTop: 14, backgroundColor: AppColors.primary },
+  modalPrimaryText: { color: '#FFFFFF', fontSize: 10, fontWeight: '900', letterSpacing: 0.5 },
+  modalSecondary: { minHeight: 38, alignItems: 'center', justifyContent: 'center', marginTop: 7, borderWidth: 1, borderColor: AppColors.borderStrong },
+  modalSecondaryText: { color: AppColors.mutedText, fontSize: 9, fontWeight: '900' },
+  modalDisabled: { opacity: 0.45 },
   pressed: { opacity: 0.72 },
 });

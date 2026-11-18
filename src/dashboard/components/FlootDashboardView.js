@@ -33,7 +33,7 @@ export default function FlootDashboardView({
   counts,
   vehicles,
   tracks,
-  lastViewedVehicle,
+  lastOpened,
   raceDayReady,
   raceLive,
   onRaceDayPress,
@@ -58,7 +58,7 @@ export default function FlootDashboardView({
   const activeTrack = noTrackSelected
     ? null
     : savedTrackChoice || raceLive?.selectedTrack || (trackList.length ? trackList[0] : null);
-  const viewedVehicle = lastViewedVehicle || (Array.isArray(vehicles) ? vehicles[0] : null);
+  const lastOpenedItem = lastOpened || null;
   const liveState = raceLive?.liveState || {};
   const currentEvent = Boolean(raceDayReady && raceLive?.currentDay);
   const eventMatches = Boolean(currentEvent && raceLive?.eventMatches);
@@ -110,7 +110,7 @@ export default function FlootDashboardView({
     raceLive?.selectedTrack?.name || raceLive?.selectedTrack?.trackName,
     workspaceTrackName,
   );
-  const showWorkspace = loading || !!activeTrack;
+  const showWorkspace = true;
   const sponsorImage = sponsor?.logo || sponsor?.image || '';
   const syncColor = statusDotColor || '#6F7D74';
   const openSponsor = () => sponsor?.url && Linking.openURL(sponsor.url).catch(() => {});
@@ -171,19 +171,6 @@ export default function FlootDashboardView({
           <Text style={styles.sponsorVisit}>VISIT  ›</Text>
         </Pressable>
 
-        <Pressable disabled={loading} style={({ pressed }) => [styles.trackStrip, compactLayout && styles.trackStripCompact, loading && styles.loadingMuted, pressed && styles.pressed]} onPress={() => setShowTrackPicker(true)}>
-          <Text style={styles.trackGlyph}>⌖</Text>
-          <View style={styles.trackIdentity}>
-            <Text style={styles.trackName} numberOfLines={1}>{workspaceTrackName}</Text>
-            <Text style={styles.trackMeta} numberOfLines={1}>{workspaceTrackMeta}</Text>
-          </View>
-          {!loading && liveActive && activeTrack ? (
-            <View style={styles.trackLiveBadge}>
-              <View style={styles.liveDot} />
-              <Text style={styles.trackLiveText}>LIVE · RACE {currentRaceNumber}</Text>
-            </View>
-          ) : <Text style={styles.chevron}>›</Text>}
-        </Pressable>
 
         {showWorkspace ? <View style={styles.primaryGrid}>
           <View style={[styles.racePanel, compactLayout && styles.racePanelCompact]}>
@@ -232,41 +219,44 @@ export default function FlootDashboardView({
           </View>
         </View> : null}
 
-        <View style={[styles.garageSection, compactLayout && styles.garageSectionCompact, !activeTrack && styles.garageSectionNoTrack]}>
+        <View style={[styles.garageSection, compactLayout && styles.garageSectionCompact]}>
           <View style={styles.sectionHeader}>
             <View>
               <Text style={styles.microLabel}>GARAGE</Text>
-              <Text style={styles.sectionTitle}>Last viewed vehicle</Text>
+              <Text style={styles.sectionTitle}>Garage</Text>
             </View>
             <Pressable onPress={() => router.push('/garage')}><Text style={styles.viewAll}>OPEN GARAGE  ›</Text></Pressable>
           </View>
-          {showWorkspace ? <View style={styles.garageMetrics}>
+          <View style={styles.garageMetrics}>
             <CountCell label="VEHICLES" value={counts?.vehicles || 0} onPress={() => router.push('/vehicles')} />
             <CountCell label="TRACKS" value={counts?.tracks || 0} onPress={() => router.push('/tracks')} />
             <CountCell label="SETUPS" value={counts?.setups || 0} onPress={() => router.push('/setups')} />
-          </View> : null}
+          </View>
           <View style={styles.vehicleList}>
-            {viewedVehicle ? (
-              <Pressable key={String(viewedVehicle?.id || 'last-viewed')} style={({ pressed }) => [styles.vehicleRow, pressed && styles.pressed]} onPress={() => router.push('/garage')}>
+            {lastOpenedItem ? (
+              <Pressable
+                style={({ pressed }) => [styles.vehicleRow, pressed && styles.pressed]}
+                onPress={() => router.push(lastOpenedItem.route)}
+              >
                 <Text style={styles.vehicleIndex}>LAST</Text>
                 <View style={styles.vehicleIdentity}>
-                  <Text style={styles.vehicleName} numberOfLines={1}>{textValue(viewedVehicle?.name, 'Unnamed vehicle')}</Text>
-                  <Text style={styles.vehicleMeta} numberOfLines={1}>
-                    {[viewedVehicle?.chassisStyle, viewedVehicle?.transponder ? `TX ${viewedVehicle.transponder}` : ''].filter(Boolean).join(' · ') || 'Vehicle details'}
-                  </Text>
+                  <Text style={styles.vehicleName} numberOfLines={1}>{textValue(lastOpenedItem.title, 'Recently opened')}</Text>
+                  <Text style={styles.vehicleMeta} numberOfLines={1}>{textValue(lastOpenedItem.meta, 'Open again')}</Text>
                 </View>
-                <Text style={[styles.vehicleStatus, isLandscape && styles.vehicleStatusLandscape]}>LAST VIEWED</Text>
+                <Text style={[styles.vehicleStatus, isLandscape && styles.vehicleStatusLandscape]}>
+                  {lastOpenedItem.type === 'tool' ? 'TOOL' : 'SETUP'}
+                </Text>
                 <Text style={styles.chevron}>›</Text>
               </Pressable>
             ) : loading ? (
               <View style={styles.emptyVehicleRow}>
-                <Text style={styles.emptyTitle}>Loading garage…</Text>
-                <Text style={styles.emptyCopy}>Checking your last viewed vehicle and saved setups.</Text>
+                <Text style={styles.emptyTitle}>Loading recent item…</Text>
+                <Text style={styles.emptyCopy}>Checking your last opened tool or setup.</Text>
               </View>
             ) : (
-              <Pressable style={styles.emptyVehicleRow} onPress={() => router.push('/garage')}>
-                <Text style={styles.emptyTitle}>No vehicles saved</Text>
-                <Text style={styles.emptyCopy}>Add your first vehicle to begin building setups.</Text>
+              <Pressable style={styles.emptyVehicleRow} onPress={() => router.push('/tools')}>
+                <Text style={styles.emptyTitle}>Nothing opened yet</Text>
+                <Text style={styles.emptyCopy}>Open a tool or setup and it will appear here.</Text>
               </Pressable>
             )}
           </View>

@@ -451,6 +451,7 @@ export default function SetupEditorScreen() {
       vehicleName: loaded.setup.vehicleName,
       trackName: loaded.setup.trackName,
       savedAt: loaded.setup.savedAt || loaded.setup.updatedAt,
+      openedAt: new Date().toISOString(),
     });
   }, [vehicleId, trackId, setupId, readOnly]);
 

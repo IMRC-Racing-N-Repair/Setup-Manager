@@ -20,6 +20,7 @@ const ROLLOUT_KEYS = [
 ];
 
 const SCALE_KEY = '@imrcToolsRaceScale_v1';
+const LAST_OPENED_TOOL_KEY = '@lastOpenedTool_v1';
 const OZ_TO_G = 28.349523125;
 const TOOLS = [
   { title: 'Rollout', route: '/tools/rollout', icon: 'RO', desc: 'FDR, rollout, target pinion', statKey: 'rollout' },
@@ -120,6 +121,18 @@ export default function ToolsHomeScreen(props) {
     });
   }, []);
 
+  const openTool = useCallback(async (tool) => {
+    try {
+      await AsyncStorage.setItem(LAST_OPENED_TOOL_KEY, JSON.stringify({
+        title: tool.title,
+        description: tool.desc,
+        route: tool.route,
+        openedAt: new Date().toISOString(),
+      }));
+    } catch {}
+    navigateTo(props, tool.route);
+  }, [props]);
+
   useEffect(() => {
     let mounted = true;
     const run = async () => {
@@ -149,7 +162,7 @@ export default function ToolsHomeScreen(props) {
           return (
             <Pressable
               key={tool.route}
-              onPress={() => navigateTo(props, tool.route)}
+              onPress={() => openTool(tool)}
               style={({ pressed }) => [
                 styles.card,
                 isShort && styles.cardShort,

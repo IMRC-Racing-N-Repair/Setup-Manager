@@ -353,7 +353,7 @@ export default function DashboardScreen({
       })()
     : null;
 
-  const { counts, vehicles, tracks, lastViewedVehicle, loadCounts } = useDashboardData();
+  const { counts, vehicles, tracks, lastViewedVehicle, lastOpened, loadCounts } = useDashboardData();
   const raceDay = useRaceDayHome({ router, onRefresh: loadCounts });
   const { raceDayReady, hasRaceDaySelections, syncRaceDayReady } = raceDay;
   const raceLive = useDashboardRaceLive(raceDayReady);
@@ -576,7 +576,7 @@ export default function DashboardScreen({
         counts={counts}
         vehicles={vehicles}
         tracks={tracks}
-        lastViewedVehicle={lastViewedVehicle}
+        lastOpened={lastOpened}
         raceDayReady={raceDayReady}
         raceLive={raceLive}
         onRaceDayPress={raceDay.handleRaceDayPress}

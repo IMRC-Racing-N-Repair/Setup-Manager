@@ -223,6 +223,22 @@ function getRaceHeadingBeforeTable(prefixHtml = '', fallback = {}) {
   };
 }
 
+function getRaceHeadingFromRow(rowHtml = '', fallback = {}) {
+  const classHeaderHtml = String(rowHtml || '').match(/class=["'][^"']*class_header[^"']*["'][^>]*>([\s\S]*?)<\/span>/i)?.[1] || '';
+  if (!classHeaderHtml) return null;
+
+  const raceNumberHtml = String(rowHtml || '').match(/class=["'][^"']*race_num[^"']*["'][^>]*>([\s\S]*?)<\/div>/i)?.[1] || '';
+  const raceNumber = clean(stripTags(raceNumberHtml)) || fallback.raceNumber || '';
+  const className = normalizeClass(stripTags(classHeaderHtml)) || fallback.className || '';
+  return {
+    ...fallback,
+    raceNumber,
+    raceLabel: raceNumber ? `Race ${raceNumber}` : fallback.raceLabel || '',
+    className,
+    classKey: textKey(className),
+  };
+}
+
 function parseLineupRowsFromHtml(html = '', fallback = {}) {
   const rows = [];
   const tables = getTables(html);
@@ -232,10 +248,15 @@ function parseLineupRowsFromHtml(html = '', fallback = {}) {
     const tableIndex = String(html).indexOf(table, searchFrom);
     const prefixStart = String(html).lastIndexOf('</table>', Math.max(0, tableIndex - 1));
     const prefixHtml = String(html).slice(prefixStart >= 0 ? prefixStart + 8 : 0, Math.max(0, tableIndex));
-    const raceHeading = getRaceHeadingBeforeTable(prefixHtml, fallback);
+    let raceHeading = getRaceHeadingBeforeTable(prefixHtml, fallback);
     searchFrom = Math.max(searchFrom, tableIndex + table.length);
 
     for (const rowHtml of getRows(table)) {
+      const embeddedHeading = getRaceHeadingFromRow(rowHtml, raceHeading);
+      if (embeddedHeading) {
+        raceHeading = embeddedHeading;
+        continue;
+      }
       const cells = getCells(rowHtml).map(clean).filter(Boolean);
       if (cells.length < 2) continue;
       const joined = cells.join(' | ');

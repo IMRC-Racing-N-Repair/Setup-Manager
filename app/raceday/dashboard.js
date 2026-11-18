@@ -21,6 +21,7 @@ import RaceDayPracticeTrackCard from '../../features/raceday/components/RaceDayP
 import RaceDayLiveHeader from '../../features/raceday/components/RaceDayLiveHeader';
 import { mergeSyncProgress } from '../../features/raceday/components/RaceDaySyncStatusPopup';
 import RaceDayAutoSyncOverlay from '../../features/raceday/components/RaceDayAutoSyncOverlay';
+import RaceDayVehicleLinkPopup from '../../features/raceday/components/RaceDayVehicleLinkPopup';
 import NewLookBottomNav from '../../src/navigation/NewLookBottomNav';
 import useLiveRcLiveFeed from '../../features/raceday/hooks/useLiveRcLiveFeed';
 import { hydrateActiveRaceDay, endRaceDay, saveRaceDayEvent } from '../../features/raceday/lib/raceDayStorage';
@@ -173,6 +174,9 @@ export default function RaceDayDashboardScreen() {
       return next;
     });
   }, []);
+  const vehicleLinkItem = useMemo(() => {
+    return autoSyncProgress.find((item) => item.status === 'needs-driver-name' || item.status === 'needs-selection') || null;
+  }, [autoSyncProgress]);
 
   const latestRunsByVehicle = useMemo(() => {
     const map = new Map();
@@ -849,6 +853,12 @@ export default function RaceDayDashboardScreen() {
         visible={autoSyncing}
         progress={autoSyncProgress}
         onCancel={cancelAutoSync}
+      />
+
+      <RaceDayVehicleLinkPopup
+        key={`${vehicleLinkItem?.vehicleId || vehicleLinkItem?.vehicleName || 'vehicle'}_${vehicleLinkItem?.status || 'closed'}`}
+        item={vehicleLinkItem}
+        onClose={cancelAutoSync}
         onSelectClass={handleEventClassSelection}
         onSubmitDriverName={handleEventDriverName}
       />

@@ -54,6 +54,29 @@ export async function saveRaceDayEventVehicleLink(raceDayOrId, eventUrl, vehicle
   return nextLink;
 }
 
+export async function saveRaceDayEventVehicleDriverName(raceDayOrId, eventUrl, vehicleId, driverName = '') {
+  const wantedEvent = eventKey(eventUrl);
+  const wantedVehicle = normalizeId(vehicleId);
+  const cleanName = String(driverName || '').replace(/\s+/g, ' ').trim();
+  if (!wantedEvent || !wantedVehicle || !cleanName) return null;
+
+  const links = await readLinks(raceDayOrId);
+  const existing = links.find((link) => eventKey(link.eventUrl) === wantedEvent && normalizeId(link.vehicleId) === wantedVehicle) || {};
+  const nextLink = {
+    ...existing,
+    eventUrl: String(eventUrl || '').trim(),
+    vehicleId: String(vehicleId || '').trim(),
+    className: '',
+    driverName: cleanName,
+    fullName: cleanName,
+    nickname: cleanName,
+    linkedAt: new Date().toISOString(),
+  };
+  const filtered = links.filter((link) => !(eventKey(link.eventUrl) === wantedEvent && normalizeId(link.vehicleId) === wantedVehicle));
+  await AsyncStorage.setItem(storageKey(raceDayOrId), JSON.stringify([...filtered, nextLink]));
+  return nextLink;
+}
+
 export async function clearRaceDayEventVehicleLinks(raceDayOrId) {
   await AsyncStorage.removeItem(storageKey(raceDayOrId));
 }

@@ -19,6 +19,7 @@ import RaceDayPracticeTrackCard from '../../features/raceday/components/RaceDayP
 import RaceDayLiveHeader from '../../features/raceday/components/RaceDayLiveHeader';
 import RaceDaySyncStatusPopup, { mergeSyncProgress } from '../../features/raceday/components/RaceDaySyncStatusPopup';
 import RaceDayAutoSyncOverlay from '../../features/raceday/components/RaceDayAutoSyncOverlay';
+import RaceDayVehicleLinkPopup from '../../features/raceday/components/RaceDayVehicleLinkPopup';
 import useLiveRcLiveFeed from '../../features/raceday/hooks/useLiveRcLiveFeed';
 import { hydrateActiveRaceDay, endRaceDay, saveRaceDayEvent } from '../../features/raceday/lib/raceDayStorage';
 import { getRaceDayRuns, getLatestRunForVehicle, getRunsForVehicleFromList } from '../../features/raceday/lib/raceDayResultStorage';
@@ -121,6 +122,10 @@ export default function RaceDayDashboardScreen() {
   // a valid fallback and keeps those existing sessions connected.
   const liveRcSiteUrl = active?.siteUrl || getTrackLiveRcUrl(track || {}) || active?.eventUrl || '';
   const liveRcState = useLiveRcLiveFeed(liveRcSiteUrl, Boolean(active?.trackId));
+  const vehicleLinkItem = useMemo(() => {
+    const source = syncStatusOpen ? syncProgress : autoSyncProgress;
+    return source.find((item) => item.status === 'needs-driver-name' || item.status === 'needs-selection') || null;
+  }, [autoSyncProgress, syncProgress, syncStatusOpen]);
 
   const latestRunsByVehicle = useMemo(() => {
     const map = new Map();
@@ -747,18 +752,25 @@ export default function RaceDayDashboardScreen() {
       />
 
       <RaceDaySyncStatusPopup
-        visible={syncStatusOpen}
+        visible={syncStatusOpen && !vehicleLinkItem}
         syncing={syncing}
         progress={syncProgress}
         summary={syncSummary}
         onClose={() => setSyncStatusOpen(false)}
-        onSelectClass={handleEventClassSelection}
-        onSubmitDriverName={handleEventDriverName}
       />
 
       <RaceDayAutoSyncOverlay
         visible={autoSyncing}
         progress={autoSyncProgress}
+      />
+
+      <RaceDayVehicleLinkPopup
+        key={`${vehicleLinkItem?.vehicleId || vehicleLinkItem?.vehicleName || 'vehicle'}_${vehicleLinkItem?.status || 'closed'}`}
+        item={vehicleLinkItem}
+        onClose={() => {
+          setAutoSyncing(false);
+          setSyncStatusOpen(false);
+        }}
         onSelectClass={handleEventClassSelection}
         onSubmitDriverName={handleEventDriverName}
       />

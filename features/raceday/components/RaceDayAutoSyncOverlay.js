@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { raceDayColors, raceDayStyles } from '../styles/raceDayStyles';
 
 function isFailed(item = {}) {
@@ -11,7 +11,7 @@ function isDone(item = {}) {
 }
 
 function isWorking(item = {}) {
-  return !isDone(item) && !isFailed(item) && item.status !== 'pending' && item.status !== 'needs-selection';
+  return !isDone(item) && !isFailed(item) && item.status !== 'pending' && item.status !== 'needs-selection' && item.status !== 'needs-driver-name';
 }
 
 function getRowTitle(item = {}) {
@@ -23,6 +23,7 @@ function getStageLabel(item = {}) {
   if (isDone(item)) return 'Done';
   if (isFailed(item)) return 'Needs review';
   if (item.status === 'needs-selection') return 'Choose class';
+  if (item.status === 'needs-driver-name') return 'Driver needed';
   if (item.status === 'pending' || item.phase === 'queued') return 'Waiting';
 
   if (item.phase === 'start') return 'Preparing';
@@ -68,14 +69,15 @@ function ProgressIcon({ item }) {
     return <Text style={[styles.statusIconText, { color: raceDayColors.danger }]}>!</Text>;
   }
 
-  if (item.status === 'needs-selection') {
+  if (item.status === 'needs-selection' || item.status === 'needs-driver-name') {
     return <Text style={[styles.statusIconText, { color: raceDayColors.blue }]}>?</Text>;
   }
 
   return <View style={styles.pendingDot} />;
 }
 
-function ProgressRow({ item, onSelectClass }) {
+function ProgressRow({ item, onSelectClass, onSubmitDriverName }) {
+  const [driverName, setDriverName] = useState(String(item.requestedDriverName || '').trim());
   const title = getRowTitle(item);
   const showVehicleName = item.className && item.vehicleName && item.className !== item.vehicleName;
   const selectionDriverName = item.status === 'needs-selection' ? String(item.driverName || '').trim() : '';
@@ -122,14 +124,38 @@ function ProgressRow({ item, onSelectClass }) {
             ))}
           </View>
         ) : null}
+        {item.status === 'needs-driver-name' ? (
+          <View style={styles.driverSearchRow}>
+            <TextInput
+              value={driverName}
+              onChangeText={setDriverName}
+              placeholder="Driver name on LiveRC"
+              placeholderTextColor={raceDayColors.faint}
+              autoCapitalize="words"
+              autoCorrect={false}
+              returnKeyType="search"
+              onSubmitEditing={() => driverName.trim() && onSubmitDriverName?.(item, driverName.trim())}
+              style={styles.driverNameInput}
+            />
+            <Pressable
+              style={[styles.classOptionButton, !driverName.trim() && styles.disabledButton]}
+              disabled={!driverName.trim()}
+              onPress={() => onSubmitDriverName?.(item, driverName.trim())}
+              accessibilityRole="button"
+              accessibilityLabel={`Search LiveRC for ${driverName.trim() || 'driver name'}`}
+            >
+              <Text style={styles.classOptionText}>SEARCH NAME</Text>
+            </Pressable>
+          </View>
+        ) : null}
       </View>
     </View>
   );
 }
 
-export default function RaceDayAutoSyncOverlay({ visible, progress = [], onCancel, onSelectClass }) {
+export default function RaceDayAutoSyncOverlay({ visible, progress = [], onCancel, onSelectClass, onSubmitDriverName }) {
   const activeItem = useMemo(
-    () => [...progress].reverse().find((item) => isWorking(item) || item.status === 'needs-selection'),
+    () => [...progress].reverse().find((item) => isWorking(item) || item.status === 'needs-selection' || item.status === 'needs-driver-name'),
     [progress],
   );
   const currentLabel = activeItem
@@ -172,7 +198,12 @@ export default function RaceDayAutoSyncOverlay({ visible, progress = [], onCance
           showsVerticalScrollIndicator={progress.length > 5}
         >
           {progress.map((item) => (
-            <ProgressRow key={String(item.key || item.vehicleId || item.vehicleName || item.phase)} item={item} onSelectClass={onSelectClass} />
+            <ProgressRow
+              key={String(item.key || item.vehicleId || item.vehicleName || item.phase)}
+              item={item}
+              onSelectClass={onSelectClass}
+              onSubmitDriverName={onSubmitDriverName}
+            />
           ))}
         </ScrollView>
       </View>
@@ -296,6 +327,26 @@ const styles = StyleSheet.create({
     fontSize: 8,
     lineHeight: 11,
     fontWeight: '900',
+  },
+  driverSearchRow: {
+    marginTop: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  driverNameInput: {
+    flex: 1,
+    minWidth: 0,
+    height: 32,
+    paddingHorizontal: 9,
+    borderWidth: 1,
+    borderColor: raceDayColors.border,
+    backgroundColor: raceDayColors.card,
+    color: raceDayColors.text,
+    fontSize: 11,
+  },
+  disabledButton: {
+    opacity: 0.45,
   },
   progressStatus: {
     flexShrink: 0,

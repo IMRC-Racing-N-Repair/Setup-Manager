@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React from 'react';
+import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
 import RaceDayPopup from './RaceDayPopup';
 import { raceDayColors, raceDayStyles } from '../styles/raceDayStyles';
 
@@ -42,8 +42,7 @@ function cleanDriverDisplay(value = '') {
     .trim();
 }
 
-function SyncProgressRow({ item, onSelectClass, onSubmitDriverName }) {
-  const [searchName, setSearchName] = useState(String(item.requestedDriverName || '').trim());
+function SyncProgressRow({ item }) {
   const statusColor = getStatusColor(item.status);
   const isWorking = item.status === 'working' || item.status === 'starting';
   const driverName = cleanDriverDisplay(item.driverName || item.nickname || item.fullName || '');
@@ -67,48 +66,11 @@ function SyncProgressRow({ item, onSelectClass, onSubmitDriverName }) {
           {isWorking ? <ActivityIndicator size="small" /> : <Text style={[raceDayStyles.syncStatusPillText, { color: statusColor }]}>{getStatusLabel(item)}</Text>}
         </View>
       </View>
-      {item.status === 'needs-selection' && Array.isArray(item.classOptions) ? (
-        <View style={styles.classOptions}>
-          {item.classOptions.map((option) => (
-            <TouchableOpacity
-              key={`${item.vehicleId || item.vehicleName}_${option.className}`}
-              style={styles.classOptionButton}
-              onPress={() => onSelectClass?.(item, option)}
-              activeOpacity={0.82}
-            >
-              <Text style={styles.classOptionText}>USE {String(option.className || '').toUpperCase()}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      ) : null}
-      {item.status === 'needs-driver-name' ? (
-        <View style={styles.driverSearchRow}>
-          <TextInput
-            value={searchName}
-            onChangeText={setSearchName}
-            placeholder="Driver name on LiveRC"
-            placeholderTextColor={raceDayColors.faint}
-            autoCapitalize="words"
-            autoCorrect={false}
-            returnKeyType="search"
-            onSubmitEditing={() => searchName.trim() && onSubmitDriverName?.(item, searchName.trim())}
-            style={styles.driverNameInput}
-          />
-          <TouchableOpacity
-            style={[styles.classOptionButton, !searchName.trim() && styles.disabledButton]}
-            disabled={!searchName.trim()}
-            onPress={() => onSubmitDriverName?.(item, searchName.trim())}
-            activeOpacity={0.82}
-          >
-            <Text style={styles.classOptionText}>SEARCH NAME</Text>
-          </TouchableOpacity>
-        </View>
-      ) : null}
     </View>
   );
 }
 
-export function RaceDaySyncStatusList({ items = [], onSelectClass, onSubmitDriverName }) {
+export function RaceDaySyncStatusList({ items = [] }) {
   if (!items.length) {
     return (
       <View style={raceDayStyles.empty}>
@@ -120,12 +82,7 @@ export function RaceDaySyncStatusList({ items = [], onSelectClass, onSubmitDrive
   return (
     <View style={{ gap: 5 }}>
       {items.map((item) => (
-        <SyncProgressRow
-          key={getProgressKey(item)}
-          item={item}
-          onSelectClass={onSelectClass}
-          onSubmitDriverName={onSubmitDriverName}
-        />
+        <SyncProgressRow key={getProgressKey(item)} item={item} />
       ))}
     </View>
   );
@@ -137,8 +94,6 @@ export default function RaceDaySyncStatusPopup({
   progress = [],
   summary = '',
   onClose,
-  onSelectClass,
-  onSubmitDriverName,
 }) {
   const statusText = summary || (syncing ? '' : 'Complete.');
 
@@ -152,7 +107,7 @@ export default function RaceDaySyncStatusPopup({
       contentContainerStyle={{ paddingBottom: 20 }}
     >
       {statusText ? <Text style={raceDayStyles.syncCompleteText}>{statusText}</Text> : null}
-      <RaceDaySyncStatusList items={progress} onSelectClass={onSelectClass} onSubmitDriverName={onSubmitDriverName} />
+      <RaceDaySyncStatusList items={progress} />
       {!syncing ? (
         <TouchableOpacity style={[raceDayStyles.primaryButton, { marginTop: 12 }]} onPress={onClose} activeOpacity={0.82}>
           <Text style={raceDayStyles.primaryButtonText}>Done</Text>
@@ -163,47 +118,3 @@ export default function RaceDaySyncStatusPopup({
 }
 
 export { RaceDaySyncStatusPopup };
-
-const styles = StyleSheet.create({
-  classOptions: {
-    marginTop: 8,
-    marginLeft: 12,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-  },
-  classOptionButton: {
-    minHeight: 30,
-    justifyContent: 'center',
-    paddingHorizontal: 10,
-    borderWidth: 1,
-    borderColor: raceDayColors.blue,
-    backgroundColor: raceDayColors.blueSoft,
-  },
-  classOptionText: {
-    color: raceDayColors.blue,
-    fontSize: 9,
-    fontWeight: '900',
-  },
-  driverSearchRow: {
-    marginTop: 8,
-    marginLeft: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  driverNameInput: {
-    flex: 1,
-    minWidth: 0,
-    height: 34,
-    paddingHorizontal: 9,
-    borderWidth: 1,
-    borderColor: raceDayColors.border,
-    backgroundColor: raceDayColors.cardAlt,
-    color: raceDayColors.text,
-    fontSize: 11,
-  },
-  disabledButton: {
-    opacity: 0.45,
-  },
-});

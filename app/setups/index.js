@@ -475,7 +475,7 @@ export default function SetupsIndexScreen() {
     };
   }, []);
 
-  const openImportReview = useCallback(async (preparedImport, availableVehicles = vehicles, availableTracks = tracks) => {
+  const openImportReview = useCallback(async (preparedImport, availableVehicles, availableTracks) => {
     if (!preparedImport || preparedImport.canceled) return;
 
     if (!preparedImport.isSingleSetup || !preparedImport.setup) {
@@ -528,7 +528,7 @@ export default function SetupsIndexScreen() {
     setImportVehicleId(defaultVehicle ? String(getEntityId(defaultVehicle)) : CREATE_NEW_VEHICLE_TARGET);
     setImportTrackId(defaultTrack ? String(getEntityId(defaultTrack)) : CREATE_NEW_TRACK_TARGET);
     setImportStep('track');
-  }, [load, tracks, vehicles]);
+  }, [load]);
 
   const handlePendingIncomingImport = useCallback(async (loadedData) => {
     const queued = await consumePendingIncomingImrcImport();
@@ -540,7 +540,7 @@ export default function SetupsIndexScreen() {
 
     try {
       if (queued.preparedImport) {
-        await openImportReview(queued.preparedImport, loadedData?.vehicles || vehicles, loadedData?.tracks || tracks);
+        await openImportReview(queued.preparedImport, loadedData.vehicles, loadedData.tracks);
         return;
       }
 
@@ -554,7 +554,7 @@ export default function SetupsIndexScreen() {
       if (!queued.uri) return;
 
       const prepared = await prepareSetupImportFromUri(queued.uri, 'opened-setup.imrc');
-      await openImportReview(prepared, loadedData?.vehicles || vehicles, loadedData?.tracks || tracks);
+      await openImportReview(prepared, loadedData.vehicles, loadedData.tracks);
     } catch (error) {
       console.warn('Incoming IMRC import failed', error);
       const message = String(error?.message || '');
@@ -564,7 +564,7 @@ export default function SetupsIndexScreen() {
         Alert.alert('Import Failed', error?.message || 'The .imrc file could not be imported.');
       }
     }
-  }, [openImportReview, tracks, vehicles]);
+  }, [openImportReview]);
 
   useFocusEffect(
     useCallback(() => {
@@ -608,7 +608,7 @@ export default function SetupsIndexScreen() {
     try {
       const prepared = await pickSetupImportForReview();
       if (!prepared?.canceled) {
-        await openImportReview(prepared);
+        await openImportReview(prepared, vehicles, tracks);
       }
     } catch (error) {
       console.warn('Setups import failed', error);
@@ -616,7 +616,7 @@ export default function SetupsIndexScreen() {
     } finally {
       setTransferBusy(false);
     }
-  }, [openImportReview, transferBusy]);
+  }, [openImportReview, tracks, transferBusy, vehicles]);
 
   const confirmImportSetup = useCallback(async () => {
     if (!pendingImport || transferBusy) return;

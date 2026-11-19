@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import RaceDayPopup from './RaceDayPopup';
-import RaceDayLapChart from './RaceDayLapChart';
+import RaceDayLapOverlay, { lapSeriesColor } from './RaceDayLapOverlay';
+import RaceDayLapChart, { getTimedLaps } from './RaceDayLapChart';
 import { getVehicleDisplayName, normalizeId } from '../lib/raceDayModel';
 import { getPracticeSessionsForVehicle } from '../lib/raceDayPracticeStorage';
 import { raceDayColors, raceDayStyles } from '../styles/raceDayStyles';
@@ -170,11 +171,20 @@ export default function RaceDayPracticeSessionsPopup({ visible, raceDay, vehicle
     return () => { cancelled = true; };
   }, [visible, raceDayId, vehicleId, practiceDayKey]);
 
+  // Storage returns the selected day's sessions newest first. The chart order
+  // stays chronological when a lap-time sort is applied to the detail list.
+  const practiceSeries = useMemo(() => sessions.map((session, index) => ({
+    id: session.id,
+    name: formatPracticeSessionTitle(session),
+    color: lapSeriesColor(index),
+    laps: getTimedLaps(session),
+  })), [sessions]);
+
   const sortedSessions = useMemo(() => {
     const list = [...sessions];
     if (sortMode === 'bestLap') return list.sort((a, b) => compareLapValues(a.fastLap, b.fastLap));
     if (sortMode === 'bestTop5') return list.sort((a, b) => compareLapValues(a.top5Avg, b.top5Avg));
-    return list.sort((a, b) => new Date(b.endedAt || b.startedAt || 0).getTime() - new Date(a.endedAt || a.startedAt || 0).getTime());
+    return list;
   }, [sessions, sortMode]);
   const openSessionId = expandedId === undefined ? sortedSessions[0]?.id : expandedId;
 
@@ -199,6 +209,14 @@ export default function RaceDayPracticeSessionsPopup({ visible, raceDay, vehicle
         <View style={raceDayStyles.empty}><ActivityIndicator /></View>
       ) : sortedSessions.length ? (
         <View style={styles.listWrap}>
+          <RaceDayLapOverlay
+            key={`${raceDayId}:${vehicleId}:${practiceDayKey}`}
+            title="Practice lap comparison"
+            series={practiceSeries}
+            seriesLabel="session"
+            compact
+            horizontalLegend
+          />
           {sortedSessions.map((session) => (
             <PracticeSessionRow
               key={session.id}

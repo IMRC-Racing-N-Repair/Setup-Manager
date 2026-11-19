@@ -7,7 +7,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  useWindowDimensions,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -26,6 +25,13 @@ import { vehicleStyles as styles } from "./styles/vehicleStyles";
 import { vehicleScreenModernStyles as modernStyles } from "./styles/vehicleScreenModernStyles";
 import NewLookBottomNav from "../../src/navigation/NewLookBottomNav";
 import AppScreenHeader from "../../src/layout/AppScreenHeader";
+import useViewport from "../../src/layout/useViewport";
+import {
+  DESKTOP_RECORD_COLUMNS_MIN_WIDTH,
+  DESKTOP_WEB_MIN_WIDTH,
+  DESKTOP_WORKSPACE_GUTTER,
+  DESKTOP_WORKSPACE_MAX_WIDTH,
+} from "../../src/layout/desktopWorkspace";
 import { AppColors } from "../../src/theme/colors";
 
 function clean(value) {
@@ -46,10 +52,12 @@ function vehicleTx(vehicle) {
 
 export default function VehicleScreen() {
   const insets = useSafeAreaInsets();
-  const { width, height } = useWindowDimensions();
+  const { width, height } = useViewport();
   const params = useLocalSearchParams();
   const isLandscape = width > height;
   const isTabletLandscape = width >= 700 && isLandscape;
+  const desktop = Platform.OS === "web" && width >= DESKTOP_WEB_MIN_WIDTH;
+  const showColumns = desktop && width >= DESKTOP_RECORD_COLUMNS_MIN_WIDTH;
 
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -188,13 +196,14 @@ export default function VehicleScreen() {
         style={[
           styles.screen,
           modernStyles.screenWithSafeArea,
+          desktop && listStyles.desktopScreen,
           {
             paddingTop: Math.max(insets.top, 10),
             paddingBottom: Math.max(insets.bottom, 10),
           },
         ]}
       >
-        <View style={[modernStyles.sharedHeaderInset, isTabletLandscape && modernStyles.sharedHeaderInsetTabletLandscape]}>
+        <View style={[modernStyles.sharedHeaderInset, isTabletLandscape && modernStyles.sharedHeaderInsetTabletLandscape, desktop && listStyles.desktopInset]}>
           <AppScreenHeader
             title="Vehicles"
             kicker="IMRC GARAGE"
@@ -204,7 +213,7 @@ export default function VehicleScreen() {
           />
         </View>
 
-        <View style={[listStyles.introRow, isTabletLandscape && listStyles.introRowTabletLandscape]}>
+        <View style={[listStyles.introRow, isTabletLandscape && listStyles.introRowTabletLandscape, desktop && listStyles.desktopIntro]}>
           <Text style={modernStyles.subHeaderText} numberOfLines={2}>
             Saved cars are used for Setups and Race Day.
           </Text>
@@ -224,9 +233,7 @@ export default function VehicleScreen() {
             modernStyles.bodyContent,
             isLandscape && modernStyles.bodyContentLandscape,
             isTabletLandscape && modernStyles.bodyContentTabletLandscape,
-            {
-              paddingBottom: Math.max(insets.bottom + 82, 92),
-            },
+            desktop ? listStyles.desktopBody : { paddingBottom: Math.max(insets.bottom + 82, 92) },
           ]}
           showsVerticalScrollIndicator={false}
         >
@@ -237,11 +244,11 @@ export default function VehicleScreen() {
           ) : vehicles.length === 0 ? (
             <EmptyVehiclesState onAdd={openAddForm} />
           ) : (
-            <View style={listStyles.vehicleList}>
+            <View style={[listStyles.vehicleList, showColumns && listStyles.vehicleGrid]}>
               {vehicles.map((vehicle, index) => (
                 <Pressable
                   key={clean(vehicle?.id || vehicle?.vehicleId) || String(index)}
-                  style={({ pressed }) => [listStyles.vehicleRow, pressed && listStyles.pressed]}
+                  style={({ pressed }) => [listStyles.vehicleRow, showColumns && listStyles.vehicleColumn, pressed && listStyles.pressed]}
                   onPress={() => openEditForm(vehicle)}
                 >
                   <Text style={listStyles.vehicleNumber}>{String(index + 1).padStart(2, "0")}</Text>
@@ -282,6 +289,10 @@ export default function VehicleScreen() {
 }
 
 const listStyles = StyleSheet.create({
+  desktopScreen: { width: "100%", maxWidth: DESKTOP_WORKSPACE_MAX_WIDTH, alignSelf: "center" },
+  desktopInset: { paddingHorizontal: DESKTOP_WORKSPACE_GUTTER },
+  desktopIntro: { marginHorizontal: DESKTOP_WORKSPACE_GUTTER },
+  desktopBody: { paddingHorizontal: DESKTOP_WORKSPACE_GUTTER, paddingBottom: 32 },
   introRow: {
     minHeight: 48,
     marginHorizontal: 15,
@@ -295,6 +306,8 @@ const listStyles = StyleSheet.create({
   introRowTabletLandscape: { marginHorizontal: 22 },
   savedCount: { color: AppColors.mutedText, fontSize: 8, fontWeight: "900", letterSpacing: 0.6 },
   vehicleList: { borderTopWidth: 1, borderTopColor: AppColors.borderStrong },
+  vehicleGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between" },
+  vehicleColumn: { width: "49%" },
   vehicleRow: {
     minHeight: 62,
     flexDirection: "row",

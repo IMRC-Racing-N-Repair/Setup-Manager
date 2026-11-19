@@ -13,7 +13,7 @@ import { getSetups, saveSetupCopyToTarget } from '../setups/lib/setupStorage';
 import { getEntityId, getTrackDisplayName, getVehicleDisplayName } from '../setups/lib/setupModel';
 import StableSafeAreaView from '../../src/layout/StableSafeAreaView';
 import useViewport from '../../src/layout/useViewport';
-import { DESKTOP_WEB_MIN_WIDTH, DESKTOP_WORKSPACE_MAX_WIDTH } from '../../src/layout/desktopWorkspace';
+import { DESKTOP_WEB_MIN_WIDTH, DESKTOP_WORKSPACE_GUTTER, DESKTOP_WORKSPACE_MAX_WIDTH } from '../../src/layout/desktopWorkspace';
 import AppScreenHeader from '../../src/layout/AppScreenHeader';
 import NewLookBottomNav from '../../src/navigation/NewLookBottomNav';
 import { AppColors } from '../../src/theme/colors';
@@ -478,7 +478,7 @@ const styles = StyleSheet.create({
 
 
 const desktopStyles = StyleSheet.create({
-  content: { maxWidth: DESKTOP_WORKSPACE_MAX_WIDTH, paddingHorizontal: 28, paddingBottom: 32 },
+  content: { maxWidth: DESKTOP_WORKSPACE_MAX_WIDTH, paddingHorizontal: DESKTOP_WORKSPACE_GUTTER, paddingBottom: 32 },
   intro: { fontSize: 14, lineHeight: 20, paddingVertical: 14 },
   columns: { flexDirection: 'row', gap: 24, alignItems: 'flex-start', marginTop: 14 },
   vehicles: { flex: 1, minWidth: 0 },

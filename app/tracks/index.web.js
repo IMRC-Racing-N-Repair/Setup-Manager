@@ -11,7 +11,12 @@ import {
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 
 import useViewport from '../../src/layout/useViewport';
-import { DESKTOP_WORKSPACE_MAX_WIDTH } from '../../src/layout/desktopWorkspace';
+import {
+  DESKTOP_RECORD_COLUMNS_MIN_WIDTH,
+  DESKTOP_WEB_MIN_WIDTH,
+  DESKTOP_WORKSPACE_GUTTER,
+  DESKTOP_WORKSPACE_MAX_WIDTH,
+} from '../../src/layout/desktopWorkspace';
 import AppScreenHeader from '../../src/layout/AppScreenHeader';
 import TrackEditSheet from '../../features/tracks/components/TrackEditSheet';
 import TrackImportSheet from '../../features/tracks/components/TrackImportSheet';
@@ -101,7 +106,8 @@ export default function TracksWebScreen() {
   const router = useRouter();
   const { addTrack, editTrackId } = useLocalSearchParams();
   const { width } = useViewport();
-  const showColumns = width >= 1100;
+  const desktop = width >= DESKTOP_WEB_MIN_WIDTH;
+  const numColumns = width >= DESKTOP_RECORD_COLUMNS_MIN_WIDTH ? 2 : 1;
   const handledAction = useRef('');
   const [tracks, setTracks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -207,7 +213,7 @@ export default function TracksWebScreen() {
 
   return (
     <View style={styles.screen}>
-      <View style={styles.content}>
+      <View style={[styles.content, desktop && styles.desktopContent]}>
         <AppScreenHeader
           title="Tracks"
           kicker="IMRC GARAGE"
@@ -247,29 +253,25 @@ export default function TracksWebScreen() {
             data={tracks}
             keyExtractor={(item) => String(item.id)}
             contentContainerStyle={styles.list}
-            ListHeaderComponent={showColumns && tracks.length > 0 ? (
-              <View style={[styles.row, styles.tableHeader]}>
-                <Text style={[styles.column, styles.columnLabel]}>Track</Text>
-                <Text style={[styles.column, styles.columnLabel]}>Surface & layout</Text>
-                <Text style={[styles.column, styles.columnLabel]}>Location</Text>
-                <View style={styles.chevron} />
-              </View>
-            ) : null}
+            key={numColumns}
+            numColumns={numColumns}
+            columnWrapperStyle={numColumns === 2 ? styles.gridRow : undefined}
             renderItem={({ item }) => (
-              <Pressable accessibilityRole="button" style={({ hovered, pressed }) => [styles.row, hovered && styles.hover, pressed && styles.pressed]} onPress={() => openTrack(item)}>
-                {showColumns ? (
-                  <>
-                    <Text style={[styles.column, styles.name]}>{trackName(item)}</Text>
-                    <Text style={[styles.column, styles.meta]}>{trackMeta(item)}</Text>
-                    <Text style={[styles.column, styles.location]}>{trackLocation(item)}</Text>
-                  </>
-                ) : (
-                  <View style={styles.column}>
-                    <Text style={styles.name}>{trackName(item)}</Text>
-                    <Text style={styles.meta}>{trackMeta(item)}</Text>
-                    <Text style={styles.location}>{trackLocation(item)}</Text>
-                  </View>
-                )}
+              <Pressable
+                accessibilityRole="button"
+                style={({ hovered, pressed }) => [
+                  styles.row,
+                  numColumns === 2 && styles.gridItem,
+                  hovered && styles.hover,
+                  pressed && styles.pressed,
+                ]}
+                onPress={() => openTrack(item)}
+              >
+                <View style={styles.identity}>
+                  <Text style={styles.name}>{trackName(item)}</Text>
+                  <Text style={styles.meta}>{trackMeta(item)}</Text>
+                  <Text style={styles.location}>{trackLocation(item)}</Text>
+                </View>
                 <Text style={styles.chevron}>›</Text>
               </Pressable>
             )}
@@ -312,6 +314,7 @@ export default function TracksWebScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: AppColors.background },
   content: { flex: 1, width: '100%', maxWidth: DESKTOP_WORKSPACE_MAX_WIDTH, alignSelf: 'center', paddingHorizontal: 22, paddingTop: 16 },
+  desktopContent: { paddingHorizontal: DESKTOP_WORKSPACE_GUTTER },
   intro: { minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: AppColors.border },
   listTitle: { color: AppColors.text, fontSize: 19, fontWeight: '800' },
   savedCount: { color: AppColors.mutedText, fontSize: 11, fontWeight: '800', letterSpacing: 0.7 },
@@ -322,9 +325,9 @@ const styles = StyleSheet.create({
   actionTitle: { color: AppColors.textStrong, fontSize: 13, fontWeight: '700' },
   list: { paddingBottom: 30 },
   row: { minHeight: 72, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 10, borderBottomWidth: 1, borderBottomColor: AppColors.border },
-  tableHeader: { minHeight: 46 },
-  column: { flex: 1, minWidth: 0 },
-  columnLabel: { color: AppColors.mutedText, fontSize: 12, fontWeight: '700' },
+  gridRow: { justifyContent: 'space-between' },
+  gridItem: { width: '49%' },
+  identity: { flex: 1, minWidth: 0 },
   name: { color: AppColors.textStrong, fontSize: 17, fontWeight: '800' },
   meta: { marginTop: 3, color: AppColors.mutedText, fontSize: 14 },
   location: { marginTop: 3, color: AppColors.mutedText, fontSize: 13 },

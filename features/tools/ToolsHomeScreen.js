@@ -2,7 +2,8 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import useViewport from '../../src/layout/useViewport';
 import {
   ToolScaffold,
   TOOL_GREEN,
@@ -94,7 +95,9 @@ function buildRolloutStat(state) {
 }
 
 export default function ToolsHomeScreen(props) {
-  const { width, height } = useWindowDimensions();
+  const { width, height } = useViewport();
+  const desktop = Platform.OS === 'web' && width >= 900;
+  const threeColumns = desktop && width >= 1330;
   const isLandscape = width > height;
   const isShort = height < 720;
   const [stats, setStats] = useState({
@@ -155,7 +158,7 @@ export default function ToolsHomeScreen(props) {
 
   return (
     <ToolScaffold title="Tools" onBack={() => goBack(props)}>
-      <View style={[styles.grid, isLandscape && styles.gridLandscape]}>
+      <View style={[styles.grid, (desktop || isLandscape) && styles.gridLandscape, desktop && styles.desktopGrid]}>
         {TOOLS.filter((tool) => !tool.hidden).map((tool) => {
           const stat = tool.statKey ? stats[tool.statKey] : null;
 
@@ -166,14 +169,16 @@ export default function ToolsHomeScreen(props) {
               style={({ pressed }) => [
                 styles.card,
                 isShort && styles.cardShort,
-                isLandscape && styles.cardLandscape,
+                (desktop || isLandscape) && styles.cardLandscape,
+                desktop && styles.desktopCard,
+                threeColumns && styles.thirdCard,
                 pressed && styles.pressed,
               ]}
             >
               <View style={styles.iconBubble}><Text style={styles.iconText}>{tool.icon}</Text></View>
 
               <View style={styles.textWrap}>
-                <View style={styles.titleRow}>
+                <View style={[styles.titleRow, desktop && styles.desktopTitleRow]}>
                   <Text style={styles.toolTitle} numberOfLines={1}>{tool.title}</Text>
                   {!!tool.experimental && (
                     <View style={styles.experimentalPill}>
@@ -186,10 +191,10 @@ export default function ToolsHomeScreen(props) {
                     </View>
                   )}
                 </View>
-                <Text style={styles.desc} numberOfLines={1}>{tool.desc}</Text>
+                <Text style={[styles.desc, desktop && styles.desktopDescription]} numberOfLines={desktop ? 2 : 1}>{tool.desc}</Text>
               </View>
 
-              <Text style={styles.arrow}>›</Text>
+              {!desktop && <Text style={styles.arrow}>›</Text>}
             </Pressable>
           );
         })}
@@ -207,6 +212,11 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 8,
   },
+  desktopGrid: { gap: 12, paddingTop: 9 },
+  desktopCard: { minHeight: 99, paddingHorizontal: 14, paddingVertical: 12, borderRadius: 12 },
+  thirdCard: { width: '32%' },
+  desktopTitleRow: { flexWrap: 'wrap' },
+  desktopDescription: { fontSize: 13 },
   card: {
     minHeight: 64,
     borderRadius: 3,

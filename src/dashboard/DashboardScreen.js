@@ -1,5 +1,6 @@
 // src/dashboard/DashboardScreen.js
-import { AppState, Platform, ScrollView, View, useWindowDimensions } from 'react-native';
+import { AppState, Platform, ScrollView, View } from 'react-native';
+import useViewport from '../layout/useViewport';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -130,7 +131,7 @@ export default function DashboardScreen({
   onCloudSyncPress = null,
 } = {}) {
   const router = useRouter();
-  const { width, height } = useWindowDimensions();
+  const { width, height } = useViewport();
   const isLandscape = width > height;
   const pendingStartActionRef = useRef(null);
   const pendingActiveSessionRef = useRef(null);
@@ -139,10 +140,16 @@ export default function DashboardScreen({
   const activeDismissTimerRef = useRef(null);
   const archiveDismissTimerRef = useRef(null);
   const [showSponsorPopup, setShowSponsorPopup] = useState(() => {
-    if (sponsorPopupShownThisLaunch) return false;
+    if (Platform.OS === 'web' || sponsorPopupShownThisLaunch) return false;
     sponsorPopupShownThisLaunch = true;
     return true;
   });
+  useEffect(() => {
+    if (Platform.OS === 'web' && !sponsorPopupShownThisLaunch) {
+      sponsorPopupShownThisLaunch = true;
+      setShowSponsorPopup(true);
+    }
+  }, []);
   const [dashboardTrackId, setDashboardTrackId] = useState('');
   const [dashboardHydrated, setDashboardHydrated] = useState(false);
 
@@ -521,6 +528,8 @@ export default function DashboardScreen({
     <>
       <DashboardHeader
         userName={auth.userFirstName}
+        signedIn={!!auth.authUser}
+        syncBusy={auth.syncBusy || auth.cloudBusy || auth.syncSettling}
         statusDotColor={dashboardStatusDotColor}
         onAuthPress={handleDashboardAuthPress}
         onAuthLongPress={auth.handleAuthLongPress}
@@ -570,6 +579,8 @@ export default function DashboardScreen({
     <StableSafeAreaView style={styles.safe}>
       <FlootDashboardView
         userName={auth.userFirstName}
+        signedIn={!!auth.authUser}
+        syncBusy={auth.syncBusy || auth.cloudBusy || auth.syncSettling}
         statusDotColor={dashboardStatusDotColor}
         onAuthPress={handleDashboardAuthPress}
         onAuthLongPress={auth.handleAuthLongPress}

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ActivityIndicator, Alert, Platform, ScrollView, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, Alert, Platform, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import useViewport from '../../src/layout/useViewport';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import RaceDayHeader from '../../features/raceday/components/RaceDayHeader';
@@ -77,7 +78,7 @@ function getEventIdLabel(eventUrl = '') {
 export default function RaceDayDashboardScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { width, height } = useWindowDimensions();
+  const { width, height } = useViewport();
   const isTabletLandscape = width >= 700 && width > height;
   const isDesktopWeb = Platform.OS === 'web' && width >= 900;
   const [loading, setLoading] = useState(true);
@@ -686,7 +687,7 @@ export default function RaceDayDashboardScreen() {
             <Text style={raceDayStyles.emptyText}>No active Race Day was found. Start Race Day from the Dashboard.</Text>
           </View>
         </View>
-        <RaceDayBottomActions docked tabletLandscape={isTabletLandscape} primaryLabel="Select Track" onPrimaryPress={() => router.replace('/raceday/select-track')} />
+        <RaceDayBottomActions docked desktop={isDesktopWeb} tabletLandscape={isTabletLandscape} primaryLabel="Select Track" onPrimaryPress={() => router.replace('/raceday/select-track')} />
         <NewLookBottomNav active="raceday" router={router} bottomOffset={insets.bottom} />
       </View>
     );

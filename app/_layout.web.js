@@ -1,5 +1,6 @@
 import React from 'react';
-import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import useViewport from '../src/layout/useViewport';
 import { Slot } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -7,7 +8,7 @@ import AppCrashBoundary from '../features/support/components/AppCrashBoundary';
 import WebSidebar from '../src/navigation/WebSidebar';
 
 export default function WebRootLayout() {
-  const { width } = useWindowDimensions();
+  const { width } = useViewport();
   const desktop = width >= 900;
 
   return (

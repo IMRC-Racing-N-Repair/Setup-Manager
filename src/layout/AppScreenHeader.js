@@ -1,5 +1,6 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import useViewport from './useViewport';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Constants from 'expo-constants';
 
@@ -21,36 +22,38 @@ export default function AppScreenHeader({
   version = Constants.expoConfig?.version || '',
 }) {
   const insets = useSafeAreaInsets();
-  const { width, height } = useWindowDimensions();
+  const { width, height } = useViewport();
   const narrow = width < 375;
-  const compact = height < 620 || width > height;
+  const desktop = Platform.OS === 'web' && width >= 900;
+  const compact = !desktop && (height < 620 || width > height);
   const showRightAction = Boolean(rightLabel && onRightPress);
 
   return (
-    <View style={[styles.header, compact && styles.headerCompact, applyTopInset && { paddingTop: Math.max(insets.top, 8) }, style]}>
+    <View style={[styles.header, compact && styles.headerCompact, desktop && styles.headerDesktop, applyTopInset && { paddingTop: Math.max(insets.top, 8) }, style]}>
       {onBack ? (
-        <Pressable style={({ pressed }) => [styles.backButton, narrow && styles.sideNarrow, compact && styles.buttonCompact, pressed && styles.pressed]} onPress={onBack}>
-          <Text style={[styles.backText, compact && styles.actionTextCompact]}>‹ {String(backLabel || 'BACK').toUpperCase()}</Text>
+        <Pressable style={({ pressed }) => [styles.backButton, desktop && styles.buttonDesktop, narrow && styles.sideNarrow, compact && styles.buttonCompact, pressed && styles.pressed]} onPress={onBack}>
+          <Text style={[styles.backText, desktop && styles.actionTextDesktop, compact && styles.actionTextCompact]}>‹ {String(backLabel || 'BACK').toUpperCase()}</Text>
         </Pressable>
       ) : <View style={[styles.sideSpacer, narrow && styles.sideNarrow, compact && styles.buttonCompact]} />}
 
       <View style={styles.titleBlock}>
         {!!kicker && (
           <View style={styles.kickerRow}>
-            <Text style={[styles.kicker, compact && styles.kickerCompact]} numberOfLines={1}>{String(kicker).toUpperCase()}</Text>
+            <Text style={[styles.kicker, desktop && styles.kickerDesktop, compact && styles.kickerCompact]} numberOfLines={1}>{String(kicker).toUpperCase()}</Text>
             {String(kicker).toUpperCase().includes('SETUP MANAGER') && version ? (
-              <Text style={styles.versionText}>v{version}</Text>
+              <Text style={[styles.versionText, desktop && styles.versionDesktop]}>v{version}</Text>
             ) : null}
           </View>
         )}
-        <Text style={[styles.title, compact && styles.titleCompact, titleStyle]} numberOfLines={1}>{title}</Text>
-        {!!subtitle && <Text style={[styles.subtitle, compact && styles.subtitleCompact]} numberOfLines={1}>{subtitle}</Text>}
+        <Text style={[styles.title, desktop && styles.titleDesktop, compact && styles.titleCompact, titleStyle]} numberOfLines={1}>{title}</Text>
+        {!!subtitle && <Text style={[styles.subtitle, desktop && styles.subtitleDesktop, compact && styles.subtitleCompact]} numberOfLines={1}>{subtitle}</Text>}
       </View>
 
       {right || (showRightAction ? (
         <Pressable
           style={({ pressed }) => [
             styles.actionButton,
+            desktop && styles.buttonDesktop,
             narrow && styles.sideNarrow,
             compact && styles.buttonCompact,
             rightTone === 'danger' && styles.actionDanger,
@@ -61,6 +64,7 @@ export default function AppScreenHeader({
         >
           <Text style={[
             styles.actionText,
+            desktop && styles.actionTextDesktop,
             compact && styles.actionTextCompact,
             rightTone === 'danger' && styles.actionDangerText,
             rightTone === 'outline' && styles.actionOutlineText,
@@ -81,6 +85,13 @@ const styles = StyleSheet.create({
     borderBottomColor: AppColors.borderStrong,
     backgroundColor: AppColors.background,
   },
+  headerDesktop: { minHeight: 78, gap: 14 },
+  buttonDesktop: { minHeight: 40, borderRadius: 7, paddingHorizontal: 12 },
+  actionTextDesktop: { fontSize: 12 },
+  kickerDesktop: { fontSize: 11, lineHeight: 15, color: '#8EBCFF' },
+  versionDesktop: { fontSize: 11, lineHeight: 15, color: AppColors.mutedText },
+  titleDesktop: { fontSize: 30, lineHeight: 35 },
+  subtitleDesktop: { fontSize: 13, lineHeight: 17 },
   headerCompact: { minHeight: 58, gap: 8 },
   backButton: {
     width: 64,

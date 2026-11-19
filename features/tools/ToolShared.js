@@ -12,9 +12,9 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  useWindowDimensions,
   View,
 } from 'react-native';
+import useViewport from '../../src/layout/useViewport';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import StableSafeAreaView from '../../src/layout/StableSafeAreaView';
@@ -58,7 +58,7 @@ export function fmt(value, places = 2, fallback = '—') {
 
 export function ToolScaffold({ title, subtitle, children, onBack, right, scroll = true, contentStyle, listProps = null, scrollRef = null }) {
   const insets = useSafeAreaInsets();
-  const { width, height } = useWindowDimensions();
+  const { width, height } = useViewport();
   const isTabletLandscape = width >= 700 && width > height;
   const Container = scroll ? ScrollView : View;
   const [keyboardOpen, setKeyboardOpen] = React.useState(false);

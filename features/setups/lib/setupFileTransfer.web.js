@@ -80,13 +80,17 @@ function downloadFile(fileName, contents, mimeType = 'application/octet-stream')
 }
 
 function pickTextFile(accept = '.imrc,.json,application/json,text/plain') {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = accept;
     input.multiple = false;
     input.style.display = 'none';
     document.body.appendChild(input);
+    input.addEventListener('cancel', () => {
+      input.remove();
+      resolve(null);
+    }, { once: true });
     input.addEventListener('change', async () => {
       const file = input.files?.[0] || null;
       input.remove();
@@ -94,7 +98,11 @@ function pickTextFile(accept = '.imrc,.json,application/json,text/plain') {
         resolve(null);
         return;
       }
-      resolve({ file, text: await file.text() });
+      try {
+        resolve({ file, text: await file.text() });
+      } catch (error) {
+        reject(error);
+      }
     }, { once: true });
     input.click();
   });

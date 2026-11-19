@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import useViewport from '../layout/useViewport';
 
 import { AppColors } from '../theme/colors';
 
@@ -47,7 +48,7 @@ function NavItem({ item, active, router, onRaceDay, desktop }) {
 }
 
 export default function NewLookBottomNav({ active = 'home', router, onRaceDay, bottomOffset = 0 }) {
-  const { width } = useWindowDimensions();
+  const { width } = useViewport();
   const desktop = width >= 900;
 
   if (desktop) return null;

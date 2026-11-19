@@ -54,16 +54,26 @@ function ComparisonPlot({ drivers, hiddenDrivers }) {
 export default function RaceDayDesktopStandings({ rows, run, buildStats, displayPosition, makeRowKey }) {
   const [hiddenDrivers, setHiddenDrivers] = useState(() => new Set());
   const [expandedKey, setExpandedKey] = useState(null);
-  const drivers = useMemo(() => rows.map((row, index) => {
-    const laps = getTimedLaps(row);
-    return {
-      row,
-      id: makeRowKey(row, index),
-      name: clean(row.driver || row.driverName),
-      color: colorForDriver(index),
-      laps: laps.length || !row.isMe ? laps : getTimedLaps(run || {}),
-    };
-  }), [rows, run, makeRowKey]);
+  const drivers = useMemo(() => {
+    const ranked = rows.map((row, index) => {
+      const position = displayPosition(row);
+      const rank = Number(position);
+      return { row, index, position, rank: Number.isInteger(rank) && rank > 0 ? rank : Infinity };
+    });
+    ranked.sort((a, b) => a.rank - b.rank || a.index - b.index);
+
+    return ranked.map(({ row, index, position }, colorIndex) => {
+      const laps = getTimedLaps(row);
+      return {
+        row,
+        id: makeRowKey(row, index),
+        name: clean(row.driver || row.driverName),
+        position,
+        color: colorForDriver(colorIndex),
+        laps: laps.length || !row.isMe ? laps : getTimedLaps(run || {}),
+      };
+    });
+  }, [rows, run, displayPosition, makeRowKey]);
   const chartable = drivers.filter(({ laps }) => laps.length);
   // Keep the same scale as drivers are toggled so lap times remain comparable.
   const active = chartable.filter(({ id }) => !hiddenDrivers.has(id));
@@ -113,14 +123,14 @@ export default function RaceDayDesktopStandings({ rows, run, buildStats, display
         {buildStats().slice(0, 3).map((stat) => <Text key={stat.key} style={[styles.label, styles.number]}>{stat.label}</Text>)}
         <View style={styles.actionCell} />
       </View>
-      {drivers.map(({ row, id, name, color }) => {
+      {drivers.map(({ row, id, name, color, position }) => {
         const expanded = expandedKey === id;
         const stats = buildStats(row);
         return (
           <View key={id} style={[styles.driver, row.isMe && styles.myDriver]}>
             <View style={styles.row}>
               <View style={[styles.identity, styles.driverIdentity]}>
-                <Text style={[styles.position, { color }]}>P{displayPosition(row)}</Text>
+                <Text style={[styles.position, { color }]}>P{position}</Text>
                 <View style={styles.driverCopy}>
                   <Text style={styles.name}>{name}</Text>
                   {row.isMe && <Text style={styles.me}>Selected driver</Text>}

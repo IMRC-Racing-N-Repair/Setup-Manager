@@ -71,8 +71,6 @@ export default function AppScreenHeader({
   );
 }
 
-export const appScreenHeaderStyles = styles;
-
 const styles = StyleSheet.create({
   header: {
     minHeight: 70,
@@ -149,3 +147,5 @@ const styles = StyleSheet.create({
   actionDangerText: { color: '#FCA5A5' },
   pressed: { opacity: 0.76 },
 });
+
+export const appScreenHeaderStyles = styles;

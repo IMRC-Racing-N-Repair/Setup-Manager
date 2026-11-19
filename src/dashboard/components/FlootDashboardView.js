@@ -182,7 +182,7 @@ export default function FlootDashboardView({
 
 
         <View style={styles.workspaceGrid}>
-          <View style={styles.primaryGrid}>
+          <View style={[styles.primaryGrid, desktop && styles.widePrimaryGrid]}>
             <View style={[styles.racePanel, compactLayout && styles.racePanelCompact]}>
               <View style={styles.sectionHeader}>
                 <View style={styles.sectionHeaderCopy}>
@@ -224,16 +224,14 @@ export default function FlootDashboardView({
 
               <Pressable disabled={loading} style={({ pressed }) => [styles.primaryButton, loading && styles.loadingMuted, pressed && styles.pressed]} onPress={onRaceDayPress}>
                 <Text style={styles.primaryButtonText}>{loading ? 'LOADING RACEDAY' : raceDayReady ? 'OPEN RACEDAY' : 'START RACEDAY'}</Text>
-
               </Pressable>
             </View>
           </View>
 
-          <View style={styles.garageColumn}>
+          <View style={[styles.garageColumn, desktop && styles.wideGarageColumn]}>
             <View style={[styles.garageSection, compactLayout && styles.garageSectionCompact]}>
               <View style={styles.sectionHeader}>
                 <View>
-
                   <Text style={styles.sectionTitle}>Garage</Text>
                 </View>
                 <Pressable onPress={() => router.push('/garage')}><Text style={styles.viewAll}>OPEN GARAGE  ›</Text></Pressable>

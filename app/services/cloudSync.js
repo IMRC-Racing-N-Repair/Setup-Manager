@@ -19,7 +19,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Platform } from "react-native";
 import { db } from "./firebaseClient";
-import { doc, getDoc, writeBatch, serverTimestamp } from "firebase/firestore";
+import { Bytes, doc, getDoc, writeBatch, serverTimestamp } from "firebase/firestore";
+import { GZIP_BACKUP_ENCODING, packCloudBackup, unpackCloudBackup } from "./cloudBackupCompression";
 
 // -----------------------------------------------------------------------------
 // Static + dynamic sync model
@@ -97,15 +98,12 @@ const TOMBSTONE_KEEP_MS = 180 * 24 * 60 * 60 * 1000;
 const MAX_SETUPS_PER_VEHICLE_TRACK = 10;
 
 // -----------------------------------------------------------------------------
-// Cloud payload format / future compression gate
+// Cloud backup encoding
 // -----------------------------------------------------------------------------
-// Keep this OFF for the 2.0 launch. The app will continue writing readable JSON
-// in `payload`, while every cloud read/write goes through encode/decode helpers.
-// Later, compression can be enabled by adding a codec inside encodePayloadForCloudDoc()
-// and decodePayloadFromCloudDoc() without changing any screens.
+// Enable new compressed backups after compatible builds are available on every platform.
+const ENABLE_NEW_COMPRESSED_BACKUPS = false;
+const COMPRESS_BACKUP_AT_BYTES = 900 * 1024;
 const CLOUD_PAYLOAD_ENCODING_JSON = "json-v1";
-const CLOUD_PAYLOAD_ENCODING_LZ_UTF16 = "lz-string-utf16-v1"; // reserved for future use
-const CLOUD_PAYLOAD_COMPRESSED_ENABLED = false;
 
 const CLOUD_SCHEMA_VERSION = "2.0.0";
 const LOCAL_SCHEMA_KEY = "@imrc_schema_version_v1";
@@ -233,85 +231,69 @@ function stableStringify(obj) {
   return walk(obj);
 }
 
-function getJsonByteLength(value) {
-  try {
-    return JSON.stringify(value || {}).length;
-  } catch {
-    return 0;
+function utf8ByteLength(text) {
+  let bytes = 0;
+  for (const character of text) {
+    const codePoint = character.codePointAt(0);
+    bytes += codePoint < 0x80 ? 1 : codePoint < 0x800 ? 2 : codePoint < 0x10000 ? 3 : 4;
   }
+  return bytes;
 }
 
-function encodePayloadForCloudDoc(payload) {
-  // JSON stays the default for now. This preserves inspectability in Firebase and
-  // avoids adding a new dependency before we actually need compression.
-  const rawBytes = getJsonByteLength(payload || {});
+function encodePayloadForCloudDoc(payload, keepCompressed) {
+  const json = JSON.stringify(payload);
+  const rawBytes = utf8ByteLength(json);
 
-  if (!CLOUD_PAYLOAD_COMPRESSED_ENABLED) {
+  if (keepCompressed || (ENABLE_NEW_COMPRESSED_BACKUPS && rawBytes >= COMPRESS_BACKUP_AT_BYTES)) {
+    const packed = packCloudBackup(json);
     return {
-      payload: payload || {},
-      payloadEncoding: CLOUD_PAYLOAD_ENCODING_JSON,
-      payloadCompressed: null,
+      payload: null,
+      payloadEncoding: GZIP_BACKUP_ENCODING,
+      payloadCompressed: Bytes.fromUint8Array(packed.bytes),
       payloadCodecVersion: 1,
-      payloadBytesRaw: rawBytes,
-      payloadBytesStored: rawBytes,
+      payloadBytesRaw: packed.rawBytes,
+      payloadBytesStored: packed.bytes.byteLength,
       compressionReady: true,
-      compressionEnabled: false,
+      compressionEnabled: true,
     };
   }
 
-  // Future hook:
-  // 1. Install: npm install lz-string
-  // 2. Import at top: import LZString from "lz-string";
-  // 3. Replace this block with:
-  //    const json = JSON.stringify(payload || {});
-  //    const packed = LZString.compressToUTF16(json);
-  //    return {
-  //      payload: null,
-  //      payloadEncoding: CLOUD_PAYLOAD_ENCODING_LZ_UTF16,
-  //      payloadCompressed: packed,
-  //      payloadCodecVersion: 1,
-  //      payloadBytesRaw: json.length,
-  //      payloadBytesStored: String(packed || "").length,
-  //      compressionReady: true,
-  //      compressionEnabled: true,
-  //    };
-  throw new Error("[CloudSync] Compression is reserved but no compression codec is wired yet.");
+  return {
+    payload,
+    payloadEncoding: CLOUD_PAYLOAD_ENCODING_JSON,
+    payloadCompressed: null,
+    payloadCodecVersion: 1,
+    payloadBytesRaw: rawBytes,
+    payloadBytesStored: rawBytes,
+    compressionReady: true,
+    compressionEnabled: false,
+  };
 }
 
 function decodePayloadFromCloudDoc(data) {
   const docData = data && typeof data === "object" ? data : {};
   const encoding = String(docData.payloadEncoding || "").trim();
 
-  // Existing / legacy cloud docs.
-  if (docData.payload && typeof docData.payload === "object") {
+  if (encoding === GZIP_BACKUP_ENCODING) {
+    if (!(docData.payloadCompressed instanceof Bytes)) {
+      throw new Error("The compressed cloud backup is missing its binary payload.");
+    }
     return {
-      payload: docData.payload || {},
-      encoding: encoding || CLOUD_PAYLOAD_ENCODING_JSON,
-      compressed: false,
-      needsRewrite: encoding !== CLOUD_PAYLOAD_ENCODING_JSON || !!docData.payloadCompressed,
+      payload: unpackCloudBackup(docData.payloadCompressed.toUint8Array(), docData.payloadBytesRaw),
+      compressed: true,
     };
   }
 
-  // Future compressed cloud docs. This branch is intentionally centralized so
-  // compression can be added later without screen changes.
-  if (docData.payloadCompressed) {
-    if (encoding === CLOUD_PAYLOAD_ENCODING_LZ_UTF16) {
-      // Future hook:
-      // const raw = LZString.decompressFromUTF16(String(docData.payloadCompressed || ""));
-      // return { payload: raw ? JSON.parse(raw) : {}, encoding, compressed: true, needsRewrite: false };
-      throw new Error(
-        "[CloudSync] This backup uses compressed payloads, but this build does not include the compression codec yet."
-      );
-    }
-
-    throw new Error(`[CloudSync] Unsupported cloud payload encoding: ${encoding || "unknown"}`);
+  if (encoding && encoding !== CLOUD_PAYLOAD_ENCODING_JSON) {
+    throw new Error(`[CloudSync] Unsupported cloud payload encoding: ${encoding}`);
+  }
+  if (docData.payloadCompressed != null) {
+    throw new Error("The compressed cloud backup is missing its encoding.");
   }
 
   return {
-    payload: {},
-    encoding: encoding || CLOUD_PAYLOAD_ENCODING_JSON,
+    payload: docData.payload && typeof docData.payload === "object" ? docData.payload : {},
     compressed: false,
-    needsRewrite: false,
   };
 }
 
@@ -1546,6 +1528,7 @@ async function _pushLocalToCloudInternal({
   cloudPayload = null,
   mergeWithCloud = false,
   readCloudBeforePush = true,
+  keepCompressed = false,
 }) {
   const deviceId = await getDeviceId();
   const ref = backupDocRef(uid);
@@ -1558,8 +1541,9 @@ async function _pushLocalToCloudInternal({
       const snap = await getDoc(ref);
       logRead(`pushLocalToCloud:prewrite:${reason || "sync"}`);
       if (snap.exists()) {
-        const data = snap.data() || {};
-        incomingCloudPayload = decodePayloadFromCloudDoc(data).payload || {};
+        const backup = decodePayloadFromCloudDoc(snap.data());
+        incomingCloudPayload = backup.payload;
+        keepCompressed = backup.compressed;
         mergeWithCloud = true;
       }
     } catch (e) {
@@ -1597,7 +1581,7 @@ async function _pushLocalToCloudInternal({
   const { counts, payloadBytes } = payloadStats(mergedPayload);
   const dirtyState = await getDirtyState();
 
-  const cloudPayloadDoc = encodePayloadForCloudDoc(mergedPayload);
+  const cloudPayloadDoc = encodePayloadForCloudDoc(mergedPayload, keepCompressed);
 
   const syncInfo = {
     lastDirection: "push",
@@ -2032,12 +2016,14 @@ async function runV2ConversionAndPurgeInternal({ uid, appVersion = "" } = {}) {
   }
 
   const cloudData = snap.exists() ? snap.data() || {} : {};
-  const cloudPayload = migratePayloadToV2(decodePayloadFromCloudDoc(cloudData).payload || {}).payload;
+  const backup = decodePayloadFromCloudDoc(cloudData);
+  const cloudPayload = migratePayloadToV2(backup.payload).payload;
   return pushLocalToCloud({
     uid,
     appVersion,
     reason: "v2-conversion-purge",
     cloudPayload,
+    keepCompressed: backup.compressed,
     mergeWithCloud: snap.exists(),
     readCloudBeforePush: false,
   });
@@ -2137,7 +2123,8 @@ async function autoCloudSyncOnSignInInternal({ uid, appVersion = "" }) {
 
   const cloudExists = snap.exists();
   const cloudData = cloudExists ? snap.data() || {} : {};
-  const cloudMigration = migratePayloadToV2(decodePayloadFromCloudDoc(cloudData).payload || {});
+  const backup = decodePayloadFromCloudDoc(cloudData);
+  const cloudMigration = migratePayloadToV2(backup.payload);
   const cloudPayload = cloudMigration.payload;
   const cloudNeedsPurge = cloudExists && (cloudMigration.changed || cloudData.schemaVersion !== CLOUD_SCHEMA_VERSION);
   const localEmpty = await isLocalEmpty();
@@ -2150,6 +2137,7 @@ async function autoCloudSyncOnSignInInternal({ uid, appVersion = "" }) {
         appVersion,
         reason: "signin-v2-cloud-purge-after-pull",
         cloudPayload,
+        keepCompressed: backup.compressed,
         mergeWithCloud: true,
         readCloudBeforePush: false,
       });
@@ -2188,6 +2176,7 @@ async function autoCloudSyncOnSignInInternal({ uid, appVersion = "" }) {
       appVersion,
       reason: localDirty ? "signin-local-changed" : "v2-cloud-purge",
       cloudPayload,
+      keepCompressed: backup.compressed,
       mergeWithCloud: true,
       readCloudBeforePush: false,
     });
@@ -2299,7 +2288,8 @@ async function runManualCloudSyncInternal({ uid, appVersion = "" }) {
 
   const cloudExists = snap.exists();
   const cloudData = cloudExists ? snap.data() || {} : {};
-  const cloudMigration = migratePayloadToV2(decodePayloadFromCloudDoc(cloudData).payload || {});
+  const backup = decodePayloadFromCloudDoc(cloudData);
+  const cloudMigration = migratePayloadToV2(backup.payload);
   const cloudPayload = cloudMigration.payload;
   const cloudNeedsPurge = cloudExists && (cloudMigration.changed || cloudData.schemaVersion !== CLOUD_SCHEMA_VERSION);
 
@@ -2313,6 +2303,7 @@ async function runManualCloudSyncInternal({ uid, appVersion = "" }) {
         appVersion,
         reason: "manual-v2-cloud-purge-after-pull",
         cloudPayload,
+        keepCompressed: backup.compressed,
         mergeWithCloud: true,
         readCloudBeforePush: false,
         bypassWriteSpacing: true,
@@ -2332,6 +2323,7 @@ async function runManualCloudSyncInternal({ uid, appVersion = "" }) {
     appVersion,
     reason: cloudNeedsPurge ? "manual-v2-cloud-purge" : "manual-reconcile",
     cloudPayload,
+    keepCompressed: backup.compressed,
     mergeWithCloud: cloudExists,
     readCloudBeforePush: false,
     bypassWriteSpacing: true,

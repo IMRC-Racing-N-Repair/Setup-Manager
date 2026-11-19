@@ -853,7 +853,7 @@ export default function RaceDayDashboardScreen() {
         onClose={() => setLapChart(null)}
         centered
         chart
-        hasChartData={!!lapChart && getTimedLaps(lapChart.run).length > 0}
+        lockLandscape={false}
       >
         {lapChart && <RaceDayLapChart run={lapChart.run} detailed />}
       </RaceDayPopup>
@@ -862,7 +862,7 @@ export default function RaceDayDashboardScreen() {
         visible={resultsOpen}
         centered
         chart
-        hasChartData={!!selectedRun && getTimedLaps(selectedRun).length > 0}
+        lockLandscape={!!selectedRun && getTimedLaps(selectedRun).length > 0}
         title="Race Results"
         subtitle={selectedVehicle ? `${getVehicleDisplayName(selectedVehicle)} • tap stats to choose dashboard blocks` : 'Tap stats to choose dashboard blocks'}
         onClose={() => setResultsOpen(false)}

@@ -186,7 +186,7 @@ export default function RaceDayPracticeSessionsPopup({ visible, raceDay, vehicle
       onClose={onClose}
       centered
       chart
-      hasChartData={!loading && sortedSessions.some((session) => getTimedLaps(session).length > 0)}
+      lockLandscape={!loading && sortedSessions.some((session) => getTimedLaps(session).length > 0)}
       showScrollIndicator
       contentContainerStyle={styles.popupContent}
     >

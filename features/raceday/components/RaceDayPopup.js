@@ -19,9 +19,9 @@ export default function RaceDayPopup({
   contentContainerStyle,
   bodyScroll = true,
   chart = false,
-  hasChartData = chart,
+  lockLandscape = chart,
 }) {
-  useRaceDayChartOrientation(visible && hasChartData);
+  useRaceDayChartOrientation(visible && lockLandscape);
   const { insets, compact, isLandscape, isShortScreen, modalBackdropStyle, modalCardStyle } = useSafeAreaLayout({
     edgeGap: chart ? 5 : centered ? 10 : 0,
     horizontalGap: chart ? 6 : centered ? 12 : 0,

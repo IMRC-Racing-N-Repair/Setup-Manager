@@ -3,7 +3,7 @@ import { Linking, Modal, Platform, Pressable, ScrollView, Text, View } from 'rea
 import useViewport from '../../layout/useViewport';
 import { Image } from 'expo-image';
 
-import { flootDashboardStyles, desktopDashboardStyles } from '../flootDashboard.styles';
+import { desktopDashboardStyles, mobileWorkspaceDashboardStyles } from '../flootDashboard.styles';
 import NewLookBottomNav from '../../navigation/NewLookBottomNav';
 
 function textValue(value, fallback = '—') {
@@ -52,7 +52,7 @@ export default function FlootDashboardView({
 }) {
   const { width, height } = useViewport();
   const desktop = Platform.OS === 'web' && width >= 900;
-  const styles = desktop ? desktopDashboardStyles : flootDashboardStyles;
+  const styles = desktop ? desktopDashboardStyles : mobileWorkspaceDashboardStyles;
   const compactLayout = !desktop && (width < 430 || height < 900);
   const shortLayout = !desktop && height < 850;
   const tabletLandscape = !desktop && width >= 700 && width > height;
@@ -91,7 +91,7 @@ export default function FlootDashboardView({
           : 'No race is currently live'
         : 'Confirming the selected event with LiveRC';
   const lineupTitle = !currentEvent
-    ? (desktop ? 'No upcoming race' : 'No Current Event')
+    ? 'No upcoming race'
     : eventMismatch
       ? "Event does not match RaceDay's"
       : !eventMatches
@@ -183,7 +183,7 @@ export default function FlootDashboardView({
 
 
         <View style={styles.workspaceGrid}>
-          <View style={styles.primaryGrid}>
+          <View style={[styles.primaryGrid, desktop && styles.widePrimaryGrid]}>
             <View style={[styles.racePanel, compactLayout && styles.racePanelCompact]}>
               <View style={styles.sectionHeader}>
                 <View style={styles.sectionHeaderCopy}>
@@ -214,7 +214,7 @@ export default function FlootDashboardView({
                 <View style={styles.nextRaceRow}>
                   <View style={styles.nextRaceIdentity}>
                     <Text style={styles.nextRaceVehicle} numberOfLines={1}>{loading ? 'Checking your vehicles' : lineupTitle}</Text>
-                    <Text style={styles.nextRaceClass} numberOfLines={desktop ? 2 : 1}>{loading ? 'Loading class and lineup details' : lineupMeta}</Text>
+                    <Text style={styles.nextRaceClass} numberOfLines={2}>{loading ? 'Loading class and lineup details' : lineupMeta}</Text>
                   </View>
                   <View style={styles.nextRaceNumberBox}>
                     <Text style={styles.nextRaceNumberLabel}>RACE</Text>
@@ -225,16 +225,14 @@ export default function FlootDashboardView({
 
               <Pressable disabled={loading} style={({ pressed }) => [styles.primaryButton, loading && styles.loadingMuted, pressed && styles.pressed]} onPress={onRaceDayPress}>
                 <Text style={styles.primaryButtonText}>{loading ? 'LOADING RACEDAY' : raceDayReady ? 'OPEN RACEDAY' : 'START RACEDAY'}</Text>
-                {!desktop && <Text style={styles.primaryButtonArrow}>›</Text>}
               </Pressable>
             </View>
           </View>
 
-          <View style={styles.garageColumn}>
+          <View style={[styles.garageColumn, desktop && styles.wideGarageColumn]}>
             <View style={[styles.garageSection, compactLayout && styles.garageSectionCompact]}>
               <View style={styles.sectionHeader}>
                 <View>
-                  {!desktop && <Text style={styles.microLabel}>GARAGE</Text>}
                   <Text style={styles.sectionTitle}>Garage</Text>
                 </View>
                 <Pressable onPress={() => router.push('/garage')}><Text style={styles.viewAll}>OPEN GARAGE  ›</Text></Pressable>

@@ -168,7 +168,7 @@ export function RaceDayVehicleCardFrame({ vehicle, desktop, lineup, onOpenSetup,
             </Text>
           </View>
         </View>
-        {desktop && <RaceDayLineupBadge lineup={lineup} desktop />}
+        {desktop && <RaceDayLineupBadge lineup={lineup} />}
         <View style={raceDayStyles.raceVehicleActions}>
           <TouchableOpacity accessibilityRole="button" accessibilityLabel={desktop ? `Open setup for ${title}` : undefined} style={[raceDayStyles.raceVehicleWrench, desktop && desktopStyles.setupButton]} onPress={onOpenSetup} activeOpacity={0.82}>
             <WrenchIcon />

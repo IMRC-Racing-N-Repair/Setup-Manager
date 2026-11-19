@@ -235,6 +235,7 @@ export default function RaceDayTop5Popup({ visible, run, onClose }) {
   return (
     <RaceDayPopup
       visible={visible}
+      chart
       title="Top 5"
       subtitle={run ? `${roundLabel}${className ? ` • ${className}` : ''}` : 'No result selected'}
       onClose={onClose}

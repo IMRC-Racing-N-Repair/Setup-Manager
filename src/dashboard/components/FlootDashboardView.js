@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { Linking, Modal, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { Linking, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import useViewport from '../../layout/useViewport';
 import { Image } from 'expo-image';
 
@@ -10,12 +9,6 @@ function textValue(value, fallback = '—') {
   const next = String(value ?? '').trim();
   return next || fallback;
 }
-
-function entityId(value) {
-  return String(value?.id || value?.trackId || '').trim();
-}
-
-const NO_TRACK = '__none__';
 
 function CountCell({ label, value, onPress, styles }) {
   return (
@@ -35,8 +28,6 @@ export default function FlootDashboardView({
   onAuthPress,
   onAuthLongPress,
   counts,
-  vehicles,
-  tracks,
   lastOpened,
   raceDayReady,
   raceLive,
@@ -46,8 +37,6 @@ export default function FlootDashboardView({
   router,
   version,
   isLandscape,
-  dashboardTrackId,
-  onSelectDashboardTrack,
   loading = false,
 }) {
   const { width, height } = useViewport();
@@ -56,13 +45,6 @@ export default function FlootDashboardView({
   const compactLayout = !desktop && (width < 430 || height < 900);
   const shortLayout = !desktop && height < 850;
   const tabletLandscape = !desktop && width >= 700 && width > height;
-  const [showTrackPicker, setShowTrackPicker] = useState(false);
-  const trackList = Array.isArray(tracks) ? tracks : [];
-  const savedTrackChoice = trackList.find((track) => entityId(track) === String(dashboardTrackId || '')) || null;
-  const noTrackSelected = dashboardTrackId === NO_TRACK;
-  const activeTrack = noTrackSelected
-    ? null
-    : savedTrackChoice || raceLive?.selectedTrack || (trackList.length ? trackList[0] : null);
   const lastOpenedItem = lastOpened || null;
   const liveState = raceLive?.liveState || {};
   const currentEvent = Boolean(raceDayReady && raceLive?.currentDay);
@@ -103,29 +85,15 @@ export default function FlootDashboardView({
       : !eventMatches
         ? 'Waiting for LiveRC to identify the current event'
         : nextRace?.className || 'Lineup details will appear after sync';
-  const workspaceTrackName = loading
+  const raceDayTrackName = loading
     ? 'Checking saved RaceDay'
-    : textValue(activeTrack?.name || activeTrack?.trackName, 'No track');
-  const workspaceTrackMeta = loading
-    ? 'Loading track, event, and race information'
-    : activeTrack
-      ? [activeTrack.surface, activeTrack.type || activeTrack.trackType].filter(Boolean).join(' · ') || 'Track details'
-      : 'No track selected';
-  const raceDayTrackName = textValue(
-    raceLive?.selectedTrack?.name || raceLive?.selectedTrack?.trackName,
-    workspaceTrackName,
-  );
+    : textValue(raceLive?.selectedTrack?.name || raceLive?.selectedTrack?.trackName, 'No track selected');
   const sponsorImage = sponsor?.logo || sponsor?.image || '';
   const syncColor = statusDotColor || '#6F7D74';
   const syncLabel = !signedIn ? 'SIGN IN'
     : syncBusy ? 'SYNCING'
       : syncProblemLabel?.toUpperCase() || (syncColor === '#22C55E' ? 'SYNCED' : 'CLOUD SYNC');
   const openSponsor = () => sponsor?.url && Linking.openURL(sponsor.url).catch(() => {});
-  const chooseTrack = (trackId) => {
-    onSelectDashboardTrack?.(trackId);
-    setShowTrackPicker(false);
-  };
-
   return (
     <View style={styles.root}>
       <ScrollView
@@ -279,66 +247,9 @@ export default function FlootDashboardView({
                 </Text>
               </View>
             )}
-
-            {trackList.length > 0 && (
-              <Pressable style={({ pressed }) => [styles.trackStrip, pressed && styles.pressed]} onPress={() => setShowTrackPicker(true)}>
-                <View style={styles.trackIdentity}>
-                  <Text style={styles.microLabel}>HOME TRACK</Text>
-                  <Text style={styles.trackName}>{workspaceTrackName}</Text>
-                  <Text style={styles.trackMeta}>{workspaceTrackMeta}</Text>
-                </View>
-                <Text style={styles.viewAll}>Change track</Text>
-              </Pressable>
-            )}
           </View>
         </View>
       </ScrollView>
-
-      <Modal visible={showTrackPicker} transparent animationType="fade" onRequestClose={() => setShowTrackPicker(false)}>
-        <View style={styles.trackPickerBackdrop}>
-          <Pressable style={styles.trackPickerDismiss} onPress={() => setShowTrackPicker(false)} />
-          <View style={styles.trackPickerSheet}>
-            <View style={styles.trackPickerHeader}>
-              <View>
-                <Text style={styles.microLabel}>HOME DISPLAY</Text>
-                <Text style={styles.trackPickerTitle}>Select track</Text>
-              </View>
-              <Pressable style={styles.trackPickerClose} onPress={() => setShowTrackPicker(false)}>
-                <Text style={styles.trackPickerCloseText}>CLOSE</Text>
-              </Pressable>
-            </View>
-            <ScrollView style={styles.trackPickerScroll} contentContainerStyle={styles.trackPickerList} showsVerticalScrollIndicator={false}>
-              <Pressable
-                style={({ pressed }) => [styles.trackPickerRow, noTrackSelected && styles.trackPickerRowSelected, pressed && styles.pressed]}
-                onPress={() => chooseTrack(NO_TRACK)}
-              >
-                <View style={styles.trackPickerIdentity}>
-                  <Text style={styles.trackPickerName}>No track</Text>
-                  <Text style={styles.trackPickerMeta}>Clear the home track selection</Text>
-                </View>
-                <Text style={[styles.trackPickerMark, noTrackSelected && styles.trackPickerMarkSelected]}>{noTrackSelected ? '✓' : '›'}</Text>
-              </Pressable>
-              {trackList.map((track) => {
-                const id = entityId(track);
-                const selected = !!id && entityId(activeTrack) === id && !noTrackSelected;
-                return (
-                  <Pressable
-                    key={id || textValue(track?.name || track?.trackName)}
-                    style={({ pressed }) => [styles.trackPickerRow, selected && styles.trackPickerRowSelected, pressed && styles.pressed]}
-                    onPress={() => chooseTrack(id)}
-                  >
-                    <View style={styles.trackPickerIdentity}>
-                      <Text style={styles.trackPickerName} numberOfLines={1}>{textValue(track?.name || track?.trackName, 'Unnamed track')}</Text>
-                      <Text style={styles.trackPickerMeta} numberOfLines={1}>{[track?.surface, track?.type || track?.trackType].filter(Boolean).join(' · ') || 'Track details'}</Text>
-                    </View>
-                    <Text style={[styles.trackPickerMark, selected && styles.trackPickerMarkSelected]}>{selected ? '✓' : '›'}</Text>
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
 
       <NewLookBottomNav active="home" router={router} onRaceDay={onRaceDayPress} />
     </View>

@@ -2,6 +2,9 @@ import React from 'react';
 import { KeyboardAvoidingView, Modal, Platform, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaLayout } from '../../../src/layout/safeAreaLayout';
 import { raceDayStyles } from '../styles/raceDayStyles';
+import useRaceDayChartOrientation from './useRaceDayChartOrientation';
+
+const chartOrientations = ['portrait', 'landscape'];
 
 export default function RaceDayPopup({
   visible,
@@ -15,16 +18,32 @@ export default function RaceDayPopup({
   showScrollIndicator = false,
   contentContainerStyle,
   bodyScroll = true,
+  chart = false,
+  hasChartData = chart,
 }) {
-  const { insets, compact, modalBackdropStyle, modalCardStyle } = useSafeAreaLayout({
-    edgeGap: centered ? 10 : 0,
-    horizontalGap: centered ? 12 : 0,
-    modalSize: 'normal',
+  useRaceDayChartOrientation(visible && hasChartData);
+  const { insets, compact, isLandscape, isShortScreen, modalBackdropStyle, modalCardStyle } = useSafeAreaLayout({
+    edgeGap: chart ? 5 : centered ? 10 : 0,
+    horizontalGap: chart ? 6 : centered ? 12 : 0,
+    modalSize: chart ? 'large' : 'normal',
   });
+  const compactChart = chart && isLandscape && isShortScreen;
+  const cardPadding = compactChart ? 8 : compact ? 12 : 16;
+  const bodyPadding = compactChart ? { paddingTop: 6, paddingBottom: 6 } : { paddingTop: 14, paddingBottom: 12 };
   const Wrapper = keyboardAware ? KeyboardAvoidingView : View;
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose} onDismiss={onDismiss} presentationStyle="overFullScreen" statusBarTranslucent navigationBarTranslucent>
+    <Modal
+      visible={visible}
+      transparent
+      animationType={chart ? 'fade' : 'slide'}
+      onRequestClose={onClose}
+      onDismiss={onDismiss}
+      presentationStyle="overFullScreen"
+      supportedOrientations={chart ? chartOrientations : undefined}
+      statusBarTranslucent
+      navigationBarTranslucent
+    >
       <Wrapper
         style={[
           raceDayStyles.modalBackdrop,
@@ -40,8 +59,8 @@ export default function RaceDayPopup({
             centered && raceDayStyles.centeredModalCard,
             modalCardStyle,
             {
-              padding: compact ? 12 : 16,
-              paddingBottom: centered ? (compact ? 12 : 16) : Math.max(insets.bottom, 12),
+              padding: cardPadding,
+              paddingBottom: centered ? cardPadding : Math.max(insets.bottom, 12),
             },
           ]}
         >
@@ -59,12 +78,12 @@ export default function RaceDayPopup({
               style={raceDayStyles.modalBodyScroll}
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={showScrollIndicator}
-              contentContainerStyle={[{ paddingTop: 14, paddingBottom: 12 }, contentContainerStyle]}
+              contentContainerStyle={[bodyPadding, contentContainerStyle]}
             >
               {children}
             </ScrollView>
           ) : (
-            <View style={[raceDayStyles.modalBodyFixed, { paddingTop: 14, paddingBottom: 12 }, contentContainerStyle]}>
+            <View style={[raceDayStyles.modalBodyFixed, bodyPadding, contentContainerStyle]}>
               {children}
             </View>
           )}

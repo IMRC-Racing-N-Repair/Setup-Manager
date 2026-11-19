@@ -9,9 +9,9 @@ const items = [
   { key: 'tools', label: 'Tools', glyph: '⌁', route: '/tools' },
 ];
 
-export default function NewLookBottomNav({ active = 'home', router, onRaceDay, bottomOffset = 0 }) {
+export default function NewLookBottomNav({ active = 'home', router, onRaceDay, bottomOffset = 0, inFlow = false, compact: preferCompact = false }) {
   const { width, height } = useWindowDimensions();
-  const compact = height < 620 || width > height;
+  const compact = preferCompact || height < 620 || width > height;
   const tabletLandscape = width >= 700 && width > height;
   const safeBottom = Math.max(0, Number(bottomOffset) || 0);
 
@@ -19,6 +19,7 @@ export default function NewLookBottomNav({ active = 'home', router, onRaceDay, b
     <View
       style={[
         styles.bottomNav,
+        inFlow && styles.bottomNavInFlow,
         compact && styles.bottomNavCompact,
         tabletLandscape && styles.bottomNavTabletLandscape,
         safeBottom > 0 && {
@@ -68,6 +69,7 @@ const styles = StyleSheet.create({
     borderTopColor: AppColors.borderStrong,
     backgroundColor: AppColors.background,
   },
+  bottomNavInFlow: { position: 'relative' },
   bottomNavCompact: { minHeight: 54, paddingTop: 4, paddingBottom: 4 },
   bottomNavTabletLandscape: { minHeight: 66, paddingHorizontal: 22, paddingTop: 5, paddingBottom: 5 },
   navItem: { flex: 1, minHeight: 52, alignItems: 'center', justifyContent: 'center', gap: 2 },

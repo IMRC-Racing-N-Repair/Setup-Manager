@@ -147,6 +147,7 @@ export default function RaceDayRaceResultsPopup({ visible, run, onClose }) {
   return (
     <RaceDayPopup
       visible={visible}
+      chart
       title="Race Results"
       subtitle={subtitle || 'Current race only'}
       onClose={onClose}

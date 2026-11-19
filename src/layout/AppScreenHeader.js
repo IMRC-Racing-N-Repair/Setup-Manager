@@ -18,6 +18,7 @@ export default function AppScreenHeader({
   onRightPress,
   rightTone = 'primary',
   applyTopInset = false,
+  compact: preferCompact = false,
   style,
   titleStyle,
   version = Constants.expoConfig?.version || '',
@@ -26,7 +27,7 @@ export default function AppScreenHeader({
   const { width, height } = useViewport();
   const narrow = width < 375;
   const desktop = Platform.OS === 'web' && width >= DESKTOP_WEB_MIN_WIDTH;
-  const compact = !desktop && (height < 620 || width > height);
+  const compact = !desktop && (preferCompact || height < 620 || width > height);
   const showRightAction = Boolean(rightLabel && onRightPress);
 
   return (

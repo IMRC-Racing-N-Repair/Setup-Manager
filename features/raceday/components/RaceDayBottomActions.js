@@ -31,7 +31,6 @@ export default function RaceDayBottomActions({
         raceDayStyles.bottomBarDocked,
         tabletLandscape && raceDayStyles.bottomBarTabletLandscape,
         tabletLandscape && raceDayStyles.bottomBarDockedTabletLandscape,
-        { bottom: 66 + insets.bottom },
       ]}>
         <View style={[raceDayStyles.actionNavRow, tabletLandscape && raceDayStyles.actionNavRowTabletLandscape]}>
           {actions.map((action) => (

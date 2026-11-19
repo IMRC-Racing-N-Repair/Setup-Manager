@@ -33,7 +33,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     borderBottomWidth: 1,
     borderColor: raceDayColors.border,
-    marginBottom: 10,
+    marginBottom: 5,
   },
   button: {
     flex: 1,

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import Svg, { Circle, Line, Polyline } from 'react-native-svg';
 import { getTimedLaps } from './RaceDayLapChart';
 import { raceDayColors as colors } from '../styles/raceDayStyles';
@@ -14,7 +14,7 @@ function clean(value) {
   return value === undefined || value === null || value === '' ? '—' : String(value);
 }
 
-function ComparisonPlot({ drivers, hiddenDrivers }) {
+function ComparisonPlot({ drivers, hiddenDrivers, compact }) {
   const visible = drivers.filter(({ id }) => !hiddenDrivers.has(id));
   const laps = drivers.flatMap((driver) => driver.laps);
   const lastLap = laps.reduce((max, lap) => Math.max(max, lap.number), 1);
@@ -32,7 +32,7 @@ function ComparisonPlot({ drivers, hiddenDrivers }) {
         <View style={styles.yAxis}>
           {ticks.map((tick) => <Text key={tick} style={styles.axisText}>{tick.toFixed(3)} s</Text>)}
         </View>
-        <Svg accessibilityRole="image" accessibilityLabel={`Lap times for ${visible.map(({ name }) => name).join(', ')}`} height={142} viewBox="0 0 600 120" preserveAspectRatio="none" style={styles.svg}>
+        <Svg accessibilityRole="image" accessibilityLabel={`Lap times for ${visible.map(({ name }) => name).join(', ')}`} height={compact ? 112 : 142} viewBox="0 0 600 120" preserveAspectRatio="none" style={styles.svg}>
           {[5, 60, 115].map((height) => (
             <Line key={height} x1={8} x2={592} y1={height} y2={height} stroke={colors.border} vectorEffect="non-scaling-stroke" />
           ))}
@@ -60,6 +60,8 @@ export function sortRaceDayStandings(rows, displayPosition) {
 }
 
 export default function RaceDayLapComparison({ rows, run, makeRowKey }) {
+  const { width, height } = useWindowDimensions();
+  const compact = width > height && height < 620;
   const [hiddenDrivers, setHiddenDrivers] = useState(() => new Set());
   const drivers = useMemo(() => {
     return rows.map((row, index) => {
@@ -86,8 +88,8 @@ export default function RaceDayLapComparison({ rows, run, makeRowKey }) {
   }
 
   return (
-    <View style={styles.chart}>
-      <View style={styles.chartHeader}>
+    <View style={[styles.chart, compact && styles.chartCompact]}>
+      <View style={[styles.chartHeader, compact && styles.chartHeaderCompact]}>
         <Text accessibilityRole="header" style={styles.title}>Lap time comparison</Text>
         {chartable.length > 1 && active.length < chartable.length && (
           <Pressable accessibilityRole="button" onPress={() => setHiddenDrivers(new Set())} style={styles.button}>
@@ -95,7 +97,7 @@ export default function RaceDayLapComparison({ rows, run, makeRowKey }) {
           </Pressable>
         )}
       </View>
-      {active.length ? <ComparisonPlot drivers={chartable} hiddenDrivers={hiddenDrivers} /> : (
+      {active.length ? <ComparisonPlot drivers={chartable} hiddenDrivers={hiddenDrivers} compact={compact} /> : (
         <Text style={styles.axisText}>{chartable.length ? 'Select a driver to show laps.' : 'Lap-by-lap times are unavailable for these results.'}</Text>
       )}
       {!!drivers.length && (
@@ -105,7 +107,7 @@ export default function RaceDayLapComparison({ rows, run, makeRowKey }) {
             return (
               <Pressable key={id} accessibilityRole="checkbox" accessibilityState={{ checked: selected, disabled: !laps.length }}
                 accessibilityLabel={laps.length ? name : `${name}, no lap times`} disabled={!laps.length}
-                onPress={() => toggleDriver(id)} style={[styles.legendButton, selected && { borderColor: color }]}>
+                onPress={() => toggleDriver(id)} style={[styles.legendButton, compact && styles.legendButtonCompact, selected && { borderColor: color }]}>
                 <View accessible={false} style={[styles.dot, { backgroundColor: color, opacity: selected ? 1 : 0.48 }]} />
                 <Text style={[styles.legendName, selected && { color }]}>{name}{laps.length ? '' : ' · No laps'}</Text>
               </Pressable>
@@ -119,7 +121,9 @@ export default function RaceDayLapComparison({ rows, run, makeRowKey }) {
 
 const styles = StyleSheet.create({
   chart: { backgroundColor: colors.bg, borderRadius: 10, padding: 14, gap: 10, marginBottom: 12 },
+  chartCompact: { padding: 8, gap: 5, marginBottom: 6 },
   chartHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 36 },
+  chartHeaderCompact: { minHeight: 26 },
   title: { color: colors.text, fontSize: 17, fontWeight: '800' },
   plot: { flexDirection: 'row', alignItems: 'stretch', gap: 6 },
   svg: { flex: 1, width: 0 },
@@ -128,6 +132,7 @@ const styles = StyleSheet.create({
   xAxis: { marginLeft: 67, flexDirection: 'row', justifyContent: 'space-between' },
   legend: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   legendButton: { flexDirection: 'row', alignItems: 'center', gap: 7, borderWidth: 1, borderColor: colors.border, borderRadius: 6, paddingHorizontal: 9, minHeight: 44, maxWidth: '100%' },
+  legendButtonCompact: { minHeight: 38 },
   dot: { width: 9, height: 9, borderRadius: 5 },
   legendName: { color: colors.muted, fontSize: 12, fontWeight: '700', flexShrink: 1 },
   button: { minHeight: 36, paddingHorizontal: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.cardAlt, borderRadius: 6 },

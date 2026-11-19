@@ -10,6 +10,7 @@ export default function RaceDayHeader({
   onRightPress,
   rightTone = 'accent',
   topOffset = true,
+  compact = false,
 }) {
   return (
     <AppScreenHeader
@@ -21,6 +22,7 @@ export default function RaceDayHeader({
       onRightPress={onRightPress}
       rightTone={rightTone}
       applyTopInset={topOffset}
+      compact={compact}
     />
   );
 }

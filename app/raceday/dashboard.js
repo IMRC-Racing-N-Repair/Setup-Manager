@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import RaceDayHeader from '../../features/raceday/components/RaceDayHeader';
 import RaceDayVehicleCard from '../../features/raceday/components/RaceDayVehicleCard';
 import RaceDayBottomActions from '../../features/raceday/components/RaceDayBottomActions';
+import RaceDayLapChart, { getTimedLaps } from '../../features/raceday/components/RaceDayLapChart';
 import RaceDayPopup from '../../features/raceday/components/RaceDayPopup';
 import RaceDayResultCard from '../../features/raceday/components/RaceDayResultCard';
 import RaceDayTop5Popup from '../../features/raceday/components/RaceDayTop5Popup';
@@ -86,6 +87,7 @@ export default function RaceDayDashboardScreen() {
   const [runs, setRuns] = useState([]);
   const [lineups, setLineups] = useState([]);
   const [compareFields, setCompareFields] = useState([]);
+  const [lapChart, setLapChart] = useState(null);
   const [resultsOpen, setResultsOpen] = useState(false);
   const [top5Open, setTop5Open] = useState(false);
   const [raceResultsOpen, setRaceResultsOpen] = useState(false);
@@ -684,7 +686,7 @@ export default function RaceDayDashboardScreen() {
             <Text style={raceDayStyles.loadingShellText}>Checking RaceDay, vehicles, and saved race information…</Text>
           </View>
         </View>
-        <NewLookBottomNav active="raceday" router={router} bottomOffset={insets.bottom} />
+        <NewLookBottomNav active="raceday" router={router} bottomOffset={insets.bottom} inFlow compact />
       </View>
     );
   }
@@ -699,7 +701,7 @@ export default function RaceDayDashboardScreen() {
           </View>
         </View>
         <RaceDayBottomActions docked tabletLandscape={isTabletLandscape} primaryLabel="Select Track" onPrimaryPress={() => router.replace('/raceday/select-track')} />
-        <NewLookBottomNav active="raceday" router={router} bottomOffset={insets.bottom} />
+        <NewLookBottomNav active="raceday" router={router} bottomOffset={insets.bottom} inFlow compact />
       </View>
     );
   }
@@ -709,6 +711,7 @@ export default function RaceDayDashboardScreen() {
       <View style={[raceDayStyles.container, isTabletLandscape && raceDayStyles.containerTabletLandscape, { paddingTop: insets.top }]}>
         <RaceDayHeader
           title="RaceDay"
+          compact={!isTabletLandscape}
           leftLabel="‹ BACK"
           onLeftPress={handleBack}
           rightLabel="END"
@@ -717,7 +720,7 @@ export default function RaceDayDashboardScreen() {
           topOffset={false}
         />
 
-        <ScrollView contentContainerStyle={[raceDayStyles.scrollContent, isTabletLandscape && raceDayStyles.scrollContentTabletLandscape, { paddingBottom: 142 + insets.bottom }]} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={raceDayStyles.scrollContent} showsVerticalScrollIndicator={false}>
           <RaceDayModeToggle mode={dashboardMode} onChange={handleDashboardModeChange} />
 
           {dashboardMode === 'practice' ? (
@@ -805,6 +808,7 @@ export default function RaceDayDashboardScreen() {
                       lineup={lineupsByVehicle.get(id) || null}
                       compareFields={compareFields}
                       onOpenResults={(run) => openResults(vehicle, run)}
+                      onOpenLapChart={(run, title) => setLapChart({ run, title, vehicle })}
                       onOpenSetup={() => openSetup(vehicle)}
                     />
                   </View>
@@ -843,7 +847,22 @@ export default function RaceDayDashboardScreen() {
       />
 
       <RaceDayPopup
+        visible={!!lapChart}
+        title={lapChart?.title || 'Lap chart'}
+        subtitle={lapChart ? [getVehicleDisplayName(lapChart.vehicle), lapChart.run.className].filter(Boolean).join(' · ') : ''}
+        onClose={() => setLapChart(null)}
+        centered
+        chart
+        hasChartData={!!lapChart && getTimedLaps(lapChart.run).length > 0}
+      >
+        {lapChart && <RaceDayLapChart run={lapChart.run} detailed />}
+      </RaceDayPopup>
+
+      <RaceDayPopup
         visible={resultsOpen}
+        centered
+        chart
+        hasChartData={!!selectedRun && getTimedLaps(selectedRun).length > 0}
         title="Race Results"
         subtitle={selectedVehicle ? `${getVehicleDisplayName(selectedVehicle)} • tap stats to choose dashboard blocks` : 'Tap stats to choose dashboard blocks'}
         onClose={() => setResultsOpen(false)}
@@ -917,7 +936,7 @@ export default function RaceDayDashboardScreen() {
         onSelectClass={handleEventClassSelection}
         onSubmitDriverName={handleEventDriverName}
       />
-      <NewLookBottomNav active="raceday" router={router} bottomOffset={insets.bottom} />
+      <NewLookBottomNav active="raceday" router={router} bottomOffset={insets.bottom} inFlow compact />
     </View>
   );
 }

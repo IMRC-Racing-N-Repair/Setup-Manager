@@ -1,10 +1,9 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { buildCompareRows, getCompareValue } from '../lib/raceDayCompare';
 import { getVehicleDisplayName, getVehicleTransponder } from '../lib/raceDayModel';
 import { pickPreferredLineup } from '../lib/raceDayLineupPriority';
-import RaceDayLapChart from './RaceDayLapChart';
 import RaceDayLineupBadge from './RaceDayLineupBadge';
 import { raceDayStyles } from '../styles/raceDayStyles';
 
@@ -53,8 +52,7 @@ function getRunTitle(run = {}) {
   return title;
 }
 
-function RaceRunCard({ run, compareFields, onOpenResults }) {
-  const [expanded, setExpanded] = useState(false);
+function RaceRunCard({ run, compareFields, onOpenResults, onOpenLapChart }) {
   const rows = buildCompareRows(run, compareFields);
   const position = getCompareValue(run, 'position');
   const showPosition = position !== '—' && !rows.some((row) => row.key === 'position');
@@ -65,11 +63,10 @@ function RaceRunCard({ run, compareFields, onOpenResults }) {
         <Text style={raceDayStyles.raceRunTitleThin} numberOfLines={1}>{getRunTitle(run)}</Text>
         <TouchableOpacity
           accessibilityRole="button"
-          accessibilityState={{ expanded }}
           style={raceDayStyles.resultsMiniButton}
-          onPress={() => setExpanded((value) => !value)}
+          onPress={() => onOpenLapChart(run, getRunTitle(run))}
         >
-          <Text style={raceDayStyles.resultsMiniButtonText}>{expanded ? 'Hide laps' : 'Lap chart'}</Text>
+          <Text style={raceDayStyles.resultsMiniButtonText}>Lap chart</Text>
         </TouchableOpacity>
         <TouchableOpacity accessibilityRole="button" style={raceDayStyles.resultsMiniButton} onPress={() => onOpenResults?.(run)} activeOpacity={0.82}>
           <Text style={raceDayStyles.resultsMiniButtonText}>Results</Text>
@@ -87,7 +84,6 @@ function RaceRunCard({ run, compareFields, onOpenResults }) {
           />
         ))}
       </View>
-      {expanded && <RaceDayLapChart run={run} />}
     </View>
   );
 }
@@ -142,7 +138,6 @@ function vehicleColor(vehicle, title) {
 export function RaceDayVehicleCardFrame({ vehicle, lineup, onOpenSetup, subtitle, children }) {
   const title = getVehicleDisplayName(vehicle);
   const accent = vehicleColor(vehicle, title);
-  const initials = title.trim().split(/\s+/).slice(0, 2).map((word) => Array.from(word)[0]).join('').toUpperCase();
   const model = [vehicle?.manufacturer, vehicle?.model].filter(Boolean).join(' ');
   const transponder = getVehicleTransponder(vehicle);
   const identity = [model, vehicle?.chassisStyle || vehicle?.vehicleStyle, transponder && `TX ${transponder}`].filter(Boolean).join(' · ');
@@ -152,10 +147,7 @@ export function RaceDayVehicleCardFrame({ vehicle, lineup, onOpenSetup, subtitle
       <View style={[raceDayStyles.cardAccent, { backgroundColor: accent }]} />
       <View style={raceDayStyles.raceVehicleHeader}>
         <View style={raceDayStyles.raceVehicleMain}>
-          <View accessible={false} style={{ width: 30, height: 30, marginRight: 8, borderRadius: 6, alignItems: 'center', justifyContent: 'center', backgroundColor: accent + '20' }}>
-            <Text style={{ color: accent, fontSize: 12, fontWeight: '800' }}>{initials}</Text>
-          </View>
-          {lineup && <RaceDayLineupBadge lineup={lineup} />}
+          {lineup && <RaceDayLineupBadge lineup={lineup} style={raceDayStyles.raceVehicleBadge} />}
           <View style={raceDayStyles.raceVehicleIdentity}>
             <Text style={raceDayStyles.workspaceVehicleTitle}>{title}</Text>
             <Text style={raceDayStyles.raceVehicleMeta} numberOfLines={1}>{identity || 'Manufacturer / Model not set'}</Text>
@@ -181,6 +173,7 @@ export default function RaceDayVehicleCard({
   lineup = null,
   compareFields,
   onOpenResults,
+  onOpenLapChart,
   onOpenSetup,
 }) {
   const raceRuns = useMemo(() => {
@@ -213,6 +206,7 @@ export default function RaceDayVehicleCard({
               run={run}
               compareFields={compareFields}
               onOpenResults={onOpenResults}
+              onOpenLapChart={onOpenLapChart}
             />
           ))}
         </View>

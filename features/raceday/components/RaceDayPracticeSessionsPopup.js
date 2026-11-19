@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import RaceDayPopup from './RaceDayPopup';
-import RaceDayLapChart from './RaceDayLapChart';
+import RaceDayLapChart, { getTimedLaps } from './RaceDayLapChart';
 import { getVehicleDisplayName, normalizeId } from '../lib/raceDayModel';
 import { getPracticeSessionsForVehicle } from '../lib/raceDayPracticeStorage';
 import { raceDayColors, raceDayStyles } from '../styles/raceDayStyles';
@@ -185,6 +185,8 @@ export default function RaceDayPracticeSessionsPopup({ visible, raceDay, vehicle
       subtitle={`${vehicleName} • ${practiceDayLabel || 'Practice'} • ${sessions.length} run${sessions.length === 1 ? '' : 's'}`}
       onClose={onClose}
       centered
+      chart
+      hasChartData={!loading && sortedSessions.some((session) => getTimedLaps(session).length > 0)}
       showScrollIndicator
       contentContainerStyle={styles.popupContent}
     >

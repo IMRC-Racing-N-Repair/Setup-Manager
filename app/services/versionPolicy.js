@@ -137,3 +137,9 @@ export function evaluateVersionPolicy(policyInput) {
     policy,
   };
 }
+
+// Expo Router scans files inside app/. This default keeps this service module
+// from being treated as an invalid page in the web route manifest.
+export default function VersionPolicyRoute() {
+  return null;
+}

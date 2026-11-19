@@ -263,7 +263,7 @@ export default function TracksWebScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: AppColors.background },
-  content: { flex: 1, width: '100%', maxWidth: 1500, alignSelf: 'center', paddingHorizontal: 28, paddingTop: 16 },
+  content: { flex: 1, width: '100%', paddingHorizontal: 22, paddingTop: 16 },
   intro: { minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: AppColors.border },
   introText: { color: AppColors.mutedText, fontSize: 12 },
   savedCount: { color: AppColors.mutedText, fontSize: 9, fontWeight: '900', letterSpacing: 0.7 },

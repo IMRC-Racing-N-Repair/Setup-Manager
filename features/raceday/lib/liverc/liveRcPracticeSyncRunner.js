@@ -1,18 +1,12 @@
 import { appendRaceDayPracticeSessions } from '../raceDayPracticeStorage';
 import { normalizeId } from '../raceDayModel';
+import { fetchLiveRcText } from './liveRcClient';
 import { getPracticeDayUrl, normalizeLiveRcPracticeSiteUrl } from './liveRcPracticeUrls';
 import { getVehicleTransponder, parsePracticeSessionsFromHtml } from './liveRcPracticeSessionParser';
 
 async function fetchHtml(url = '') {
   console.log('[IMRC RaceDay Practice] fetch practice sessions URL', { url });
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: {
-      Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-    },
-  });
-  if (!response.ok) throw new Error(`LiveRC practice page failed to load (${response.status}) at ${url}`);
-  return response.text();
+  return fetchLiveRcText(url);
 }
 
 export async function syncLiveRcPracticeDay({

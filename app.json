@@ -126,7 +126,7 @@
     "runtimeVersion": "2.1.14",
     "web": {
       "bundler": "metro",
-      "output": "single",
+      "output": "server",
       "favicon": "./assets/icon.png"
     }
   }

@@ -23,7 +23,7 @@ function LapPlot({ laps, detailed, compact }) {
 
   return (
     <View style={styles.plot}>
-      <Svg accessibilityRole="image" accessibilityLabel={best ? `Lap progression. Fastest lap ${best.number} at ${best.seconds.toFixed(3)} seconds.` : 'Lap progression. No valid laps.'} width="100%" height={detailed ? (compact ? 126 : 158) : 94} viewBox="0 0 360 84" preserveAspectRatio="none">
+      <Svg accessibilityRole="image" accessibilityLabel={best ? `Lap progression. Fastest lap ${best.number} at ${best.seconds.toFixed(3)} seconds.` : 'Lap progression. No valid laps.'} width="100%" height={detailed ? (compact ? 112 : 158) : 94} viewBox="0 0 360 84" preserveAspectRatio="none">
         {[10, 42, 74].map((position) => (
           <Line key={position} x1={8} x2={352} y1={position} y2={position} stroke={AppColors.border} vectorEffect="non-scaling-stroke" />
         ))}
@@ -51,9 +51,9 @@ export function getTimedLaps(run = {}) {
     .sort((a, b) => a.number - b.number);
 }
 
-export default function RaceDayLapChart({ run, detailed = false }) {
+export default function RaceDayLapChart({ run, detailed = false, compact: preferCompact = false }) {
   const { width, height } = useWindowDimensions();
-  const compact = width > height && height < 620;
+  const compact = preferCompact || !detailed || (width > height && height < 620);
   const laps = getTimedLaps(run);
   const consistencyValue = getCompareValue(run, 'consistency').trim();
   const consistency = /^\d+(?:\.\d+)?\s*%?$/.test(consistencyValue) ? Number.parseFloat(consistencyValue) : null;

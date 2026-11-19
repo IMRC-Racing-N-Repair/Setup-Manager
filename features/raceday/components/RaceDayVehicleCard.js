@@ -1,9 +1,10 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { buildCompareRows, getCompareValue } from '../lib/raceDayCompare';
 import { getVehicleDisplayName, getVehicleTransponder } from '../lib/raceDayModel';
 import { pickPreferredLineup } from '../lib/raceDayLineupPriority';
+import RaceDayLapChart from './RaceDayLapChart';
 import RaceDayLineupBadge from './RaceDayLineupBadge';
 import { raceDayStyles } from '../styles/raceDayStyles';
 
@@ -52,7 +53,8 @@ function getRunTitle(run = {}) {
   return title;
 }
 
-function RaceRunCard({ run, compareFields, onOpenResults, onOpenLapChart }) {
+function RaceRunCard({ run, compareFields, onOpenResults }) {
+  const [expanded, setExpanded] = useState(false);
   const rows = buildCompareRows(run, compareFields);
   const position = getCompareValue(run, 'position');
   const showPosition = position !== '—' && !rows.some((row) => row.key === 'position');
@@ -60,20 +62,23 @@ function RaceRunCard({ run, compareFields, onOpenResults, onOpenLapChart }) {
   return (
     <View style={raceDayStyles.raceRunCardThin}>
       <View style={raceDayStyles.raceRunTopRow}>
-        <Text style={raceDayStyles.raceRunTitleThin} numberOfLines={1}>{getRunTitle(run)}</Text>
+        <View style={raceDayStyles.flex1}>
+          <Text style={raceDayStyles.raceRunTitleThin}>{getRunTitle(run)}</Text>
+          {!!run.className && <Text style={raceDayStyles.raceRunSub}>{run.className}</Text>}
+        </View>
         <TouchableOpacity
           accessibilityRole="button"
           style={raceDayStyles.resultsMiniButton}
-          onPress={() => onOpenLapChart(run, getRunTitle(run))}
+          aria-expanded={expanded}
+          onPress={() => setExpanded((value) => !value)}
         >
-          <Text style={raceDayStyles.resultsMiniButtonText}>Lap chart</Text>
+          <Text style={raceDayStyles.resultsMiniButtonText}>{expanded ? 'Hide laps' : 'Lap chart'}</Text>
         </TouchableOpacity>
         <TouchableOpacity accessibilityRole="button" style={raceDayStyles.resultsMiniButton} onPress={() => onOpenResults?.(run)} activeOpacity={0.82}>
           <Text style={raceDayStyles.resultsMiniButtonText}>Results</Text>
         </TouchableOpacity>
       </View>
 
-      {!!run.className && <Text style={raceDayStyles.raceRunSub}>{run.className}</Text>}
       <View style={raceDayStyles.raceRunStatsRow}>
         {showPosition && <RaceRunStat label="Position" value={position} />}
         {rows.map((row) => (
@@ -84,10 +89,10 @@ function RaceRunCard({ run, compareFields, onOpenResults, onOpenLapChart }) {
           />
         ))}
       </View>
+      {expanded && <RaceDayLapChart run={run} />}
     </View>
   );
 }
-
 
 function getLineupFromRunList(runs = []) {
   const list = Array.isArray(runs) ? runs.filter(Boolean) : [];
@@ -173,7 +178,6 @@ export default function RaceDayVehicleCard({
   lineup = null,
   compareFields,
   onOpenResults,
-  onOpenLapChart,
   onOpenSetup,
 }) {
   const raceRuns = useMemo(() => {
@@ -206,7 +210,6 @@ export default function RaceDayVehicleCard({
               run={run}
               compareFields={compareFields}
               onOpenResults={onOpenResults}
-              onOpenLapChart={onOpenLapChart}
             />
           ))}
         </View>

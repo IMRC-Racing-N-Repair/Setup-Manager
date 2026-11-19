@@ -17,6 +17,7 @@ function Stat({
   label,
   value,
   wide = false,
+  third = false,
   compareKey,
   activeCompareFields = [],
   onToggleCompareField,
@@ -30,6 +31,7 @@ function Stat({
       style={[
         raceDayStyles.resultStatBox,
         wide && raceDayStyles.resultStatBoxWide,
+        third && raceDayStyles.resultStatBoxThird,
         selectable && raceDayStyles.resultStatBoxSelectable,
         selected && raceDayStyles.resultStatBoxSelected,
       ]}
@@ -65,7 +67,6 @@ export default function RaceDayResultCard({ run, compareFields = [], onToggleCom
   const hasRaceUrl = Boolean(run.raceUrl || run.resultUrl || run.url);
 
   return (
-    <>
     <View style={raceDayStyles.resultDetailCard}>
       <View style={raceDayStyles.rowBetween}>
         <View style={raceDayStyles.flex1}>
@@ -94,7 +95,7 @@ export default function RaceDayResultCard({ run, compareFields = [], onToggleCom
         </View>
       </View>
 
-      <RaceDayLapChart run={run} detailed />
+      <RaceDayLapChart run={run} detailed compact />
 
       <View style={raceDayStyles.dashboardBlockHintBox}>
         <Text style={raceDayStyles.dashboardBlockHintTitle}>Dashboard Blocks</Text>
@@ -114,9 +115,9 @@ export default function RaceDayResultCard({ run, compareFields = [], onToggleCom
 
       <SectionTitle>Averages</SectionTitle>
       <View style={raceDayStyles.resultStatGrid}>
-        <Stat label="Avg Top 5" value={getRunValue(run, 'top5Avg')} compareKey="top5Avg" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
-        <Stat label="Avg Top 10" value={getRunValue(run, 'top10Avg')} compareKey="top10Avg" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
-        <Stat label="Avg Top 15" value={getRunValue(run, 'top15Avg')} compareKey="top15Avg" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
+        <Stat third label="Avg Top 5" value={getRunValue(run, 'top5Avg')} compareKey="top5Avg" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
+        <Stat third label="Avg Top 10" value={getRunValue(run, 'top10Avg')} compareKey="top10Avg" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
+        <Stat third label="Avg Top 15" value={getRunValue(run, 'top15Avg')} compareKey="top15Avg" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
       </View>
 
       <SectionTitle>Consecutive / Consistency</SectionTitle>
@@ -142,7 +143,6 @@ export default function RaceDayResultCard({ run, compareFields = [], onToggleCom
         </>
       ) : null}
     </View>
-    </>
   );
 }
 

@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import RaceDayHeader from '../../features/raceday/components/RaceDayHeader';
 import RaceDayVehicleCard from '../../features/raceday/components/RaceDayVehicleCard';
 import RaceDayBottomActions from '../../features/raceday/components/RaceDayBottomActions';
-import RaceDayLapChart, { getTimedLaps } from '../../features/raceday/components/RaceDayLapChart';
+import { getTimedLaps } from '../../features/raceday/components/RaceDayLapChart';
 import RaceDayPopup from '../../features/raceday/components/RaceDayPopup';
 import RaceDayResultCard from '../../features/raceday/components/RaceDayResultCard';
 import RaceDayTop5Popup from '../../features/raceday/components/RaceDayTop5Popup';
@@ -87,7 +87,6 @@ export default function RaceDayDashboardScreen() {
   const [runs, setRuns] = useState([]);
   const [lineups, setLineups] = useState([]);
   const [compareFields, setCompareFields] = useState([]);
-  const [lapChart, setLapChart] = useState(null);
   const [resultsOpen, setResultsOpen] = useState(false);
   const [top5Open, setTop5Open] = useState(false);
   const [raceResultsOpen, setRaceResultsOpen] = useState(false);
@@ -808,7 +807,6 @@ export default function RaceDayDashboardScreen() {
                       lineup={lineupsByVehicle.get(id) || null}
                       compareFields={compareFields}
                       onOpenResults={(run) => openResults(vehicle, run)}
-                      onOpenLapChart={(run, title) => setLapChart({ run, title, vehicle })}
                       onOpenSetup={() => openSetup(vehicle)}
                     />
                   </View>
@@ -845,18 +843,6 @@ export default function RaceDayDashboardScreen() {
         primaryLabel="Add Vehicles"
         onPrimaryPress={() => router.push('/raceday/select-vehicles?add=1')}
       />
-
-      <RaceDayPopup
-        visible={!!lapChart}
-        title={lapChart?.title || 'Lap chart'}
-        subtitle={lapChart ? [getVehicleDisplayName(lapChart.vehicle), lapChart.run.className].filter(Boolean).join(' · ') : ''}
-        onClose={() => setLapChart(null)}
-        centered
-        chart
-        lockLandscape={false}
-      >
-        {lapChart && <RaceDayLapChart run={lapChart.run} detailed />}
-      </RaceDayPopup>
 
       <RaceDayPopup
         visible={resultsOpen}

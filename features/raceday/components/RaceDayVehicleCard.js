@@ -23,7 +23,7 @@ function WrenchIcon() {
   );
 }
 
-function RaceRunStat({ label, value, desktop }) {
+export function RaceRunStat({ label, value, desktop }) {
   return (
     <View style={[raceDayStyles.raceRunStatBox, desktop && desktopStyles.stat]}>
       <Text style={[raceDayStyles.raceRunStatLabel, desktop && desktopStyles.statLabel]} numberOfLines={1}>{label}</Text>
@@ -137,6 +137,45 @@ function vehicleColor(vehicle, title) {
   return vehicleColors[hash % vehicleColors.length];
 }
 
+export function RaceDayVehicleCardFrame({ vehicle, desktop, lineup, onOpenSetup, children }) {
+  const title = getVehicleDisplayName(vehicle);
+  const model = [vehicle?.manufacturer, vehicle?.model].filter(Boolean).join(' ');
+  const transponder = getVehicleTransponder(vehicle);
+  const identity = [model, vehicle?.chassisStyle || vehicle?.vehicleStyle, transponder && `TX ${transponder}`].filter(Boolean).join(' · ');
+  const accent = desktop ? vehicleColor(vehicle, title) : null;
+  return (
+    <View style={[raceDayStyles.raceVehicleCard, desktop && desktopStyles.vehicle, desktop && { borderLeftWidth: 4, borderLeftColor: accent }]}>
+      {!desktop && <View style={raceDayStyles.cardAccent} />}
+
+      <View style={[raceDayStyles.raceVehicleHeader, desktop && desktopStyles.vehicleHeader]}>
+        <View style={raceDayStyles.raceVehicleMain}>
+          {desktop && (
+            <View aria-hidden style={[desktopStyles.vehicleMarker, { borderColor: accent + '64', backgroundColor: accent + '20' }]}>
+              <Text style={[desktopStyles.vehicleInitials, { color: accent }]}>{title.trim().split(/\s+/).slice(0, 2).map((word) => Array.from(word)[0]).join('').toUpperCase()}</Text>
+            </View>
+          )}
+          {!desktop && <RaceDayLineupBadge lineup={lineup} />}
+          <View style={raceDayStyles.raceVehicleIdentity}>
+            <Text style={[raceDayStyles.cardTitle, desktop && desktopStyles.vehicleTitle]}>{title}</Text>
+            <Text style={[raceDayStyles.raceVehicleMeta, desktop && desktopStyles.vehicleMeta]} numberOfLines={1}>
+              {desktop ? identity || 'Vehicle' : model || 'Manufacturer / Model not set'}
+            </Text>
+          </View>
+        </View>
+        {desktop && <RaceDayLineupBadge lineup={lineup} desktop />}
+        <View style={raceDayStyles.raceVehicleActions}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel={desktop ? `Open setup for ${title}` : undefined} style={[raceDayStyles.raceVehicleWrench, desktop && desktopStyles.setupButton]} onPress={onOpenSetup} activeOpacity={0.82}>
+            <WrenchIcon />
+            <Text style={[raceDayStyles.raceVehicleWrenchText, desktop && desktopStyles.vehicleAction]}>WRENCH</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {children}
+    </View>
+  );
+}
+
 export default function RaceDayVehicleCard({
   vehicle,
   desktop = false,
@@ -147,11 +186,6 @@ export default function RaceDayVehicleCard({
   onOpenResults,
   onOpenSetup,
 }) {
-  const title = getVehicleDisplayName(vehicle);
-  const model = [vehicle?.manufacturer, vehicle?.model].filter(Boolean).join(' ');
-  const transponder = getVehicleTransponder(vehicle);
-  const identity = [model, vehicle?.chassisStyle || vehicle?.vehicleStyle, transponder && `TX ${transponder}`].filter(Boolean).join(' · ');
-  const accent = desktop ? vehicleColor(vehicle, title) : null;
   const raceRuns = useMemo(() => {
     const list = Array.isArray(runsForVehicle) && runsForVehicle.length
       ? runsForVehicle
@@ -173,33 +207,7 @@ export default function RaceDayVehicleCard({
   );
 
   return (
-    <View style={[raceDayStyles.raceVehicleCard, desktop && desktopStyles.vehicle, desktop && { borderLeftWidth: 4, borderLeftColor: accent }]}>
-      {!desktop && <View style={raceDayStyles.cardAccent} />}
-
-      <View style={[raceDayStyles.raceVehicleHeader, desktop && desktopStyles.vehicleHeader]}>
-        <View style={raceDayStyles.raceVehicleMain}>
-          {desktop && (
-            <View aria-hidden style={[desktopStyles.vehicleMarker, { borderColor: accent + '64', backgroundColor: accent + '20' }]}>
-              <Text style={[desktopStyles.vehicleInitials, { color: accent }]}>{title.trim().split(/\s+/).slice(0, 2).map((word) => Array.from(word)[0]).join('').toUpperCase()}</Text>
-            </View>
-          )}
-          {!desktop && <RaceDayLineupBadge lineup={displayLineup} />}
-          <View style={raceDayStyles.raceVehicleIdentity}>
-            <Text style={[raceDayStyles.cardTitle, desktop && desktopStyles.vehicleTitle]}>{title}</Text>
-            <Text style={[raceDayStyles.raceVehicleMeta, desktop && desktopStyles.vehicleMeta]} numberOfLines={1}>
-              {desktop ? identity || 'Vehicle' : model || 'Manufacturer / Model not set'}
-            </Text>
-          </View>
-        </View>
-        {desktop && <RaceDayLineupBadge lineup={displayLineup} desktop />}
-        <View style={raceDayStyles.raceVehicleActions}>
-          <TouchableOpacity accessibilityRole="button" accessibilityLabel={desktop ? `Open setup for ${title}` : undefined} style={[raceDayStyles.raceVehicleWrench, desktop && desktopStyles.setupButton]} onPress={onOpenSetup} activeOpacity={0.82}>
-            <WrenchIcon />
-            <Text style={[raceDayStyles.raceVehicleWrenchText, desktop && desktopStyles.vehicleAction]}>WRENCH</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
+    <RaceDayVehicleCardFrame vehicle={vehicle} desktop={desktop} lineup={displayLineup} onOpenSetup={onOpenSetup}>
       {raceRuns.length ? (
         <View style={[raceDayStyles.raceRunList, desktop && desktopStyles.vehicleRuns]}>
           {raceRuns.map((run, index) => (
@@ -216,7 +224,7 @@ export default function RaceDayVehicleCard({
       ) : (
         <Text style={[raceDayStyles.cardSub, { marginTop: 8 }, desktop && desktopStyles.vehicleEmpty]}>No results synced yet</Text>
       )}
-    </View>
+    </RaceDayVehicleCardFrame>
   );
 }
 

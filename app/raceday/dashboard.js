@@ -717,6 +717,7 @@ export default function RaceDayDashboardScreen() {
 
   const eventPanel = dashboardMode === 'practice' ? (
     <RaceDayPracticeTrackCard
+      desktop={isDesktopWeb}
       raceDay={active}
       trackName={trackName}
       vehicleCount={vehicles.length}
@@ -811,6 +812,7 @@ export default function RaceDayDashboardScreen() {
           <View key={id} style={useTabletGrid ? raceDayStyles.vehicleGridCellTabletLandscape : null}>
             <RaceDayPracticeCard
               vehicle={vehicle}
+              desktop={isDesktopWeb}
               summary={practiceSummaries[id]}
               onOpenSessions={() => openPracticeSessions(vehicle)}
               onOpenSetup={() => openSetup(vehicle)}

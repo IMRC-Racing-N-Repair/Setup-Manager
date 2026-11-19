@@ -2,6 +2,8 @@ import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { getVehicleDisplayName } from '../lib/raceDayModel';
 import { raceDayColors, raceDayStyles } from '../styles/raceDayStyles';
+import { raceDayDesktopStyles as desktopStyles } from '../styles/raceDayDesktopStyles';
+import { RaceDayVehicleCardFrame, RaceRunStat } from './RaceDayVehicleCard';
 
 function clean(value) {
   if (value === undefined || value === null || value === '') return '—';
@@ -26,11 +28,49 @@ function Stat({ label, value }) {
   );
 }
 
-export default function RaceDayPracticeCard({ vehicle, summary = {}, onOpenSessions, onOpenSetup }) {
+export default function RaceDayPracticeCard({ vehicle, summary = {}, onOpenSessions, onOpenSetup, desktop = false }) {
   const vehicleName = getVehicleDisplayName(vehicle || {});
   const runCount = summary?.runCount || 0;
   const latest = summary?.latestSession || null;
   const hasSessions = runCount > 0;
+  const countLabel = `Practice Summary • ${runCount} run${runCount === 1 ? '' : 's'} • ${summary?.totalLaps || 0} laps`;
+
+  if (desktop) {
+    return (
+      <RaceDayVehicleCardFrame vehicle={vehicle} desktop onOpenSetup={onOpenSetup}>
+        <View style={[raceDayStyles.raceRunList, desktopStyles.vehicleRuns]}>
+          <View style={[raceDayStyles.raceRunCardThin, desktopStyles.run, desktopStyles.firstRun]}>
+            <View style={raceDayStyles.raceRunTopRow}>
+              <Text style={[raceDayStyles.raceRunTitleThin, desktopStyles.runTitle]}>
+                {hasSessions ? `Latest practice • ${formatTime(latest?.endedAt || latest?.startedAt)}` : 'Practice'}
+              </Text>
+              <TouchableOpacity accessibilityRole="button" style={[raceDayStyles.resultsMiniButton, desktopStyles.resultsButton]} onPress={onOpenSessions} activeOpacity={0.82}>
+                <Text style={[raceDayStyles.resultsMiniButtonText, desktopStyles.resultsButtonText]}>View Practice Sessions</Text>
+              </TouchableOpacity>
+            </View>
+            <Text style={desktopStyles.runClass}>{countLabel}</Text>
+            {hasSessions ? (
+              <View style={[raceDayStyles.raceRunStatsRow, desktopStyles.runStats]}>
+                <RaceRunStat desktop label="Fast lap" value={clean(summary.latestFastLap || latest?.fastLap)} />
+                <RaceRunStat desktop label="Avg lap" value={clean(latest?.avgLap)} />
+                <RaceRunStat desktop label="Top 5" value={clean(summary.latestTop5Avg || latest?.top5Avg)} />
+              </View>
+            ) : <Text style={raceDayStyles.cardSub}>No practice sessions saved for this vehicle yet.</Text>}
+          </View>
+          {hasSessions && (
+            <View style={[raceDayStyles.raceRunCardThin, desktopStyles.run]}>
+              <Text style={[raceDayStyles.raceRunTitleThin, desktopStyles.runTitle]}>Practice day totals</Text>
+              <View style={[raceDayStyles.raceRunStatsRow, desktopStyles.runStats]}>
+                <RaceRunStat desktop label="Best lap" value={clean(summary.bestLap)} />
+                <RaceRunStat desktop label="Best top 5" value={clean(summary.bestTop5)} />
+                <RaceRunStat desktop label="Total laps" value={summary.totalLaps || 0} />
+              </View>
+            </View>
+          )}
+        </View>
+      </RaceDayVehicleCardFrame>
+    );
+  }
 
   return (
     <View style={[raceDayStyles.card, raceDayStyles.dashboardCardCompact]}>
@@ -39,7 +79,7 @@ export default function RaceDayPracticeCard({ vehicle, summary = {}, onOpenSessi
         <View style={raceDayStyles.flex1}>
           <Text style={raceDayStyles.cardTitle}>{vehicleName}</Text>
           <Text style={raceDayStyles.cardSub} numberOfLines={1}>
-            Practice Summary • {runCount} run{runCount === 1 ? '' : 's'} • {summary?.totalLaps || 0} laps
+            {countLabel}
           </Text>
         </View>
         <TouchableOpacity style={styles.wrenchButton} onPress={onOpenSetup} activeOpacity={0.82}>

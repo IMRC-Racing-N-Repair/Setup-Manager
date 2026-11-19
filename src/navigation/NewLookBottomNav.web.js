@@ -50,21 +50,7 @@ export default function NewLookBottomNav({ active = 'home', router, onRaceDay, b
   const { width } = useWindowDimensions();
   const desktop = width >= 900;
 
-  if (desktop) {
-    return (
-      <View style={styles.desktopNav}>
-        <View style={styles.brand}>
-          <Text style={styles.brandMark}>IMRC</Text>
-          <Text style={styles.brandSub}>SETUP</Text>
-        </View>
-        <View style={styles.desktopItems}>
-          {desktopItems.map((item) => (
-            <NavItem key={item.key} item={item} active={active} router={router} onRaceDay={onRaceDay} desktop />
-          ))}
-        </View>
-      </View>
-    );
-  }
+  if (desktop) return null;
 
   const safeBottom = Math.max(0, Number(bottomOffset) || 0);
   return (

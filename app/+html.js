@@ -23,12 +23,6 @@ const globalCss = `
   button, input, textarea, select {
     font: inherit;
   }
-
-  @media (min-width: 900px) {
-    body {
-      padding-left: 104px;
-    }
-  }
 `;
 
 export default function Root({ children }) {

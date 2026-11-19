@@ -93,6 +93,7 @@ export default function RaceDayDashboardScreen() {
   const [syncing, setSyncing] = useState(false);
   const [autoSyncing, setAutoSyncing] = useState(false);
   const [autoSyncProgress, setAutoSyncProgress] = useState([]);
+  const [vehicleLinkSessionItem, setVehicleLinkSessionItem] = useState(null);
   const [syncStatusOpen, setSyncStatusOpen] = useState(false);
   const [syncProgress, setSyncProgress] = useState([]);
   const [syncSummary, setSyncSummary] = useState('');
@@ -124,8 +125,10 @@ export default function RaceDayDashboardScreen() {
   const liveRcState = useLiveRcLiveFeed(liveRcSiteUrl, Boolean(active?.trackId));
   const vehicleLinkItem = useMemo(() => {
     const source = syncStatusOpen ? syncProgress : autoSyncProgress;
-    return source.find((item) => item.status === 'needs-driver-name' || item.status === 'needs-selection') || null;
-  }, [autoSyncProgress, syncProgress, syncStatusOpen]);
+    return vehicleLinkSessionItem || source.find(
+      (item) => item.status === 'needs-driver-name' || item.status === 'needs-selection'
+    ) || null;
+  }, [autoSyncProgress, syncProgress, syncStatusOpen, vehicleLinkSessionItem]);
 
   const latestRunsByVehicle = useMemo(() => {
     const map = new Map();
@@ -237,10 +240,25 @@ export default function RaceDayDashboardScreen() {
           eventUrl: raceDay.eventUrl,
           siteUrl: raceDay.siteUrl || getTrackLiveRcUrl(nextTrack || {}),
           onProgress: (update) => {
-            if (!cancelled) setAutoSyncProgress((previous) => mergeSyncProgress(previous, update));
+            if (!cancelled) {
+              setAutoSyncProgress((previous) => mergeSyncProgress(previous, update));
+              if (update?.status === 'needs-driver-name' || update?.status === 'needs-selection') {
+                setVehicleLinkSessionItem((current) => {
+                  const currentId = normalizeId(current?.vehicleId);
+                  const updateId = normalizeId(update?.vehicleId);
+                  if (currentId && updateId && currentId !== updateId) return current;
+                  return { ...(current || {}), ...update };
+                });
+              }
+            }
           },
         });
         waitingForClassSelection = Boolean(result?.needsUserInput?.length);
+        if (waitingForClassSelection && result?.needsUserInput?.[0]) {
+          setVehicleLinkSessionItem((current) => current || result.needsUserInput[0]);
+        } else if (!waitingForClassSelection) {
+          setVehicleLinkSessionItem(null);
+        }
         if (!cancelled) await load({ showLoading: false });
         // Keep the completed checklist visible briefly so the final car and
         // lineup steps visibly reach Done instead of disappearing immediately.
@@ -429,6 +447,14 @@ export default function RaceDayDashboardScreen() {
   function handleSyncProgress(update) {
     setSyncStatusOpen(true);
     setSyncProgress((previous) => mergeSyncProgress(previous, update));
+    if (update?.status === 'needs-driver-name' || update?.status === 'needs-selection') {
+      setVehicleLinkSessionItem((current) => {
+        const currentId = normalizeId(current?.vehicleId);
+        const updateId = normalizeId(update?.vehicleId);
+        if (currentId && updateId && currentId !== updateId) return current;
+        return { ...(current || {}), ...update };
+      });
+    }
   }
 
   async function runLiveRcSync({ eventUrl, siteUrl, eventTitle, eventDateLabel, saveEvent = false } = {}) {
@@ -479,6 +505,11 @@ export default function RaceDayDashboardScreen() {
       await load({ showLoading: false });
       if (result?.progress?.length) setSyncProgress(result.progress);
       waitingForClassSelection = Boolean(result?.needsUserInput?.length);
+      if (waitingForClassSelection && result?.needsUserInput?.[0]) {
+        setVehicleLinkSessionItem((current) => current || result.needsUserInput[0]);
+      } else if (!waitingForClassSelection) {
+        setVehicleLinkSessionItem(null);
+      }
       setSyncSummary(waitingForClassSelection ? 'Enter a Driver Name or choose a class below to continue.' : 'Complete.');
     } catch (error) {
       setSyncSummary(error?.message || 'LiveRC sync failed.');
@@ -510,6 +541,9 @@ export default function RaceDayDashboardScreen() {
       classFound: true,
       message: `${option.driverName || item.driverName || 'Driver'} linked to ${option.className} for this event. Re-checking Race #.`,
     }));
+    setVehicleLinkSessionItem(null);
+    setAutoSyncProgress([]);
+    setSyncProgress([]);
     setAutoSyncing(false);
     setSyncStatusOpen(false);
     await new Promise((resolve) => setTimeout(resolve, 80));
@@ -524,22 +558,16 @@ export default function RaceDayDashboardScreen() {
     if (!raceDayId || !eventUrl || !vehicleId || !cleanName) return;
 
     await saveRaceDayEventVehicleDriverName(active, eventUrl, vehicleId, cleanName);
-    setAutoSyncProgress((previous) => mergeSyncProgress(previous, {
+    const searchingItem = {
       ...item,
       phase: 'driver',
-      status: 'working',
+      status: 'searching-driver',
       driverName: cleanName,
-      message: `Searching LiveRC again for ${cleanName}.`,
-    }));
-    setSyncProgress((previous) => mergeSyncProgress(previous, {
-      ...item,
-      phase: 'driver',
-      status: 'working',
-      driverName: cleanName,
-      message: `Searching LiveRC again for ${cleanName}.`,
-    }));
-    setAutoSyncing(false);
-    setSyncStatusOpen(false);
+      message: `Searching LiveRC for ${cleanName} and available classes.`,
+    };
+    setVehicleLinkSessionItem(searchingItem);
+    setAutoSyncProgress((previous) => mergeSyncProgress(previous, searchingItem));
+    setSyncProgress((previous) => mergeSyncProgress(previous, searchingItem));
     await new Promise((resolve) => setTimeout(resolve, 80));
     runLiveRcSync();
   }
@@ -765,9 +793,12 @@ export default function RaceDayDashboardScreen() {
       />
 
       <RaceDayVehicleLinkPopup
-        key={`${vehicleLinkItem?.vehicleId || vehicleLinkItem?.vehicleName || 'vehicle'}_${vehicleLinkItem?.status || 'closed'}`}
+        key={`${vehicleLinkItem?.vehicleId || vehicleLinkItem?.vehicleName || 'vehicle'}`}
         item={vehicleLinkItem}
         onClose={() => {
+          setVehicleLinkSessionItem(null);
+          setAutoSyncProgress([]);
+          setSyncProgress([]);
           setAutoSyncing(false);
           setSyncStatusOpen(false);
         }}

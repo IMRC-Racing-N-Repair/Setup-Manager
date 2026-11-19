@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { raceDayStyles } from '../styles/raceDayStyles';
 
@@ -15,10 +15,12 @@ export default function RaceDayBottomActions({
   tertiaryDisabled = false,
   docked = false,
   tabletLandscape = false,
+  desktop = false,
 }) {
   const insets = useSafeAreaInsets();
 
   if (docked) {
+    const desktopWeb = desktop && Platform.OS === 'web';
     const actions = [
       secondaryLabel ? { key: 'notes', glyph: '▤', label: secondaryLabel, onPress: onSecondaryPress, disabled: secondaryDisabled } : null,
       tertiaryLabel ? { key: 'changes', glyph: '↻', label: tertiaryLabel, onPress: onTertiaryPress, disabled: tertiaryDisabled } : null,
@@ -31,9 +33,14 @@ export default function RaceDayBottomActions({
         raceDayStyles.bottomBarDocked,
         tabletLandscape && raceDayStyles.bottomBarTabletLandscape,
         tabletLandscape && raceDayStyles.bottomBarDockedTabletLandscape,
-        { bottom: 66 + insets.bottom },
+        desktopWeb && styles.desktopBar,
+        !desktopWeb && { bottom: 66 + insets.bottom },
       ]}>
-        <View style={[raceDayStyles.actionNavRow, tabletLandscape && raceDayStyles.actionNavRowTabletLandscape]}>
+        <View style={[
+          raceDayStyles.actionNavRow,
+          tabletLandscape && raceDayStyles.actionNavRowTabletLandscape,
+          desktopWeb && styles.desktopRow,
+        ]}>
           {actions.map((action) => (
             <TouchableOpacity
               key={action.key}
@@ -41,6 +48,8 @@ export default function RaceDayBottomActions({
                 raceDayStyles.actionNavItem,
                 tabletLandscape && raceDayStyles.actionNavItemTabletLandscape,
                 action.disabled && raceDayStyles.actionNavItemDisabled,
+                desktopWeb && styles.desktopItem,
+                desktopWeb && action.primary && styles.desktopPrimaryItem,
               ]}
               onPress={action.disabled ? undefined : action.onPress}
               activeOpacity={0.72}
@@ -100,3 +109,40 @@ export default function RaceDayBottomActions({
 }
 
 export { RaceDayBottomActions };
+
+const styles = StyleSheet.create({
+  desktopBar: {
+    position: 'relative',
+    left: undefined,
+    right: undefined,
+    bottom: undefined,
+    zIndex: 1,
+    width: '100%',
+    maxWidth: '100%',
+    alignSelf: 'stretch',
+    paddingHorizontal: 0,
+    paddingTop: 0,
+    paddingBottom: 8,
+    backgroundColor: 'transparent',
+    borderTopWidth: 0,
+  },
+  desktopRow: {
+    minHeight: 40,
+    justifyContent: 'flex-end',
+    gap: 8,
+  },
+  desktopItem: {
+    flex: 0,
+    width: 128,
+    minHeight: 38,
+    flexDirection: 'row',
+    gap: 7,
+    borderWidth: 1,
+    borderColor: raceDayColors.border,
+    backgroundColor: raceDayColors.cardAlt,
+  },
+  desktopPrimaryItem: {
+    borderColor: raceDayColors.blue,
+    backgroundColor: raceDayColors.blueSoft,
+  },
+});

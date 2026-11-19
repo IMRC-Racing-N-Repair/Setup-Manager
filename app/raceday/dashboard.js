@@ -79,6 +79,7 @@ export default function RaceDayDashboardScreen() {
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
   const isTabletLandscape = width >= 700 && width > height;
+  const isDesktopWeb = Platform.OS === 'web' && width >= 900;
   const [loading, setLoading] = useState(true);
   const [active, setActive] = useState(null);
   const [track, setTrack] = useState(null);
@@ -104,6 +105,7 @@ export default function RaceDayDashboardScreen() {
   const [livePreferenceLoaded, setLivePreferenceLoaded] = useState(false);
   const [autoSyncing, setAutoSyncing] = useState(false);
   const [autoSyncProgress, setAutoSyncProgress] = useState([]);
+  const [vehicleLinkSessionItem, setVehicleLinkSessionItem] = useState(null);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [selectedPracticeVehicle, setSelectedPracticeVehicle] = useState(null);
   const [selectedRun, setSelectedRun] = useState(null);
@@ -175,8 +177,10 @@ export default function RaceDayDashboardScreen() {
     });
   }, []);
   const vehicleLinkItem = useMemo(() => {
-    return autoSyncProgress.find((item) => item.status === 'needs-driver-name' || item.status === 'needs-selection') || null;
-  }, [autoSyncProgress]);
+    return vehicleLinkSessionItem || autoSyncProgress.find(
+      (item) => item.status === 'needs-driver-name' || item.status === 'needs-selection'
+    ) || null;
+  }, [autoSyncProgress, vehicleLinkSessionItem]);
 
   const latestRunsByVehicle = useMemo(() => {
     const map = new Map();
@@ -264,7 +268,21 @@ export default function RaceDayDashboardScreen() {
 
   const cancelAutoSync = useCallback(() => {
     if (autoSyncCancelRef.current) autoSyncCancelRef.current.cancelled = true;
+    setVehicleLinkSessionItem(null);
+    setAutoSyncProgress([]);
     setAutoSyncing(false);
+  }, []);
+
+  const handleAutoSyncProgress = useCallback((update) => {
+    setAutoSyncProgress((previous) => mergeSyncProgress(previous, update));
+    if (update?.status === 'needs-driver-name' || update?.status === 'needs-selection') {
+      setVehicleLinkSessionItem((current) => {
+        const currentId = normalizeId(current?.vehicleId);
+        const updateId = normalizeId(update?.vehicleId);
+        if (currentId && updateId && currentId !== updateId) return current;
+        return { ...(current || {}), ...update };
+      });
+    }
   }, []);
 
   useFocusEffect(useCallback(() => {
@@ -300,10 +318,15 @@ export default function RaceDayDashboardScreen() {
           existingRuns: savedRuns,
           shouldCancel: () => cancelled || cancelToken.cancelled,
           onProgress: (update) => {
-            if (!cancelled && !cancelToken.cancelled) setAutoSyncProgress((previous) => mergeSyncProgress(previous, update));
+            if (!cancelled && !cancelToken.cancelled) handleAutoSyncProgress(update);
           },
         });
         waitingForClassSelection = Boolean(result?.needsUserInput?.length);
+        if (waitingForClassSelection && result?.needsUserInput?.[0]) {
+          setVehicleLinkSessionItem((current) => current || result.needsUserInput[0]);
+        } else if (!waitingForClassSelection) {
+          setVehicleLinkSessionItem(null);
+        }
         if (!cancelled && !cancelToken.cancelled) await load({ showLoading: false });
         // Keep the completed checklist visible briefly so the final car and
         // lineup steps visibly reach Done instead of disappearing immediately.
@@ -539,11 +562,16 @@ export default function RaceDayDashboardScreen() {
         existingRuns: runs,
         shouldCancel: () => cancelToken.cancelled,
         onProgress: (update) => {
-          if (!cancelToken.cancelled) setAutoSyncProgress((previous) => mergeSyncProgress(previous, update));
+          if (!cancelToken.cancelled) handleAutoSyncProgress(update);
         },
       });
 
       waitingForClassSelection = Boolean(result?.needsUserInput?.length);
+      if (waitingForClassSelection && result?.needsUserInput?.[0]) {
+        setVehicleLinkSessionItem((current) => current || result.needsUserInput[0]);
+      } else if (!waitingForClassSelection) {
+        setVehicleLinkSessionItem(null);
+      }
 
       if (!cancelToken.cancelled) await load({ showLoading: false });
       if (!waitingForClassSelection && !cancelToken.cancelled) await new Promise((resolve) => setTimeout(resolve, 450));
@@ -574,6 +602,8 @@ export default function RaceDayDashboardScreen() {
       classFound: true,
       message: `${option.driverName || item.driverName || 'Driver'} linked to ${option.className} for this event. Re-checking Race #.`,
     }));
+    setVehicleLinkSessionItem(null);
+    setAutoSyncProgress([]);
     setAutoSyncing(false);
     await new Promise((resolve) => setTimeout(resolve, 80));
     runLiveRcSync();
@@ -587,14 +617,15 @@ export default function RaceDayDashboardScreen() {
     if (!raceDayId || !eventUrl || !vehicleId || !cleanName) return;
 
     await saveRaceDayEventVehicleDriverName(active, eventUrl, vehicleId, cleanName);
-    setAutoSyncProgress((previous) => mergeSyncProgress(previous, {
+    const searchingItem = {
       ...item,
       phase: 'driver',
-      status: 'working',
+      status: 'searching-driver',
       driverName: cleanName,
-      message: `Searching LiveRC again for ${cleanName}.`,
-    }));
-    setAutoSyncing(false);
+      message: `Searching LiveRC for ${cleanName} and available classes.`,
+    };
+    setVehicleLinkSessionItem(searchingItem);
+    setAutoSyncProgress((previous) => mergeSyncProgress(previous, searchingItem));
     await new Promise((resolve) => setTimeout(resolve, 80));
     runLiveRcSync();
   }
@@ -663,7 +694,21 @@ export default function RaceDayDashboardScreen() {
           topOffset={false}
         />
 
-        <ScrollView contentContainerStyle={[raceDayStyles.scrollContent, isTabletLandscape && raceDayStyles.scrollContentTabletLandscape, { paddingBottom: 142 + insets.bottom }]} showsVerticalScrollIndicator={false}>
+        {isDesktopWeb ? (
+          <RaceDayBottomActions
+            docked
+            desktop
+            tabletLandscape
+            secondaryLabel="Notes"
+            onSecondaryPress={() => setNotesOpen(true)}
+            tertiaryLabel="Changes"
+            onTertiaryPress={() => setChangesOpen(true)}
+            primaryLabel="Add Vehicles"
+            onPrimaryPress={() => router.push('/raceday/select-vehicles?add=1')}
+          />
+        ) : null}
+
+        <ScrollView contentContainerStyle={[raceDayStyles.scrollContent, isTabletLandscape && raceDayStyles.scrollContentTabletLandscape, { paddingBottom: isDesktopWeb ? 24 : 142 + insets.bottom }]} showsVerticalScrollIndicator={false}>
           <RaceDayModeToggle mode={dashboardMode} onChange={handleDashboardModeChange} />
 
           {dashboardMode === 'practice' ? (
@@ -776,16 +821,18 @@ export default function RaceDayDashboardScreen() {
         </ScrollView>
       </View>
 
-      <RaceDayBottomActions
-        docked
-        tabletLandscape={isTabletLandscape}
-        secondaryLabel="Notes"
-        onSecondaryPress={() => setNotesOpen(true)}
-        tertiaryLabel="Changes"
-        onTertiaryPress={() => setChangesOpen(true)}
-        primaryLabel="Add Vehicles"
-        onPrimaryPress={() => router.push('/raceday/select-vehicles?add=1')}
-      />
+      {!isDesktopWeb ? (
+        <RaceDayBottomActions
+          docked
+          tabletLandscape={isTabletLandscape}
+          secondaryLabel="Notes"
+          onSecondaryPress={() => setNotesOpen(true)}
+          tertiaryLabel="Changes"
+          onTertiaryPress={() => setChangesOpen(true)}
+          primaryLabel="Add Vehicles"
+          onPrimaryPress={() => router.push('/raceday/select-vehicles?add=1')}
+        />
+      ) : null}
 
       <RaceDayPopup
         visible={resultsOpen}
@@ -856,7 +903,7 @@ export default function RaceDayDashboardScreen() {
       />
 
       <RaceDayVehicleLinkPopup
-        key={`${vehicleLinkItem?.vehicleId || vehicleLinkItem?.vehicleName || 'vehicle'}_${vehicleLinkItem?.status || 'closed'}`}
+        key={`${vehicleLinkItem?.vehicleId || vehicleLinkItem?.vehicleName || 'vehicle'}`}
         item={vehicleLinkItem}
         onClose={cancelAutoSync}
         onSelectClass={handleEventClassSelection}

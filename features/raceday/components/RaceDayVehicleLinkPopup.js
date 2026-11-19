@@ -18,6 +18,7 @@ export default function RaceDayVehicleLinkPopup({
   const visible = Boolean(item);
   const needsDriverName = item?.status === 'needs-driver-name';
   const needsClass = item?.status === 'needs-selection';
+  const searching = visible && !needsDriverName && !needsClass;
   const initialDriverName = clean(item?.requestedDriverName || item?.driverName || item?.nickname || item?.fullName);
 
   useEffect(() => {
@@ -105,6 +106,18 @@ export default function RaceDayVehicleLinkPopup({
             {submitting ? <ActivityIndicator size="small" color={raceDayColors.text} /> : null}
             <Text style={styles.primaryButtonText}>SEARCH DRIVER NAME</Text>
           </TouchableOpacity>
+        </View>
+      ) : null}
+
+      {searching ? (
+        <View style={styles.searchingSection}>
+          <ActivityIndicator size="small" color={raceDayColors.blue} />
+          <View style={styles.searchingTextWrap}>
+            <Text style={styles.sectionTitle}>Searching LiveRC</Text>
+            <Text style={styles.helpText}>
+              {clean(item?.message) || 'Checking the driver name and finding the available classes…'}
+            </Text>
+          </View>
         </View>
       ) : null}
 
@@ -236,6 +249,21 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     opacity: 0.45,
+  },
+  searchingSection: {
+    minHeight: 78,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: raceDayColors.blue,
+    backgroundColor: raceDayColors.blueSoft,
+  },
+  searchingTextWrap: {
+    flex: 1,
+    minWidth: 0,
+    gap: 4,
   },
   classOptions: {
     gap: 8,

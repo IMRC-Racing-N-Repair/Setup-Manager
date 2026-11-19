@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Linking, Modal, Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native';
+import { Linking, Modal, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import useViewport from '../../layout/useViewport';
 import { Image } from 'expo-image';
 
-import { flootDashboardStyles as styles } from '../flootDashboard.styles';
+import { desktopDashboardStyles, mobileWorkspaceDashboardStyles } from '../flootDashboard.styles';
 import NewLookBottomNav from '../../navigation/NewLookBottomNav';
 
 function textValue(value, fallback = '—') {
@@ -16,7 +17,7 @@ function entityId(value) {
 
 const NO_TRACK = '__none__';
 
-function CountCell({ label, value, onPress }) {
+function CountCell({ label, value, onPress, styles }) {
   return (
     <Pressable style={({ pressed }) => [styles.countCell, pressed && styles.pressed]} onPress={onPress}>
       <Text style={styles.microLabel}>{label}</Text>
@@ -27,6 +28,9 @@ function CountCell({ label, value, onPress }) {
 
 export default function FlootDashboardView({
   userName,
+  signedIn,
+  syncBusy,
+  syncProblemLabel,
   statusDotColor,
   onAuthPress,
   onAuthLongPress,
@@ -46,11 +50,12 @@ export default function FlootDashboardView({
   onSelectDashboardTrack,
   loading = false,
 }) {
-  const { width, height } = useWindowDimensions();
-  const compactLayout = width < 430 || height < 900;
-  const shortLayout = height < 850;
-  const tabletLandscape = width >= 700 && width > height;
-  const allowHomeScroll = isLandscape || height < 680;
+  const { width, height } = useViewport();
+  const desktop = width >= 900 && (Platform.OS === 'web' || width > height);
+  const styles = desktop ? desktopDashboardStyles : mobileWorkspaceDashboardStyles;
+  const compactLayout = !desktop && (width < 430 || height < 900);
+  const shortLayout = !desktop && height < 850;
+  const tabletLandscape = !desktop && width >= 700 && width > height;
   const [showTrackPicker, setShowTrackPicker] = useState(false);
   const trackList = Array.isArray(tracks) ? tracks : [];
   const savedTrackChoice = trackList.find((track) => entityId(track) === String(dashboardTrackId || '')) || null;
@@ -85,7 +90,7 @@ export default function FlootDashboardView({
           : 'No race is currently live'
         : 'Confirming the selected event with LiveRC';
   const lineupTitle = !currentEvent
-    ? 'No Current Event'
+    ? (desktop ? 'No upcoming race' : 'No Current Event')
     : eventMismatch
       ? "Event does not match RaceDay's"
       : !eventMatches
@@ -110,9 +115,11 @@ export default function FlootDashboardView({
     raceLive?.selectedTrack?.name || raceLive?.selectedTrack?.trackName,
     workspaceTrackName,
   );
-  const showWorkspace = true;
   const sponsorImage = sponsor?.logo || sponsor?.image || '';
   const syncColor = statusDotColor || '#6F7D74';
+  const syncLabel = !signedIn ? 'SIGN IN'
+    : syncBusy ? 'SYNCING'
+      : syncProblemLabel?.toUpperCase() || (syncColor === '#22C55E' ? 'SYNCED' : 'CLOUD SYNC');
   const openSponsor = () => sponsor?.url && Linking.openURL(sponsor.url).catch(() => {});
   const chooseTrack = (trackId) => {
     onSelectDashboardTrack?.(trackId);
@@ -124,13 +131,13 @@ export default function FlootDashboardView({
       <ScrollView
         contentContainerStyle={[
           styles.content,
+          desktop && Platform.OS !== 'web' && { paddingBottom: 92 },
           compactLayout && styles.contentCompact,
           shortLayout && styles.contentShort,
           tabletLandscape && styles.contentTabletLandscape,
         ]}
         showsVerticalScrollIndicator={false}
         bounces={false}
-        scrollEnabled={allowHomeScroll}
       >
         <View style={[styles.topbar, compactLayout && styles.topbarCompact]}>
           <View style={styles.titleBlock}>
@@ -143,16 +150,18 @@ export default function FlootDashboardView({
           <View style={styles.topActions}>
             <Pressable
               style={({ pressed }) => [styles.syncButton, pressed && styles.pressed]}
+              accessibilityRole="button"
+              accessibilityLabel={signedIn ? (syncProblemLabel ? 'View Cloud Sync details' : 'Sync account') : 'Sign in'}
               onPress={onAuthPress}
               onLongPress={onAuthLongPress}
             >
               <View style={[styles.syncDot, { backgroundColor: syncColor }]} />
               <View>
-                <Text style={styles.syncLabel}>{userName ? 'SYNCED' : 'SIGN IN'}</Text>
-                <Text style={styles.syncName} numberOfLines={1}>{userName || 'Cloud sync'}</Text>
+                <Text style={styles.syncLabel}>{syncLabel}</Text>
+                <Text style={styles.syncName} numberOfLines={1}>{signedIn ? userName : 'Cloud sync'}</Text>
               </View>
             </Pressable>
-            <Pressable style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]} onPress={() => router.push('/support')}>
+            <Pressable style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]} accessibilityLabel="Support" onPress={() => router.push('/support')}>
               <Text style={styles.iconButtonText}>•••</Text>
             </Pressable>
           </View>
@@ -168,109 +177,123 @@ export default function FlootDashboardView({
             <Text style={styles.microLabel}>PRESENTED BY</Text>
             <Text style={styles.sponsorName} numberOfLines={1}>{sponsor?.name || 'Available Banner'}</Text>
           </View>
-          <Text style={styles.sponsorVisit}>VISIT  ›</Text>
+          {!!sponsor?.url && <Text style={styles.sponsorVisit}>Visit sponsor</Text>}
         </Pressable>
 
 
-        {showWorkspace ? <View style={styles.primaryGrid}>
-          <View style={[styles.racePanel, compactLayout && styles.racePanelCompact]}>
-            <View style={styles.sectionHeader}>
-              <View style={styles.sectionHeaderCopy}>
-                <Text style={styles.microLabel}>{loading ? 'CHECKING RACEDAY' : liveActive ? 'LIVE RACEDAY' : 'RACEDAY'}</Text>
-                <Text style={styles.sectionTitle} numberOfLines={2}>{raceDayTrackName}</Text>
-              </View>
-              <View style={[styles.liveBadge, (loading || !liveActive) && styles.idleBadge]}>
-                <View style={[styles.liveDot, (loading || !liveActive) && styles.idleDot]} />
-                <Text style={[styles.liveText, (loading || !liveActive) && styles.idleText]}>{loading ? 'LOADING' : liveActive ? 'LIVE' : currentEvent ? 'WAITING' : 'NO EVENT'}</Text>
-              </View>
-            </View>
-
-            <Pressable disabled={loading} style={({ pressed }) => [styles.raceLine, compactLayout && styles.raceLineCompact, loading && styles.loadingMuted, pressed && styles.pressed]} onPress={onRaceDayPress}>
-              <View style={styles.raceBadge}>
-                <Text style={styles.raceBadgeTop}>RACE</Text>
-                <Text style={styles.raceBadgeValue}>{!loading && liveActive ? currentRaceNumber : '—'}</Text>
-              </View>
-              <View style={styles.raceMain}>
-                <Text style={styles.mutedLabel}>{loading ? 'LOADING' : liveActive ? 'CURRENT RACE' : 'EVENT STATUS'}</Text>
-                <Text style={styles.raceMainTitle}>{loading ? 'Checking race information' : currentRaceTitle}</Text>
-                <Text style={styles.raceMainMeta}>{loading ? 'Reading your saved RaceDay and LiveRC data' : currentRaceMeta}</Text>
-              </View>
-              <Text style={styles.chevronLarge}>›</Text>
-            </Pressable>
-
-            <View style={styles.nextRaceBlock}>
-              <Text style={styles.microLabel}>YOUR NEXT RACE</Text>
-              <View style={styles.nextRaceRow}>
-                <View style={styles.nextRaceIdentity}>
-                  <Text style={styles.nextRaceVehicle} numberOfLines={1}>{loading ? 'Checking your vehicles' : lineupTitle}</Text>
-                  <Text style={styles.nextRaceClass} numberOfLines={1}>{loading ? 'Loading class and lineup details' : lineupMeta}</Text>
+        <View style={styles.workspaceGrid}>
+          <View style={styles.primaryGrid}>
+            <View style={[styles.racePanel, compactLayout && styles.racePanelCompact]}>
+              <View style={styles.sectionHeader}>
+                <View style={styles.sectionHeaderCopy}>
+                  <Text style={styles.microLabel}>{loading ? 'CHECKING RACEDAY' : liveActive ? 'LIVE RACEDAY' : 'RACEDAY'}</Text>
+                  <Text style={styles.sectionTitle} numberOfLines={2}>{raceDayTrackName}</Text>
                 </View>
-                <View style={styles.nextRaceNumberBox}>
-                  <Text style={styles.nextRaceNumberLabel}>RACE</Text>
-                  <Text style={styles.nextRaceNumber}>{nextRace?.raceNumber || '—'}</Text>
+                <View style={[styles.liveBadge, (loading || !liveActive) && styles.idleBadge]}>
+                  <View style={[styles.liveDot, (loading || !liveActive) && styles.idleDot]} />
+                  <Text style={[styles.liveText, (loading || !liveActive) && styles.idleText]}>{loading ? 'LOADING' : liveActive ? 'LIVE' : currentEvent ? 'WAITING' : 'NO EVENT'}</Text>
                 </View>
               </View>
-            </View>
 
-            <Pressable disabled={loading} style={({ pressed }) => [styles.primaryButton, loading && styles.loadingMuted, pressed && styles.pressed]} onPress={onRaceDayPress}>
-              <Text style={styles.primaryButtonText}>{loading ? 'LOADING RACEDAY' : raceDayReady ? 'OPEN RACEDAY' : 'START RACEDAY'}</Text>
-              <Text style={styles.primaryButtonArrow}>›</Text>
-            </Pressable>
-          </View>
-        </View> : null}
-
-        <View style={[styles.garageSection, compactLayout && styles.garageSectionCompact]}>
-          <View style={styles.sectionHeader}>
-            <View>
-              <Text style={styles.microLabel}>GARAGE</Text>
-              <Text style={styles.sectionTitle}>Garage</Text>
-            </View>
-            <Pressable onPress={() => router.push('/garage')}><Text style={styles.viewAll}>OPEN GARAGE  ›</Text></Pressable>
-          </View>
-          <View style={styles.garageMetrics}>
-            <CountCell label="VEHICLES" value={counts?.vehicles || 0} onPress={() => router.push('/vehicles')} />
-            <CountCell label="TRACKS" value={counts?.tracks || 0} onPress={() => router.push('/tracks')} />
-            <CountCell label="SETUPS" value={counts?.setups || 0} onPress={() => router.push('/setups')} />
-          </View>
-          <View style={styles.vehicleList}>
-            {lastOpenedItem ? (
-              <Pressable
-                style={({ pressed }) => [styles.vehicleRow, pressed && styles.pressed]}
-                onPress={() => router.push(lastOpenedItem.route)}
-              >
-                <Text style={styles.vehicleIndex}>LAST</Text>
-                <View style={styles.vehicleIdentity}>
-                  <Text style={styles.vehicleName} numberOfLines={1}>{textValue(lastOpenedItem.title, 'Recently opened')}</Text>
-                  <Text style={styles.vehicleMeta} numberOfLines={1}>{textValue(lastOpenedItem.meta, 'Open again')}</Text>
+              <Pressable disabled={loading} style={({ pressed }) => [styles.raceLine, compactLayout && styles.raceLineCompact, loading && styles.loadingMuted, pressed && styles.pressed]} onPress={onRaceDayPress}>
+                <View style={styles.raceBadge}>
+                  <Text style={styles.raceBadgeTop}>RACE</Text>
+                  <Text style={styles.raceBadgeValue}>{!loading && liveActive ? currentRaceNumber : '—'}</Text>
                 </View>
-                <Text style={[styles.vehicleStatus, isLandscape && styles.vehicleStatusLandscape]}>
-                  {lastOpenedItem.type === 'tool' ? 'TOOL' : 'SETUP'}
-                </Text>
-                <Text style={styles.chevron}>›</Text>
+                <View style={styles.raceMain}>
+                  <Text style={styles.mutedLabel}>{loading ? 'LOADING' : liveActive ? 'CURRENT RACE' : 'EVENT STATUS'}</Text>
+                  <Text style={styles.raceMainTitle}>{loading ? 'Checking race information' : currentRaceTitle}</Text>
+                  <Text style={styles.raceMainMeta}>{loading ? 'Reading your saved RaceDay and LiveRC data' : currentRaceMeta}</Text>
+                </View>
+                <Text style={styles.chevronLarge}>›</Text>
               </Pressable>
-            ) : loading ? (
-              <View style={styles.emptyVehicleRow}>
-                <Text style={styles.emptyTitle}>Loading recent item…</Text>
-                <Text style={styles.emptyCopy}>Checking your last opened tool or setup.</Text>
+
+              <View style={styles.nextRaceBlock}>
+                <Text style={styles.microLabel}>YOUR NEXT RACE</Text>
+                <View style={styles.nextRaceRow}>
+                  <View style={styles.nextRaceIdentity}>
+                    <Text style={styles.nextRaceVehicle} numberOfLines={1}>{loading ? 'Checking your vehicles' : lineupTitle}</Text>
+                    <Text style={styles.nextRaceClass} numberOfLines={desktop ? 2 : 1}>{loading ? 'Loading class and lineup details' : lineupMeta}</Text>
+                  </View>
+                  <View style={styles.nextRaceNumberBox}>
+                    <Text style={styles.nextRaceNumberLabel}>RACE</Text>
+                    <Text style={styles.nextRaceNumber}>{nextRace?.raceNumber || '—'}</Text>
+                  </View>
+                </View>
               </View>
-            ) : (
-              <Pressable style={styles.emptyVehicleRow} onPress={() => router.push('/tools')}>
-                <Text style={styles.emptyTitle}>Nothing opened yet</Text>
-                <Text style={styles.emptyCopy}>Open a tool or setup and it will appear here.</Text>
+
+              <Pressable disabled={loading} style={({ pressed }) => [styles.primaryButton, loading && styles.loadingMuted, pressed && styles.pressed]} onPress={onRaceDayPress}>
+                <Text style={styles.primaryButtonText}>{loading ? 'LOADING RACEDAY' : raceDayReady ? 'OPEN RACEDAY' : 'START RACEDAY'}</Text>
+                {!desktop && <Text style={styles.primaryButtonArrow}>›</Text>}
+              </Pressable>
+            </View>
+          </View>
+
+          <View style={styles.garageColumn}>
+            <View style={[styles.garageSection, compactLayout && styles.garageSectionCompact]}>
+              <View style={styles.sectionHeader}>
+                <View>
+                  {!desktop && <Text style={styles.microLabel}>GARAGE</Text>}
+                  <Text style={styles.sectionTitle}>Garage</Text>
+                </View>
+                <Pressable onPress={() => router.push('/garage')}><Text style={styles.viewAll}>OPEN GARAGE  ›</Text></Pressable>
+              </View>
+              <View style={styles.garageMetrics}>
+                <CountCell styles={styles} label="VEHICLES" value={counts?.vehicles || 0} onPress={() => router.push('/vehicles')} />
+                <CountCell styles={styles} label="TRACKS" value={counts?.tracks || 0} onPress={() => router.push('/tracks')} />
+                <CountCell styles={styles} label="SETUPS" value={counts?.setups || 0} onPress={() => router.push('/setups')} />
+              </View>
+              <View style={styles.vehicleList}>
+                {lastOpenedItem ? (
+                  <Pressable
+                    style={({ pressed }) => [styles.vehicleRow, pressed && styles.pressed]}
+                    onPress={() => router.push(lastOpenedItem.route)}
+                  >
+                    <Text style={styles.vehicleIndex}>LAST</Text>
+                    <View style={styles.vehicleIdentity}>
+                      <Text style={styles.vehicleName} numberOfLines={1}>{textValue(lastOpenedItem.title, 'Recently opened')}</Text>
+                      <Text style={styles.vehicleMeta} numberOfLines={1}>{textValue(lastOpenedItem.meta, 'Open again')}</Text>
+                    </View>
+                    <Text style={[styles.vehicleStatus, isLandscape && styles.vehicleStatusLandscape]}>
+                      {lastOpenedItem.type === 'tool' ? 'TOOL' : 'SETUP'}
+                    </Text>
+                    <Text style={styles.chevron}>›</Text>
+                  </Pressable>
+                ) : loading ? (
+                  <View style={styles.emptyVehicleRow}>
+                    <Text style={styles.emptyTitle}>Loading recent item…</Text>
+                    <Text style={styles.emptyCopy}>Checking your last opened tool or setup.</Text>
+                  </View>
+                ) : (
+                  <Pressable style={styles.emptyVehicleRow} onPress={() => router.push('/tools')}>
+                    <Text style={styles.emptyTitle}>Nothing opened yet</Text>
+                    <Text style={styles.emptyCopy}>Open a tool or setup and it will appear here.</Text>
+                  </Pressable>
+                )}
+              </View>
+            </View>
+
+            {!!recentRows?.length && !shortLayout && (
+              <View style={styles.activityStrip}>
+                <Text style={styles.microLabel}>LATEST CHANGE</Text>
+                <Text style={styles.activityText} numberOfLines={1}>
+                  {recentRows[0]?.vehicleName} · {recentRows[0]?.fieldLabel} · {recentRows[0]?.beforeValue} → {recentRows[0]?.afterValue}
+                </Text>
+              </View>
+            )}
+
+            {trackList.length > 0 && (
+              <Pressable style={({ pressed }) => [styles.trackStrip, pressed && styles.pressed]} onPress={() => setShowTrackPicker(true)}>
+                <View style={styles.trackIdentity}>
+                  <Text style={styles.microLabel}>HOME TRACK</Text>
+                  <Text style={styles.trackName}>{workspaceTrackName}</Text>
+                  <Text style={styles.trackMeta}>{workspaceTrackMeta}</Text>
+                </View>
+                <Text style={styles.viewAll}>Change track</Text>
               </Pressable>
             )}
           </View>
         </View>
-
-        {!!recentRows?.length && !shortLayout && (
-          <View style={styles.activityStrip}>
-            <Text style={styles.microLabel}>LATEST CHANGE</Text>
-            <Text style={styles.activityText} numberOfLines={1}>
-              {recentRows[0]?.vehicleName} · {recentRows[0]?.fieldLabel} · {recentRows[0]?.beforeValue} → {recentRows[0]?.afterValue}
-            </Text>
-          </View>
-        )}
-
       </ScrollView>
 
       <Modal visible={showTrackPicker} transparent animationType="fade" onRequestClose={() => setShowTrackPicker(false)}>
@@ -293,7 +316,7 @@ export default function FlootDashboardView({
               >
                 <View style={styles.trackPickerIdentity}>
                   <Text style={styles.trackPickerName}>No track</Text>
-                  <Text style={styles.trackPickerMeta}>Show the last viewed vehicle on Home</Text>
+                  <Text style={styles.trackPickerMeta}>Clear the home track selection</Text>
                 </View>
                 <Text style={[styles.trackPickerMark, noTrackSelected && styles.trackPickerMarkSelected]}>{noTrackSelected ? '✓' : '›'}</Text>
               </Pressable>

@@ -5,7 +5,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useMemo, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, useWindowDimensions, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import {
   ToolButton,
   ToolCard,
@@ -14,6 +14,9 @@ import {
   goBack,
 } from './ToolShared';
 import styles from './ScaleCalculatorScreen.styles';
+import useViewport from '../../src/layout/useViewport';
+import { DESKTOP_WEB_MIN_WIDTH } from '../../src/layout/desktopWorkspace';
+import CornerWeightChart from '../../src/components/CornerWeightChart';
 
 const STORAGE_KEY = '@imrcToolsRaceScale_v1';
 const OZ_TO_G = 28.349523125;
@@ -281,10 +284,11 @@ function ScalePad({ label, value, valueGrams, unit, onChangeText, ui }) {
 
 export default function ScaleCalculatorScreen(props) {
   const [state, setState] = useState(DEFAULTS);
-  const { height } = useWindowDimensions();
+  const { height, width } = useViewport();
+  const desktop = Platform.OS === 'web' && width >= DESKTOP_WEB_MIN_WIDTH;
 
-  const shortPhone = height < 760;
-  const tinyPhone = height < 690;
+  const shortPhone = !desktop && height < 760;
+  const tinyPhone = !desktop && height < 690;
   const ui = compactStyles(shortPhone, tinyPhone);
 
   useEffect(() => {
@@ -355,7 +359,7 @@ export default function ScaleCalculatorScreen(props) {
       >
         <ScrollView
           style={styles.scaleScroll}
-          contentContainerStyle={[styles.fitContainer, tinyPhone && styles.fitContainerTiny]}
+          contentContainerStyle={[styles.fitContainer, tinyPhone && styles.fitContainerTiny, desktop && styles.fitContainerDesktop]}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
           showsVerticalScrollIndicator={false}
@@ -455,6 +459,9 @@ export default function ScaleCalculatorScreen(props) {
           </View>
         </ToolCard>
 
+          {[state.lf, state.rf, state.lr, state.rr].every((value) => String(value).trim()) && (
+            <CornerWeightChart weights={{ LF: w.lf, RF: w.rf, LR: w.lr, RR: w.rr }} />
+          )}
           <ToolButton label="Clear" secondary onPress={() => setState(DEFAULTS)} style={ui.clearButton} />
         </ScrollView>
       </KeyboardAvoidingView>

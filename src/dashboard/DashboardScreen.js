@@ -1,5 +1,6 @@
 // src/dashboard/DashboardScreen.js
-import { AppState, Platform, ScrollView, View, useWindowDimensions } from 'react-native';
+import { AppState, Platform, ScrollView, View } from 'react-native';
+import useViewport from '../layout/useViewport';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -15,6 +16,7 @@ import { useRecentChanges } from './logic/useRecentChanges';
 import { useSponsorBanner } from './logic/useSponsorBanner';
 import StableSafeAreaView from '../layout/StableSafeAreaView';
 
+import CloudSyncStatusModal from './modals/CloudSyncStatusModal';
 import ActiveRaceDayModal from './modals/ActiveRaceDayModal';
 import DashboardHeader from './components/DashboardHeader';
 import BottomActions from './components/BottomActions';
@@ -130,7 +132,7 @@ export default function DashboardScreen({
   onCloudSyncPress = null,
 } = {}) {
   const router = useRouter();
-  const { width, height } = useWindowDimensions();
+  const { width, height } = useViewport();
   const isLandscape = width > height;
   const pendingStartActionRef = useRef(null);
   const pendingActiveSessionRef = useRef(null);
@@ -139,10 +141,17 @@ export default function DashboardScreen({
   const activeDismissTimerRef = useRef(null);
   const archiveDismissTimerRef = useRef(null);
   const [showSponsorPopup, setShowSponsorPopup] = useState(() => {
-    if (sponsorPopupShownThisLaunch) return false;
+    if (Platform.OS === 'web' || sponsorPopupShownThisLaunch) return false;
     sponsorPopupShownThisLaunch = true;
     return true;
   });
+  useEffect(() => {
+    if (Platform.OS === 'web' && !sponsorPopupShownThisLaunch) {
+      sponsorPopupShownThisLaunch = true;
+      setShowSponsorPopup(true);
+    }
+  }, []);
+  const [showCloudSyncStatus, setShowCloudSyncStatus] = useState(false);
   const [dashboardTrackId, setDashboardTrackId] = useState('');
   const [dashboardHydrated, setDashboardHydrated] = useState(false);
 
@@ -391,7 +400,15 @@ export default function DashboardScreen({
   const incomingDotColor = incomingSyncStatus?.color || '';
   const authDotResolved = !!auth.authUser && !!auth.statusDotColor && auth.statusDotColor !== '#6B7280';
   const dashboardStatusDotColor = authDotResolved ? auth.statusDotColor : (incomingDotColor || auth.statusDotColor);
-  const handleDashboardAuthPress = auth.handleAuthPress;
+  const dashboardSyncStatus = auth.syncStatus || incomingSyncStatus;
+  const dashboardSyncBusy = auth.syncBusy || auth.cloudBusy || auth.syncSettling;
+  const hasSyncProblem = !!auth.authUser && (
+    ['error', 'backoff', 'paused'].includes(dashboardSyncStatus?.state) ||
+    dashboardStatusDotColor === '#EF4444'
+  );
+  const handleDashboardAuthPress = hasSyncProblem
+    ? () => setShowCloudSyncStatus(true)
+    : auth.handleAuthPress;
 
   const finishStartModalDismissal = useCallback(async () => {
     const action = pendingStartActionRef.current;
@@ -521,6 +538,8 @@ export default function DashboardScreen({
     <>
       <DashboardHeader
         userName={auth.userFirstName}
+        signedIn={!!auth.authUser}
+        syncBusy={auth.syncBusy || auth.cloudBusy || auth.syncSettling}
         statusDotColor={dashboardStatusDotColor}
         onAuthPress={handleDashboardAuthPress}
         onAuthLongPress={auth.handleAuthLongPress}
@@ -570,6 +589,9 @@ export default function DashboardScreen({
     <StableSafeAreaView style={styles.safe}>
       <FlootDashboardView
         userName={auth.userFirstName}
+        signedIn={!!auth.authUser}
+        syncBusy={dashboardSyncBusy}
+        syncProblemLabel={hasSyncProblem ? dashboardSyncStatus?.label || 'Sync error' : ''}
         statusDotColor={dashboardStatusDotColor}
         onAuthPress={handleDashboardAuthPress}
         onAuthLongPress={auth.handleAuthLongPress}
@@ -589,6 +611,16 @@ export default function DashboardScreen({
         onSelectDashboardTrack={selectDashboardTrack}
         loading={!dashboardHydrated}
       />
+
+      {showCloudSyncStatus && auth.authUser && (
+        <CloudSyncStatusModal
+          visible
+          status={dashboardSyncStatus}
+          busy={dashboardSyncBusy}
+          onClose={() => setShowCloudSyncStatus(false)}
+          onRetry={auth.handleAuthPress}
+        />
+      )}
 
       <RaceDayStartModal
         visible={raceDay.modals.showStartModal}

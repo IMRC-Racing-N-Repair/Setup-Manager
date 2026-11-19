@@ -12,9 +12,10 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  useWindowDimensions,
   View,
 } from 'react-native';
+import { DESKTOP_WEB_MIN_WIDTH, DESKTOP_WORKSPACE_MAX_WIDTH } from '../../src/layout/desktopWorkspace';
+import useViewport from '../../src/layout/useViewport';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import StableSafeAreaView from '../../src/layout/StableSafeAreaView';
@@ -58,7 +59,8 @@ export function fmt(value, places = 2, fallback = '—') {
 
 export function ToolScaffold({ title, subtitle, children, onBack, right, scroll = true, contentStyle, listProps = null, scrollRef = null }) {
   const insets = useSafeAreaInsets();
-  const { width, height } = useWindowDimensions();
+  const { width, height } = useViewport();
+  const desktop = Platform.OS === 'web' && width >= DESKTOP_WEB_MIN_WIDTH;
   const isTabletLandscape = width >= 700 && width > height;
   const Container = scroll ? ScrollView : View;
   const [keyboardOpen, setKeyboardOpen] = React.useState(false);
@@ -84,7 +86,7 @@ export function ToolScaffold({ title, subtitle, children, onBack, right, scroll 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 6 : 0}
       >
-        <View style={[styles.sharedHeaderWrap, isTabletLandscape && styles.sharedHeaderWrapTabletLandscape]}>
+        <View style={[styles.sharedHeaderWrap, isTabletLandscape && styles.sharedHeaderWrapTabletLandscape, desktop && styles.desktopWorkspace]}>
           <AppScreenHeader title={title} subtitle={subtitle} onBack={onBack} right={right || undefined} />
         </View>
 
@@ -95,6 +97,7 @@ export function ToolScaffold({ title, subtitle, children, onBack, right, scroll 
             contentContainerStyle={[
               styles.content,
               isTabletLandscape && styles.contentTabletLandscape,
+              desktop && styles.desktopWorkspace,
               { paddingBottom: Math.max(12, insets.bottom + 10) + (keyboardOpen ? 180 : 0) },
               contentStyle,
               listProps.contentContainerStyle,
@@ -114,6 +117,7 @@ export function ToolScaffold({ title, subtitle, children, onBack, right, scroll 
             contentContainerStyle={scroll ? [
               styles.content,
               isTabletLandscape && styles.contentTabletLandscape,
+              desktop && styles.desktopWorkspace,
               { paddingBottom: Math.max(12, insets.bottom + 10) + (keyboardOpen ? 180 : 0) },
               contentStyle,
             ] : undefined}
@@ -297,6 +301,7 @@ export const styles = StyleSheet.create({
     paddingTop: 8,
     gap: 7,
   },
+  desktopWorkspace: { width: '100%', maxWidth: DESKTOP_WORKSPACE_MAX_WIDTH, alignSelf: 'center', paddingHorizontal: 28 },
   contentTabletLandscape: {
     paddingHorizontal: 22,
   },

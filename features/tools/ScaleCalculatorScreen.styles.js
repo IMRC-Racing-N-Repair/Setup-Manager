@@ -25,6 +25,15 @@ export default StyleSheet.create({
     justifyContent: 'center',
     gap: 7,
   },
+  fitContainerDesktop: {
+    width: '100%',
+    maxWidth: 760,
+    alignSelf: 'center',
+    justifyContent: 'flex-start',
+    paddingHorizontal: 28,
+    paddingVertical: 24,
+    gap: 16,
+  },
   fitContainerTiny: {
     paddingHorizontal: 7,
     paddingTop: 5,

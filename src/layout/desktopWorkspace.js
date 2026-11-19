@@ -1,0 +1,2 @@
+export const DESKTOP_WEB_MIN_WIDTH = 900;
+export const DESKTOP_WORKSPACE_MAX_WIDTH = 1480;

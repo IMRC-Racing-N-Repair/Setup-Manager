@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, Alert, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 
@@ -12,6 +12,8 @@ import { getTracks } from '../tracks/storage/trackStorage';
 import { getSetups, saveSetupCopyToTarget } from '../setups/lib/setupStorage';
 import { getEntityId, getTrackDisplayName, getVehicleDisplayName } from '../setups/lib/setupModel';
 import StableSafeAreaView from '../../src/layout/StableSafeAreaView';
+import useViewport from '../../src/layout/useViewport';
+import { DESKTOP_WEB_MIN_WIDTH, DESKTOP_WORKSPACE_MAX_WIDTH } from '../../src/layout/desktopWorkspace';
 import AppScreenHeader from '../../src/layout/AppScreenHeader';
 import NewLookBottomNav from '../../src/navigation/NewLookBottomNav';
 import { AppColors } from '../../src/theme/colors';
@@ -47,7 +49,8 @@ function savedLabel(setup) {
 export default function GarageScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const { width, height } = useWindowDimensions();
+  const { width, height } = useViewport();
+  const desktop = Platform.OS === 'web' && width >= DESKTOP_WEB_MIN_WIDTH;
   const isTabletLandscape = width >= 700 && width > height;
   const [loading, setLoading] = useState(true);
   const [vehicles, setVehicles] = useState([]);
@@ -205,7 +208,7 @@ export default function GarageScreen() {
     <StableSafeAreaView style={styles.safe}>
       <StatusBar style="light" />
       <View style={styles.root}>
-        <ScrollView contentContainerStyle={[styles.content, isTabletLandscape && styles.contentTabletLandscape]} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={[styles.content, isTabletLandscape && styles.contentTabletLandscape, desktop && desktopStyles.content]} showsVerticalScrollIndicator={false}>
           <AppScreenHeader
             title="Garage"
             kicker="IMRC GARAGE"
@@ -214,7 +217,7 @@ export default function GarageScreen() {
             onRightPress={handleHeaderAction}
           />
 
-          <Text style={styles.intro}>
+          <Text style={[styles.intro, desktop && desktopStyles.intro]}>
             {showVehicleTracks
               ? `Tracks and setups for ${selectedVehicle?.name || 'the selected vehicle'}.`
               : 'Choose a vehicle to view its tracks and setups.'}
@@ -228,86 +231,109 @@ export default function GarageScreen() {
               <Text style={styles.emptyCopy}>Add your first car before creating track setups.</Text>
               <Pressable style={styles.primaryButton} onPress={() => router.push('/vehicles')}><Text style={styles.primaryButtonText}>ADD VEHICLE</Text></Pressable>
             </View>
-          ) : !showVehicleTracks ? (
-            <>
-              <View style={styles.sectionHeading}>
-                <View><Text style={styles.kicker}>GARAGE VEHICLES</Text><Text style={styles.sectionTitle}>Select vehicle</Text></View>
-                <Text style={styles.sectionCount}>{vehicles.length} SAVED</Text>
-              </View>
-
-              <View style={styles.vehicleList}>
-                {vehicles.map((vehicle) => {
-                  const id = clean(vehicle?.id || vehicle?.vehicleId);
-                  const setupCount = vehicleSetupCounts.get(id)?.size || 0;
-                  return (
-                    <Pressable key={id} style={({ pressed }) => [styles.vehicleRow, pressed && styles.pressed]} onPress={() => selectVehicle(vehicle)}>
-                      <Text style={styles.vehicleNumber}>{String(vehicles.indexOf(vehicle) + 1).padStart(2, '0')}</Text>
-                      <View style={styles.vehicleIdentity}>
-                        <Text style={styles.vehicleName} numberOfLines={1}>{vehicle?.name || 'Unnamed vehicle'}</Text>
-                        <Text style={styles.vehicleMeta} numberOfLines={1}>{vehicleMeta(vehicle)}</Text>
-                      </View>
-                      <View style={styles.setupBadge}>
-                        <Text style={styles.setupBadgeValue}>{setupCount}</Text>
-                        <Text style={styles.setupBadgeLabel}>SETUPS</Text>
-                      </View>
-                      <Text style={styles.chevron}>›</Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-            </>
           ) : (
-            <>
-              <View style={styles.selectedSummary}>
-                <View style={styles.selectedSummaryText}>
-                  <Text style={styles.kicker}>SELECTED VEHICLE</Text>
-                  <Text style={styles.selectedVehicleName} numberOfLines={1}>{selectedVehicle?.name || 'Vehicle'}</Text>
-                  <Text style={styles.selectedVehicleMeta} numberOfLines={1}>{vehicleMeta(selectedVehicle)}</Text>
+            <View style={desktop ? desktopStyles.columns : undefined}>
+              {(desktop || !showVehicleTracks) && (
+                <View style={desktop ? desktopStyles.vehicles : undefined}>
+                  <View style={styles.sectionHeading}>
+                    <View>
+                      {!desktop && <Text style={styles.kicker}>GARAGE VEHICLES</Text>}
+                      <Text style={[styles.sectionTitle, desktopStyles.sectionTitle]}>{desktop ? 'Vehicles' : 'Select vehicle'}</Text>
+                    </View>
+                    {desktop && showVehicleTracks ? (
+                      <Pressable style={desktopStyles.add} accessibilityRole="button" onPress={() => router.push({ pathname: '/vehicles', params: { addVehicle: '1' } })}>
+                        <Text style={desktopStyles.link}>+ Vehicle</Text>
+                      </Pressable>
+                    ) : <Text style={[styles.sectionCount, desktop && desktopStyles.count]}>{vehicles.length} SAVED</Text>}
+                  </View>
+
+                  <View style={styles.vehicleList}>
+                    {vehicles.map((vehicle) => {
+                      const id = clean(vehicle?.id || vehicle?.vehicleId);
+                      const setupCount = vehicleSetupCounts.get(id)?.size || 0;
+                      return (
+                        <Pressable key={id} accessibilityRole="button" accessibilityState={{ selected: showVehicleTracks && selectedVehicleId === id }} style={({ pressed, hovered }) => [
+                          styles.vehicleRow,
+                          desktopStyles.vehicleRow,
+                          desktop && showVehicleTracks && selectedVehicleId === id && desktopStyles.selection,
+                          desktop && hovered && desktopStyles.hover,
+                          pressed && styles.pressed,
+                        ]} onPress={() => selectVehicle(vehicle)}>
+                          {!desktop && <Text style={styles.vehicleNumber}>{String(vehicles.indexOf(vehicle) + 1).padStart(2, '0')}</Text>}
+                          <View style={styles.vehicleIdentity}>
+                            <Text style={[styles.vehicleName, desktopStyles.name]} numberOfLines={1}>{vehicle?.name || 'Unnamed vehicle'}</Text>
+                            <Text style={[styles.vehicleMeta, desktopStyles.meta]} numberOfLines={1}>{vehicleMeta(vehicle)}</Text>
+                          </View>
+                          <View style={[styles.setupBadge, desktopStyles.badge]}>
+                            <Text style={[styles.setupBadgeValue, desktopStyles.badgeValue]}>{setupCount}</Text>
+                            <Text style={[styles.setupBadgeLabel, desktopStyles.badgeLabel]}>SETUPS</Text>
+                          </View>
+                          <Text style={styles.chevron}>›</Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
                 </View>
-                <View style={styles.setupCountBox}><Text style={styles.setupCountValue}>{selectedSetupCount}</Text><Text style={styles.setupCountLabel}>SETUPS</Text></View>
-              </View>
+              )}
+              {showVehicleTracks && (
+                <View style={desktop ? desktopStyles.tracks : undefined}>
+                  <View style={[styles.selectedSummary, desktopStyles.summary]}>
+                    <View style={styles.selectedSummaryText}>
+                      <Text style={styles.kicker}>SELECTED VEHICLE</Text>
+                      <Text style={[styles.selectedVehicleName, desktopStyles.summaryName]} numberOfLines={1}>{selectedVehicle?.name || 'Vehicle'}</Text>
+                      <Text style={[styles.selectedVehicleMeta, desktopStyles.meta]} numberOfLines={1}>{vehicleMeta(selectedVehicle)}</Text>
+                    </View>
+                    <View style={styles.setupCountBox}><Text style={styles.setupCountValue}>{selectedSetupCount}</Text><Text style={styles.setupCountLabel}>SETUPS</Text></View>
+                  </View>
 
-              <View style={[styles.manageRow, isTabletLandscape && styles.manageRowTabletLandscape]}>
-                <Pressable style={({ pressed }) => [styles.manageButton, isTabletLandscape && styles.manageButtonTabletLandscape, pressed && styles.pressed]} onPress={() => router.push('/tracks')}>
-                  <Text style={[styles.manageButtonText, isTabletLandscape && styles.manageButtonTextTabletLandscape]}>ALL TRACKS</Text>
-                </Pressable>
-                <Pressable style={({ pressed }) => [styles.manageButton, isTabletLandscape && styles.manageButtonTabletLandscape, pressed && styles.pressed]} onPress={addTrack}>
-                  <Text style={[styles.manageButtonText, isTabletLandscape && styles.manageButtonTextTabletLandscape]}>+ ADD TRACK</Text>
-                </Pressable>
-                <Pressable style={({ pressed }) => [styles.manageButton, styles.manageButtonPrimary, isTabletLandscape && styles.manageButtonTabletLandscape, pressed && styles.pressed]} onPress={addSetup}>
-                  <Text style={[styles.manageButtonText, styles.manageButtonTextPrimary, isTabletLandscape && styles.manageButtonTextTabletLandscape]}>+ ADD SETUP</Text>
-                </Pressable>
-              </View>
-
-              <View style={styles.sectionHeading}>
-                <View><Text style={styles.kicker}>SELECT TRACK</Text><Text style={styles.sectionTitle}>Tracks & setups</Text></View>
-                <Text style={styles.sectionCount}>{selectedSetupCount} SAVED</Text>
-              </View>
-
-              <View style={styles.trackList}>
-                {trackRows.map(({ track, trackId, setup }) => (
-                  <View key={trackId} style={[styles.trackRow, styles.trackRowWithSetup]}>
-                    <Pressable style={({ pressed }) => [styles.trackIdentity, pressed && styles.pressed]} onPress={() => openVehicleTrack(trackId)}>
-                      <Text style={styles.trackName} numberOfLines={1}>{getTrackDisplayName(track)}</Text>
-                      <Text style={styles.trackMeta} numberOfLines={1}>{trackMeta(track)}</Text>
-                      <Text style={[styles.trackStatus, styles.trackStatusSaved]}>{savedLabel(setup)}</Text>
+                  <View style={[styles.manageRow, isTabletLandscape && styles.manageRowTabletLandscape]}>
+                    <Pressable style={({ pressed }) => [styles.manageButton, isTabletLandscape && styles.manageButtonTabletLandscape, desktopStyles.action, pressed && styles.pressed]} onPress={() => router.push('/tracks')}>
+                      <Text style={[styles.manageButtonText, isTabletLandscape && styles.manageButtonTextTabletLandscape, desktopStyles.actionLabel]}>ALL TRACKS</Text>
                     </Pressable>
-                    <Pressable style={styles.copyAction} onPress={() => openCopySetup({ track, trackId, setup })}>
-                      <Text style={styles.copyActionText}>COPY</Text>
+                    <Pressable style={({ pressed }) => [styles.manageButton, isTabletLandscape && styles.manageButtonTabletLandscape, desktopStyles.action, pressed && styles.pressed]} onPress={addTrack}>
+                      <Text style={[styles.manageButtonText, isTabletLandscape && styles.manageButtonTextTabletLandscape, desktopStyles.actionLabel]}>+ ADD TRACK</Text>
                     </Pressable>
-                    <Pressable style={[styles.trackAction, styles.trackActionSaved]} onPress={() => openVehicleTrack(trackId)}>
-                      <Text style={[styles.trackActionText, styles.trackActionTextSaved]}>OPEN</Text>
+                    <Pressable style={({ pressed }) => [styles.manageButton, styles.manageButtonPrimary, isTabletLandscape && styles.manageButtonTabletLandscape, desktopStyles.action, pressed && styles.pressed]} onPress={addSetup}>
+                      <Text style={[styles.manageButtonText, styles.manageButtonTextPrimary, isTabletLandscape && styles.manageButtonTextTabletLandscape, desktopStyles.actionLabel]}>+ ADD SETUP</Text>
                     </Pressable>
                   </View>
-                ))}
-                {!trackRows.length ? (
-                  <View style={styles.emptyTracks}>
-                    <Text style={styles.emptyTitle}>No setups for this vehicle</Text>
-                    <Text style={styles.emptyCopy}>Use Add Setup to choose a track and create this car’s first setup.</Text>
+
+                  <View style={styles.sectionHeading}>
+                    <View>{!desktop && <Text style={styles.kicker}>SELECT TRACK</Text>}<Text style={[styles.sectionTitle, desktopStyles.sectionTitle]}>Tracks & setups</Text></View>
+                    <Text style={[styles.sectionCount, desktop && desktopStyles.count]}>{selectedSetupCount} SAVED</Text>
                   </View>
-                ) : null}
-              </View>
-            </>
+
+                  <View style={styles.trackList}>
+                    {trackRows.map(({ track, trackId, setup }) => (
+                      <View key={trackId} style={[styles.trackRow, styles.trackRowWithSetup, desktopStyles.trackRow]}>
+                        <Pressable style={({ pressed }) => [styles.trackIdentity, pressed && styles.pressed]} onPress={() => openVehicleTrack(trackId)}>
+                          <Text style={[styles.trackName, desktopStyles.name]} numberOfLines={1}>{getTrackDisplayName(track)}</Text>
+                          <Text style={[styles.trackMeta, desktopStyles.meta]} numberOfLines={1}>{trackMeta(track)}</Text>
+                          <Text style={[styles.trackStatus, styles.trackStatusSaved]}>{savedLabel(setup)}</Text>
+                        </Pressable>
+                        <Pressable style={[styles.copyAction, desktopStyles.action]} onPress={() => openCopySetup({ track, trackId, setup })}>
+                          <Text style={[styles.copyActionText, desktopStyles.actionLabel]}>COPY</Text>
+                        </Pressable>
+                        <Pressable style={[styles.trackAction, styles.trackActionSaved, desktopStyles.action]} onPress={() => openVehicleTrack(trackId)}>
+                          <Text style={[styles.trackActionText, styles.trackActionTextSaved, desktopStyles.actionLabel]}>OPEN</Text>
+                        </Pressable>
+                      </View>
+                    ))}
+                    {!trackRows.length ? (
+                      <View style={styles.emptyTracks}>
+                        <Text style={styles.emptyTitle}>No setups for this vehicle</Text>
+                        <Text style={[styles.emptyCopy, desktopStyles.meta]}>Use Add Setup to choose a track and create this car’s first setup.</Text>
+                      </View>
+                    ) : null}
+                  </View>
+                </View>
+              )}
+              {desktop && !showVehicleTracks && (
+                <View style={desktopStyles.tracks}>
+                  <Text style={desktopStyles.empty}>Choose a vehicle to browse its saved track setups.</Text>
+                </View>
+              )}
+            </View>
           )}
         </ScrollView>
 
@@ -448,4 +474,31 @@ const styles = StyleSheet.create({
   modalSecondaryText: { color: AppColors.mutedText, fontSize: 9, fontWeight: '900' },
   modalDisabled: { opacity: 0.45 },
   pressed: { opacity: 0.72 },
+});
+
+
+const desktopStyles = StyleSheet.create({
+  content: { maxWidth: DESKTOP_WORKSPACE_MAX_WIDTH, paddingHorizontal: 28, paddingBottom: 32 },
+  intro: { fontSize: 14, lineHeight: 20, paddingVertical: 14 },
+  columns: { flexDirection: 'row', gap: 24, alignItems: 'flex-start', marginTop: 14 },
+  vehicles: { flex: 1, minWidth: 0 },
+  tracks: { flex: 1.8, minWidth: 0 },
+  sectionTitle: { fontSize: 20 },
+  count: { fontSize: 11 },
+  name: { fontSize: 17 },
+  meta: { fontSize: 13, lineHeight: 18 },
+  vehicleRow: { minHeight: 65, paddingHorizontal: 10, gap: 10 },
+  selection: { backgroundColor: AppColors.primarySoft, borderLeftWidth: 2, borderLeftColor: AppColors.primary },
+  hover: { backgroundColor: AppColors.cardSoft },
+  badge: { borderWidth: 0, backgroundColor: 'transparent', height: 39 },
+  badgeValue: { fontSize: 16, lineHeight: 19 },
+  badgeLabel: { fontSize: 9, lineHeight: 13, color: AppColors.mutedText },
+  add: { minHeight: 36, paddingHorizontal: 8, justifyContent: 'center' },
+  link: { color: '#A6CDFF', fontSize: 13, fontWeight: '700' },
+  summary: { minHeight: 76, marginTop: 0, borderRadius: 9, paddingHorizontal: 14 },
+  summaryName: { fontSize: 22 },
+  trackRow: { minHeight: 76, borderLeftWidth: 0 },
+  action: { borderRadius: 6, minHeight: 44, paddingHorizontal: 8 },
+  actionLabel: { fontSize: 11, lineHeight: 15 },
+  empty: { color: AppColors.mutedText, fontSize: 15, lineHeight: 22, paddingVertical: 20 },
 });

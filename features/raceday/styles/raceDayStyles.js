@@ -206,9 +206,10 @@ export const raceDayStyles = StyleSheet.create({
     opacity: 0.9,
   },
   trackCard: {
+    borderRadius: 10,
     position: 'relative',
     overflow: 'hidden',
-    backgroundColor: raceDayColors.card,
+    backgroundColor: raceDayColors.panel,
     borderWidth: 1,
     borderColor: raceDayColors.border,
     borderRadius: 0,
@@ -1079,6 +1080,7 @@ export const raceDayStyles = StyleSheet.create({
     marginTop: 7,
   },
   raceVehicleCard: {
+    borderRadius: 12,
     position: 'relative',
     overflow: 'hidden',
     marginBottom: 8,
@@ -1087,7 +1089,7 @@ export const raceDayStyles = StyleSheet.create({
     paddingBottom: 2,
     borderWidth: 1,
     borderColor: raceDayColors.border,
-    backgroundColor: raceDayColors.card,
+    backgroundColor: raceDayColors.panel,
   },
   raceVehicleHeader: {
     minHeight: 50,
@@ -1138,7 +1140,7 @@ export const raceDayStyles = StyleSheet.create({
     padding: 10,
   },
   raceRunCardThin: {
-    backgroundColor: raceDayColors.panel,
+    backgroundColor: 'transparent',
     borderRadius: 0,
     borderTopWidth: 1,
     borderTopColor: raceDayColors.border,

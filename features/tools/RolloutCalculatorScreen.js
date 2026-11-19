@@ -3,6 +3,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
+import useViewport from '../../src/layout/useViewport';
 import {
   InfoText,
   Segmented,
@@ -68,12 +69,13 @@ function sameGear(cell, pinion, spur) {
   return Math.round(toNumber(pinion)) === cell?.pinion && Math.round(toNumber(spur)) === cell?.spur;
 }
 
-function CompactInput({ label, value, onChangeText, suffix, placeholder }) {
+function CompactInput({ label, value, onChangeText, suffix, placeholder, wide }) {
   return (
     <View style={styles.compactInputWrap}>
-      {!!label && <Text style={styles.compactLabel} numberOfLines={1}>{label}</Text>}
-      <View style={styles.compactInputRow}>
+      {!!label && <Text style={[styles.compactLabel, wide && styles.wideLabel]} numberOfLines={1}>{label}</Text>}
+      <View style={[styles.compactInputRow, wide && styles.wideInputRow]}>
         <TextInput
+          accessibilityLabel={label}
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
@@ -89,6 +91,8 @@ function CompactInput({ label, value, onChangeText, suffix, placeholder }) {
 }
 
 export default function RolloutCalculatorScreen(props) {
+  const { width } = useViewport();
+  const wide = width >= 1060;
   const [state, setState] = useState(DEFAULTS);
 
   useEffect(() => {
@@ -195,135 +199,154 @@ export default function RolloutCalculatorScreen(props) {
   const targetLabel = targetMode === 'fdr' ? 'Target FDR' : 'Target Rollout';
 
   return (
-    <ToolScaffold title="Rollout" subtitle="inches standard" onBack={() => goBack(props)}>
-      <ToolCard compact>
-        <ToolSectionTitle right={hasBase ? 'live' : 'enter setup'}>Results</ToolSectionTitle>
-        <View style={styles.resultGrid}>
-          <View style={[styles.resultBox, styles.mainResultBox]}>
-            <Text style={styles.boxLabel}>Rollout</Text>
-            <Text style={styles.boxValue}>{hasBase ? formatUnitValue(currentRollout, unit) : '—'}</Text>
-            <Text style={styles.boxSub}>{hasBase ? formatUnitValue(otherRollout, otherUnit) : 'Enter tire + gears'}</Text>
-          </View>
-          <View style={styles.resultBox}>
-            <Text style={styles.boxLabel}>FDR</Text>
-            <Text style={styles.boxValue}>{hasBase ? fmt(result.finalDriveRatio, 3) : '—'}</Text>
-            <Text style={styles.boxSub}>{hasBase ? `${fmt(result.gearRatio, 3)} gear` : ''}</Text>
-          </View>
-          <View style={styles.resultBox}>
-            <Text style={styles.boxLabel}>{targetLabel}</Text>
-            <Text style={styles.boxValue}>{targetMode === 'fdr' ? (targetFdr > 0 ? fmt(targetFdr, 3) : '—') : (targetMm > 0 ? formatUnitValue(targetDisplay, unit) : '—')}</Text>
-            <Text style={styles.boxSub}>{chartCenter.canBuild ? chartCenter.anchorLabel : 'Finder chart'}</Text>
-          </View>
-        </View>
-      </ToolCard>
-
-      <ToolCard compact>
-        <ToolSectionTitle>Inputs</ToolSectionTitle>
-        <Segmented
-          value={unit}
-          onChange={changeUnit}
-          options={[
-            { label: 'inch', value: 'in' },
-            { label: 'mm', value: 'mm' },
-          ]}
-        />
-        <View style={styles.row}>
-          <View style={styles.col}><CompactInput label="Tire Dia" value={state.tireDiameter} onChangeText={(v) => setField('tireDiameter', v)} suffix={unitLabel} /></View>
-          <View style={styles.col}><CompactInput label="Internal" value={state.internalRatio} onChangeText={(v) => setField('internalRatio', v)} suffix=":1" /></View>
-        </View>
-        <View style={styles.row}>
-          <View style={styles.col}><CompactInput label="Pinion" value={state.pinion} onChangeText={(v) => setField('pinion', v)} suffix="T" /></View>
-          <View style={styles.col}><CompactInput label="Spur" value={state.spur} onChangeText={(v) => setField('spur', v)} suffix="T" /></View>
-        </View>
-        <Text style={styles.targetModeLabel}>CHART TARGET</Text>
-        <Segmented
-          value={targetMode}
-          onChange={(value) => setField('targetMode', value)}
-          options={[
-            { label: 'Target Rollout', value: 'rollout' },
-            { label: 'Target FDR', value: 'fdr' },
-          ]}
-        />
-        <View style={styles.targetFinderRow}>
-          <View style={styles.targetInputCol}>
-            {targetMode === 'fdr' ? (
-              <CompactInput label="Target FDR" value={state.targetFdr} onChangeText={(v) => setField('targetFdr', v)} suffix=":1" placeholder="ex: 3.500" />
-            ) : (
-              <CompactInput label="Target Rollout" value={state.targetRollout} onChangeText={(v) => setField('targetRollout', v)} suffix={unitLabel} placeholder={`ex: ${unit === 'in' ? '1.000' : '25.40'}`} />
-            )}
-          </View>
-        </View>
-        {!hasTargetInputs && (
-          <InfoText numberOfLines={2}>
-            {targetMode === 'fdr'
-              ? 'Enter internal ratio, target FDR, and at least the current spur or pinion. Spur is used first when both are entered.'
-              : 'Enter tire diameter, internal ratio, target rollout, and at least the current spur or pinion. Spur is used first when both are entered.'}
-          </InfoText>
-        )}
-      </ToolCard>
-
-      <ToolCard compact style={styles.chartCard}>
-        <ToolSectionTitle right={chartCenter.anchorLabel}>{targetMode === 'fdr' ? 'Target FDR Chart' : 'Target Rollout Chart'}</ToolSectionTitle>
-        <View style={styles.compactTargetRow}>
-          <Text style={styles.compactTargetLabel}>{hasTarget ? 'Closest' : 'Chart'}</Text>
-          <Text style={styles.compactTargetValue} numberOfLines={1}>
-            {bestCell
-              ? `${bestCell.pinion}T / ${bestCell.spur}T · ${chartValue(bestCell)} · Δ ${bestDelta >= 0 ? '+' : ''}${fmt(bestDelta, targetMode === 'fdr' ? 3 : unitPlaces(unit))}${targetMode === 'fdr' ? '' : ` ${unitLabel}`}`
-              : chartCenter.canBuild
-                ? `${chartCenter.centerPinion}T / ${chartCenter.centerSpur}T · enter a target to highlight the closest gear`
-                : 'Enter tire diameter, internal ratio, pinion, and spur to build the chart'}
-          </Text>
-        </View>
-
-        {!!chart.rows.length ? (
-          <>
-            <View style={styles.matrixHeader}>
-              <Text style={styles.matrixPinionHeader}>P/S</Text>
-              {chart.spurs.map((spur) => (
-                <Text key={spur} style={styles.matrixHeadCell}>{spur}T</Text>
-              ))}
+    <ToolScaffold title="Rollout" subtitle="inches standard" onBack={() => goBack(props)} contentStyle={wide && styles.wideContent}>
+      <View style={wide && styles.wideWorkspace}>
+        <View style={[styles.controls, wide && styles.wideControls]}>
+          <ToolCard compact={!wide} style={styles.wideCard}>
+            <ToolSectionTitle right={hasBase ? 'live' : 'enter setup'}>Results</ToolSectionTitle>
+            <View style={styles.resultGrid}>
+              <View style={[styles.resultBox, styles.mainResultBox]}>
+                <Text style={styles.boxLabel}>Rollout</Text>
+                <Text style={styles.boxValue}>{hasBase ? formatUnitValue(currentRollout, unit) : '—'}</Text>
+                <Text style={styles.boxSub}>{hasBase ? formatUnitValue(otherRollout, otherUnit) : 'Enter tire + gears'}</Text>
+              </View>
+              <View style={styles.resultBox}>
+                <Text style={styles.boxLabel}>FDR</Text>
+                <Text style={styles.boxValue}>{hasBase ? fmt(result.finalDriveRatio, 3) : '—'}</Text>
+                <Text style={styles.boxSub}>{hasBase ? `${fmt(result.gearRatio, 3)} gear` : ''}</Text>
+              </View>
+              <View style={styles.resultBox}>
+                <Text style={styles.boxLabel}>{targetLabel}</Text>
+                <Text style={styles.boxValue}>{targetMode === 'fdr' ? (targetFdr > 0 ? fmt(targetFdr, 3) : '—') : (targetMm > 0 ? formatUnitValue(targetDisplay, unit) : '—')}</Text>
+                <Text style={styles.boxSub}>{chartCenter.canBuild ? chartCenter.anchorLabel : 'Finder chart'}</Text>
+              </View>
             </View>
-            {chart.rows.map((row) => {
-              const currentPinion = Math.round(toNumber(state.pinion)) === row.pinion;
-              return (
-                <View key={row.pinion} style={[styles.matrixRow, currentPinion && styles.currentMatrixRow]}>
-                  <Text style={[styles.matrixPinion, currentPinion && styles.currentText]}>{row.pinion}T</Text>
-                  {row.cells.map((cell) => {
-                    const currentCell = sameGear(cell, state.pinion, state.spur);
-                    const targetCell = bestCell && cell.pinion === bestCell.pinion && cell.spur === bestCell.spur;
-                    return (
-                      <Text
-                        key={`${cell.pinion}-${cell.spur}`}
-                        style={[
-                          styles.matrixCell,
-                          currentCell && styles.currentCell,
-                          targetCell && styles.targetCell,
-                        ]}
-                      >
-                        {chartValue(cell)}{targetCell ? '*' : ''}
-                      </Text>
-                    );
-                  })}
-                </View>
-              );
-            })}
-            <Text style={styles.chartNote}>
-              {hasTarget
-                ? `* closest target ${targetMode === 'fdr' ? 'FDR' : 'rollout'}. Current gearing is softly highlighted.`
-                : `Chart displays ${targetMode === 'fdr' ? 'FDR' : `rollout in ${unitLabel}`}. Current gearing is softly highlighted.`}
-            </Text>
-          </>
-        ) : (
-          <InfoText>Complete the gearing inputs above to populate the chart.</InfoText>
-        )}
-      </ToolCard>
+          </ToolCard>
 
-      <ToolButton label="Reset" secondary onPress={() => setState(DEFAULTS)} />
+          <ToolCard compact={!wide} style={styles.wideCard}>
+            <ToolSectionTitle>Inputs</ToolSectionTitle>
+            <Segmented
+              value={unit}
+              onChange={changeUnit}
+              options={[
+                { label: 'inch', value: 'in' },
+                { label: 'mm', value: 'mm' },
+              ]}
+            />
+            <View style={styles.row}>
+              <View style={styles.col}><CompactInput wide={wide} label="Tire Dia" value={state.tireDiameter} onChangeText={(v) => setField('tireDiameter', v)} suffix={unitLabel} /></View>
+              <View style={styles.col}><CompactInput wide={wide} label="Internal" value={state.internalRatio} onChangeText={(v) => setField('internalRatio', v)} suffix=":1" /></View>
+            </View>
+            <View style={styles.row}>
+              <View style={styles.col}><CompactInput wide={wide} label="Pinion" value={state.pinion} onChangeText={(v) => setField('pinion', v)} suffix="T" /></View>
+              <View style={styles.col}><CompactInput wide={wide} label="Spur" value={state.spur} onChangeText={(v) => setField('spur', v)} suffix="T" /></View>
+            </View>
+            <Text style={styles.targetModeLabel}>CHART TARGET</Text>
+            <Segmented
+              value={targetMode}
+              onChange={(value) => setField('targetMode', value)}
+              options={[
+                { label: 'Target Rollout', value: 'rollout' },
+                { label: 'Target FDR', value: 'fdr' },
+              ]}
+            />
+            <View style={styles.targetFinderRow}>
+              <View style={styles.targetInputCol}>
+                {targetMode === 'fdr' ? (
+                  <CompactInput wide={wide} label="Target FDR" value={state.targetFdr} onChangeText={(v) => setField('targetFdr', v)} suffix=":1" placeholder="ex: 3.500" />
+                ) : (
+                  <CompactInput wide={wide} label="Target Rollout" value={state.targetRollout} onChangeText={(v) => setField('targetRollout', v)} suffix={unitLabel} placeholder={`ex: ${unit === 'in' ? '1.000' : '25.40'}`} />
+                )}
+              </View>
+            </View>
+            {!hasTargetInputs && (
+              <InfoText numberOfLines={2}>
+                {targetMode === 'fdr'
+                  ? 'Enter internal ratio, target FDR, and at least the current spur or pinion. Spur is used first when both are entered.'
+                  : 'Enter tire diameter, internal ratio, target rollout, and at least the current spur or pinion. Spur is used first when both are entered.'}
+              </InfoText>
+            )}
+          </ToolCard>
+
+          {wide && <ToolButton label="Reset" secondary onPress={() => setState(DEFAULTS)} />}
+        </View>
+
+        <ToolCard compact={!wide} style={[styles.chartCard, styles.wideCard, wide && styles.wideChart]}>
+          <ToolSectionTitle right={chartCenter.anchorLabel}>{targetMode === 'fdr' ? 'Target FDR Chart' : 'Target Rollout Chart'}</ToolSectionTitle>
+          <View style={styles.compactTargetRow}>
+            <Text style={styles.compactTargetLabel}>{hasTarget ? 'Closest' : 'Chart'}</Text>
+            <Text style={[styles.compactTargetValue, wide && styles.wideTargetValue]} numberOfLines={wide ? 2 : 1}>
+              {bestCell
+                ? `${bestCell.pinion}T / ${bestCell.spur}T · ${chartValue(bestCell)} · Δ ${bestDelta >= 0 ? '+' : ''}${fmt(bestDelta, targetMode === 'fdr' ? 3 : unitPlaces(unit))}${targetMode === 'fdr' ? '' : ` ${unitLabel}`}`
+                : chartCenter.canBuild
+                  ? `${chartCenter.centerPinion}T / ${chartCenter.centerSpur}T · enter a target to highlight the closest gear`
+                  : 'Enter tire diameter, internal ratio, pinion, and spur to build the chart'}
+            </Text>
+          </View>
+
+          {!!chart.rows.length ? (
+            <>
+              <View style={styles.matrixHeader}>
+                <Text style={styles.matrixPinionHeader}>P/S</Text>
+                {chart.spurs.map((spur) => (
+                  <Text key={spur} style={styles.matrixHeadCell}>{spur}T</Text>
+                ))}
+              </View>
+              {chart.rows.map((row) => {
+                const currentPinion = Math.round(toNumber(state.pinion)) === row.pinion;
+                return (
+                  <View key={row.pinion} style={[styles.matrixRow, wide && styles.wideMatrixRow, currentPinion && styles.currentMatrixRow]}>
+                    <Text style={[styles.matrixPinion, currentPinion && styles.currentText]}>{row.pinion}T</Text>
+                    {row.cells.map((cell) => {
+                      const currentCell = sameGear(cell, state.pinion, state.spur);
+                      const targetCell = bestCell && cell.pinion === bestCell.pinion && cell.spur === bestCell.spur;
+                      return (
+                        <Text
+                          key={`${cell.pinion}-${cell.spur}`}
+                          style={[
+                            styles.matrixCell,
+                            wide && styles.wideMatrixCell,
+                            currentCell && styles.currentCell,
+                            targetCell && styles.targetCell,
+                          ]}
+                        >
+                          {chartValue(cell)}{targetCell ? '*' : ''}
+                        </Text>
+                      );
+                    })}
+                  </View>
+                );
+              })}
+              <Text style={[styles.chartNote, wide && styles.wideNote]}>
+                {hasTarget
+                  ? `* closest target ${targetMode === 'fdr' ? 'FDR' : 'rollout'}. Current gearing is softly highlighted.`
+                  : `Chart displays ${targetMode === 'fdr' ? 'FDR' : `rollout in ${unitLabel}`}. Current gearing is softly highlighted.`}
+              </Text>
+            </>
+          ) : (
+            <InfoText>Complete the gearing inputs above to populate the chart.</InfoText>
+          )}
+        </ToolCard>
+
+      </View>
+      {!wide && <ToolButton label="Reset" secondary onPress={() => setState(DEFAULTS)} />}
     </ToolScaffold>
   );
 }
 
 const styles = StyleSheet.create({
+  controls: { gap: 7 },
+  wideContent: { paddingTop: 18, paddingHorizontal: 28 },
+  wideWorkspace: { flexDirection: 'row', alignItems: 'flex-start', gap: 16 },
+  wideControls: { flex: 4, minWidth: 0, gap: 12 },
+  wideCard: { borderRadius: 12, padding: 14 },
+  wideChart: { flex: 7, minWidth: 0, borderRadius: 12, padding: 14 },
+  wideLabel: { fontSize: 12 },
+  wideInputRow: { minHeight: 43 },
+  wideTargetValue: { fontSize: 13 },
+  wideMatrixRow: { minHeight: 42 },
+  wideMatrixCell: { fontSize: 14, fontVariant: ['tabular-nums'] },
+  wideNote: { fontSize: 12, marginTop: 10 },
   row: { flexDirection: 'row', gap: 7, marginBottom: 1 },
   col: { flex: 1 },
   chartCard: { paddingHorizontal: 7, paddingVertical: 8 },

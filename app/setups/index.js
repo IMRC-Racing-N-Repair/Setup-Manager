@@ -3,6 +3,7 @@ import { ActivityIndicator, Alert, Modal, Platform, Pressable, RefreshControl, S
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import StableSafeAreaView from '../../src/layout/StableSafeAreaView';
 import AppScreenHeader from '../../src/layout/AppScreenHeader';
+import SetupPreview from '../../features/setups/components/SetupPreview';
 import SelectorCard from '../../features/setups/components/SelectorCard';
 import {
   ensureTrackForImportedSetup,
@@ -416,6 +417,7 @@ export default function SetupsIndexScreen() {
   const [vehicles, setVehicles] = useState([]);
   const [tracks, setTracks] = useState([]);
   const [lastViewedSetup, setLastViewedSetupState] = useState(null);
+  const [previewSetupKey, setPreviewSetupKey] = useState('');
   const [selectedVehicleId, setSelectedVehicleId] = useState(null);
   const [selectedTrackId, setSelectedTrackId] = useState(null);
   const [transferBusy, setTransferBusy] = useState(false);
@@ -831,6 +833,21 @@ export default function SetupsIndexScreen() {
           </View>
         ) : (
           <>
+        {canCreate && !selectedVehicle && lastOpened?.setup && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Reopen last setup"
+            style={({ pressed }) => [setupBrowserStyles.selectedSummary, pressed && setupBrowserStyles.pressed]}
+            onPress={() => router.push(`/setups/editor/${lastOpened.trackId}/${lastOpened.vehicleId}?returnTo=setups`)}
+          >
+            <View style={setupBrowserStyles.selectedSummaryText}>
+              <Text style={setupBrowserStyles.kicker}>LAST OPENED SETUP</Text>
+              <Text style={setupBrowserStyles.vehicleName}>{lastOpened.vehicleName}</Text>
+              <Text style={setupBrowserStyles.vehicleMeta}>{lastOpened.trackName}</Text>
+            </View>
+            <Text style={setupBrowserStyles.chevron}>›</Text>
+          </Pressable>
+        )}
         {!canCreate ? (
           <View style={setupBrowserStyles.emptyPanel}>
             <Text style={setupBrowserStyles.emptyTitle}>Vehicles and tracks required</Text>
@@ -881,17 +898,25 @@ export default function SetupsIndexScreen() {
               </View>
             ) : (
               <View style={setupBrowserStyles.trackList}>
-                {selectedVehicleTrackRows.map((row) => (
-                  <View key={`${row.trackId}_${row.vehicleId}`} style={setupBrowserStyles.trackRow}>
-                    <Pressable style={({ pressed }) => [setupBrowserStyles.trackIdentity, pressed && setupBrowserStyles.pressed]} onPress={() => router.push(`/setups/editor/${row.trackId}/${row.vehicleId}?returnTo=setups&returnVehicleId=${encodeURIComponent(row.vehicleId)}`)}>
-                      <Text style={setupBrowserStyles.trackName} numberOfLines={1}>{getTrackDisplayName(row.track)}</Text>
-                      <Text style={setupBrowserStyles.trackMeta} numberOfLines={1}>{getTrackTypeDisplay(row.track)}</Text>
-                      <Text style={setupBrowserStyles.trackStatus}>Saved {formatDate(row.setup?.savedAt || row.setup?.updatedAt)}</Text>
-                    </Pressable>
-                    <Pressable style={setupBrowserStyles.copyButton} onPress={() => openCopyPrompt(row)}><Text style={setupBrowserStyles.copyText}>COPY</Text></Pressable>
-                    <Pressable style={setupBrowserStyles.openButton} onPress={() => router.push(`/setups/editor/${row.trackId}/${row.vehicleId}?returnTo=setups&returnVehicleId=${encodeURIComponent(row.vehicleId)}`)}><Text style={setupBrowserStyles.openText}>OPEN</Text></Pressable>
-                  </View>
-                ))}
+                {selectedVehicleTrackRows.map((row) => {
+                  const rowKey = `${row.trackId}_${row.vehicleId}`;
+                  const expanded = previewSetupKey === rowKey;
+                  const openSetup = () => router.push(`/setups/editor/${row.trackId}/${row.vehicleId}?returnTo=setups&returnVehicleId=${encodeURIComponent(row.vehicleId)}`);
+                  return (
+                    <View key={rowKey}>
+                        <View style={setupBrowserStyles.trackRow}>
+                          <Pressable style={({ pressed }) => [setupBrowserStyles.trackIdentity, pressed && setupBrowserStyles.pressed]} onPress={() => setPreviewSetupKey(expanded ? '' : rowKey)} accessibilityRole="button" accessibilityState={{ expanded }}>
+                            <Text style={setupBrowserStyles.trackName} numberOfLines={1}>{getTrackDisplayName(row.track)}</Text>
+                            <Text style={setupBrowserStyles.trackMeta} numberOfLines={1}>{getTrackTypeDisplay(row.track)}</Text>
+                            <Text style={setupBrowserStyles.trackStatus}>Saved {formatDate(row.setup?.savedAt || row.setup?.updatedAt)}</Text>
+                          </Pressable>
+                          <Pressable style={setupBrowserStyles.copyButton} onPress={() => openCopyPrompt(row)}><Text style={setupBrowserStyles.copyText}>COPY</Text></Pressable>
+                          <Pressable style={setupBrowserStyles.openButton} onPress={openSetup}><Text style={setupBrowserStyles.openText}>OPEN</Text></Pressable>
+                        </View>
+                      {expanded && <SetupPreview row={row} onOpen={openSetup} />}
+                    </View>
+                  );
+                })}
               </View>
             )}
           </>
@@ -950,7 +975,7 @@ const setupBrowserStyles = StyleSheet.create({
   fullWidthTabletLandscape: { maxWidth: '100%', paddingHorizontal: 22 },
   introRow: { minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, borderBottomWidth: 1, borderBottomColor: AppColors.border },
   introText: { flex: 1, color: AppColors.mutedText, fontSize: 10, lineHeight: 15 },
-  importButton: { minHeight: 28, justifyContent: 'center', paddingHorizontal: 9, borderWidth: 1, borderColor: AppColors.borderStrong },
+  importButton: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 9, borderWidth: 1, borderColor: AppColors.borderStrong },
   importText: { color: AppColors.primary, fontSize: 8, fontWeight: '900', letterSpacing: 0.45 },
   scrollContent: { width: '100%', maxWidth: 860, alignSelf: 'center', paddingHorizontal: 15, paddingBottom: 92 },
   loadingCard: { minHeight: 100, alignItems: 'center', justifyContent: 'center', gap: 8 },
@@ -959,34 +984,34 @@ const setupBrowserStyles = StyleSheet.create({
   sectionTitle: { marginTop: 2, color: AppColors.textStrong, fontSize: 18, fontWeight: '900' },
   sectionCount: { color: AppColors.mutedText, fontSize: 8, fontWeight: '900', letterSpacing: 0.5 },
   vehicleList: { borderTopWidth: 1, borderTopColor: AppColors.borderStrong },
-  vehicleRow: { minHeight: 56, flexDirection: 'row', alignItems: 'center', gap: 9, paddingHorizontal: 8, borderBottomWidth: 1, borderBottomColor: AppColors.border },
-  vehicleNumber: { width: 24, color: AppColors.subtleText, fontSize: 9, fontWeight: '800' },
+  vehicleRow: { minHeight: 64, flexDirection: 'row', alignItems: 'center', gap: 9, paddingHorizontal: 8, borderBottomWidth: 1, borderBottomColor: AppColors.border },
+  vehicleNumber: { width: 24, color: AppColors.subtleText, fontSize: 11, fontWeight: '800' },
   vehicleIdentity: { flex: 1, minWidth: 0 },
-  vehicleName: { color: AppColors.textStrong, fontSize: 14, fontWeight: '900' },
-  vehicleMeta: { marginTop: 2, color: AppColors.mutedText, fontSize: 9 },
-  setupBadge: { width: 54, height: 29, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(47,140,255,0.70)', backgroundColor: 'rgba(47,140,255,0.12)' },
+  vehicleName: { color: AppColors.textStrong, fontSize: 16, fontWeight: '900' },
+  vehicleMeta: { marginTop: 2, color: AppColors.mutedText, fontSize: 11 },
+  setupBadge: { width: 54, height: 34, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(47,140,255,0.70)', backgroundColor: 'rgba(47,140,255,0.12)' },
   setupBadgeValue: { color: AppColors.textStrong, fontSize: 10, lineHeight: 11, fontWeight: '900' },
-  setupBadgeLabel: { color: AppColors.primary, fontSize: 5, lineHeight: 6, fontWeight: '900', letterSpacing: 0.4 },
+  setupBadgeLabel: { color: AppColors.primary, fontSize: 8, lineHeight: 10, fontWeight: '900', letterSpacing: 0.4 },
   chevron: { color: AppColors.primary, fontSize: 21 },
-  selectedSummary: { minHeight: 66, flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 12, paddingLeft: 11, borderLeftWidth: 2, borderLeftColor: AppColors.primary, backgroundColor: AppColors.card },
+  selectedSummary: { minHeight: 66, flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 12, paddingLeft: 11, borderLeftWidth: 2, borderLeftColor: AppColors.primary, backgroundColor: AppColors.surface, borderRadius: 9, paddingRight: 10 },
   selectedSummaryText: { flex: 1, minWidth: 0 },
   selectedVehicleName: { marginTop: 2, color: AppColors.textStrong, fontSize: 17, fontWeight: '900' },
-  selectedVehicleMeta: { marginTop: 2, color: AppColors.mutedText, fontSize: 9 },
+  selectedVehicleMeta: { marginTop: 2, color: AppColors.mutedText, fontSize: 11 },
   setupCountBox: { minWidth: 62, alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center', borderLeftWidth: 1, borderLeftColor: AppColors.border },
   setupCountValue: { color: AppColors.primary, fontSize: 21, fontWeight: '900' },
-  setupCountLabel: { marginTop: 1, color: AppColors.mutedText, fontSize: 7, fontWeight: '900', letterSpacing: 0.6 },
-  addSetupButton: { minHeight: 34, justifyContent: 'center', paddingHorizontal: 10, backgroundColor: AppColors.primary },
-  addSetupText: { color: '#FFFFFF', fontSize: 9, fontWeight: '900', letterSpacing: 0.4 },
+  setupCountLabel: { marginTop: 1, color: AppColors.mutedText, fontSize: 10, fontWeight: '900', letterSpacing: 0.6 },
+  addSetupButton: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 10, backgroundColor: AppColors.primary },
+  addSetupText: { color: '#FFFFFF', fontSize: 11, fontWeight: '900', letterSpacing: 0.4 },
   trackList: { borderTopWidth: 1, borderTopColor: AppColors.borderStrong },
   trackRow: { minHeight: 68, flexDirection: 'row', alignItems: 'center', gap: 7, paddingVertical: 8, paddingLeft: 10, borderLeftWidth: 2, borderLeftColor: AppColors.primary, borderBottomWidth: 1, borderBottomColor: AppColors.border },
   trackIdentity: { flex: 1, minWidth: 0 },
-  trackName: { color: AppColors.textStrong, fontSize: 14, fontWeight: '900' },
-  trackMeta: { marginTop: 2, color: AppColors.mutedText, fontSize: 9 },
+  trackName: { color: AppColors.textStrong, fontSize: 16, fontWeight: '900' },
+  trackMeta: { marginTop: 2, color: AppColors.mutedText, fontSize: 11 },
   trackStatus: { marginTop: 4, color: AppColors.primary, fontSize: 8, fontWeight: '800' },
-  copyButton: { minWidth: 44, minHeight: 30, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: AppColors.borderStrong },
-  copyText: { color: AppColors.mutedText, fontSize: 7, fontWeight: '900' },
-  openButton: { minWidth: 52, minHeight: 30, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: AppColors.primary, backgroundColor: AppColors.primarySoft },
-  openText: { color: AppColors.primary, fontSize: 7, fontWeight: '900' },
+  copyButton: { borderRadius: 6, minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: AppColors.borderStrong },
+  copyText: { color: AppColors.mutedText, fontSize: 10, fontWeight: '900' },
+  openButton: { borderRadius: 6, minWidth: 52, minHeight: 44, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: AppColors.primary, backgroundColor: AppColors.primarySoft },
+  openText: { color: AppColors.primary, fontSize: 10, fontWeight: '900' },
   emptyPanel: { marginTop: 18, padding: 14, borderWidth: 1, borderColor: AppColors.border, backgroundColor: AppColors.card },
   emptyTitle: { color: AppColors.textStrong, fontSize: 15, fontWeight: '900' },
   emptyCopy: { marginTop: 4, color: AppColors.mutedText, fontSize: 10, lineHeight: 15 },

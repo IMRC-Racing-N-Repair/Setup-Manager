@@ -30,6 +30,8 @@ export default function NewLookBottomNav({ active = 'home', router, onRaceDay, b
       {items.map((item) => (
         <Pressable
           key={item.key}
+          accessibilityRole="tab"
+          accessibilityState={{ selected: active === item.key }}
           style={({ pressed }) => [
             styles.navItem,
             compact && styles.navItemCompact,
@@ -71,13 +73,13 @@ const styles = StyleSheet.create({
   navItem: { flex: 1, minHeight: 52, alignItems: 'center', justifyContent: 'center', gap: 2 },
   navItemCompact: { minHeight: 44 },
   navItemTabletLandscape: { minHeight: 52, gap: 2 },
-  navItemActive: { backgroundColor: AppColors.surface },
+  navItemActive: { backgroundColor: AppColors.primarySoft, borderRadius: 8 },
   navGlyph: { color: AppColors.mutedText, fontSize: 18 },
   navGlyphCompact: { fontSize: 15 },
-  navGlyphTabletLandscape: { fontSize: 20, lineHeight: 22, transform: [{ translateY: -8 }] },
-  navLabel: { color: AppColors.mutedText, fontSize: 8, fontWeight: '700' },
-  navLabelCompact: { fontSize: 7 },
-  navLabelTabletLandscape: { fontSize: 9, lineHeight: 11, fontWeight: '800', transform: [{ translateY: -8 }] },
+  navGlyphTabletLandscape: { fontSize: 20, lineHeight: 22 },
+  navLabel: { color: AppColors.mutedText, fontSize: 11, fontWeight: '700' },
+  navLabelCompact: { fontSize: 10 },
+  navLabelTabletLandscape: { fontSize: 9, lineHeight: 11, fontWeight: '800' },
   navTextActive: { color: AppColors.primary },
   pressed: { opacity: 0.72 },
 });

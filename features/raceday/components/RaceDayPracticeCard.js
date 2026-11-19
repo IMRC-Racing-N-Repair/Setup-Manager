@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { getVehicleDisplayName } from '../lib/raceDayModel';
-import { raceDayColors, raceDayStyles } from '../styles/raceDayStyles';
+import { RaceDayVehicleCardFrame } from './RaceDayVehicleCard';
+import { raceDayColors } from '../styles/raceDayStyles';
 
 function clean(value) {
   if (value === undefined || value === null || value === '') return '—';
@@ -27,26 +27,14 @@ function Stat({ label, value }) {
 }
 
 export default function RaceDayPracticeCard({ vehicle, summary = {}, onOpenSessions, onOpenSetup }) {
-  const vehicleName = getVehicleDisplayName(vehicle || {});
   const runCount = summary?.runCount || 0;
   const latest = summary?.latestSession || null;
   const hasSessions = runCount > 0;
 
-  return (
-    <View style={[raceDayStyles.card, raceDayStyles.dashboardCardCompact]}>
-      <View style={raceDayStyles.cardAccent} />
-      <View style={styles.headerRow}>
-        <View style={raceDayStyles.flex1}>
-          <Text style={raceDayStyles.cardTitle}>{vehicleName}</Text>
-          <Text style={raceDayStyles.cardSub} numberOfLines={1}>
-            Practice Summary • {runCount} run{runCount === 1 ? '' : 's'} • {summary?.totalLaps || 0} laps
-          </Text>
-        </View>
-        <TouchableOpacity style={styles.wrenchButton} onPress={onOpenSetup} activeOpacity={0.82}>
-          <Text style={styles.wrenchText}>Wrench</Text>
-        </TouchableOpacity>
-      </View>
+  const subtitle = `Practice Summary • ${runCount} run${runCount === 1 ? '' : 's'} • ${summary?.totalLaps || 0} laps`;
 
+  return (
+    <RaceDayVehicleCardFrame vehicle={vehicle} onOpenSetup={onOpenSetup} subtitle={subtitle}>
       {hasSessions ? (
         <>
           <View style={styles.sectionHeaderRow}>
@@ -73,34 +61,13 @@ export default function RaceDayPracticeCard({ vehicle, summary = {}, onOpenSessi
       <TouchableOpacity style={styles.sessionsButton} onPress={onOpenSessions} activeOpacity={0.82}>
         <Text style={styles.sessionsButtonText}>View Practice Sessions</Text>
       </TouchableOpacity>
-    </View>
+    </RaceDayVehicleCardFrame>
   );
 }
 
 export { RaceDayPracticeCard };
 
 const styles = StyleSheet.create({
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    gap: 10,
-  },
-  wrenchButton: {
-    minHeight: 32,
-    paddingHorizontal: 10,
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: raceDayColors.border,
-    backgroundColor: raceDayColors.cardAlt,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  wrenchText: {
-    color: raceDayColors.text,
-    fontSize: 11,
-    fontWeight: '900',
-  },
   sectionHeaderRow: {
     marginTop: 12,
     flexDirection: 'row',

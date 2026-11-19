@@ -5,6 +5,7 @@ import {
   normalizeLiveRcPracticeSiteUrl,
   normalizePracticeUrl,
 } from './liveRcPracticeUrls';
+import { fetchLiveRcText } from './liveRcClient';
 
 function decodeHtml(value = '') {
   return String(value || '')
@@ -189,17 +190,6 @@ export async function findPracticeDays(siteUrl = '', { limit = 30, monthKey = ''
 
   const practiceUrl = monthKey ? getPracticeMonthCalendarUrl(normalized, monthKey) : getPracticeUrl(normalized);
   console.log('[IMRC RaceDay Practice] findPracticeDays URL', { practiceUrl, monthKey, siteUrl: normalized });
-  const response = await fetch(practiceUrl, {
-    method: 'GET',
-    headers: {
-      Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`LiveRC practice page failed to load (${response.status}) at ${practiceUrl}`);
-  }
-
-  const html = await response.text();
+  const html = await fetchLiveRcText(practiceUrl);
   return parsePracticeDaysFromHtml(html, normalized, { limit });
 }

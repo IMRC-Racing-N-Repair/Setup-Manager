@@ -224,24 +224,39 @@ export async function getPracticeSummariesForVehicles(raceDayId, vehicles = [], 
 }
 
 export async function upsertRaceDayPracticeSession(raceDayId, vehicleId, session = {}) {
+  const [saved] = await appendRaceDayPracticeSessions(raceDayId, vehicleId || session.vehicleId, [session]);
+  return saved || null;
+}
+
+export async function appendRaceDayPracticeSessions(raceDayId, vehicleId, sessions = []) {
   const id = keySafe(raceDayId);
-  const vId = normalizeId(vehicleId || session.vehicleId);
-  if (!id || !vId) return null;
+  const vId = normalizeId(vehicleId);
+  const list = (Array.isArray(sessions) ? sessions : [sessions]).filter(Boolean);
+  if (!id || !vId || !list.length) return [];
 
   const bundle = await getRaceDayPractice(id);
   const existingBucket = bundle.vehicles?.[vId] || { vehicleId: vId, sessions: [] };
-  const nextSession = normalizePracticeSession(session, {
-    raceDayId: id,
-    vehicleId: vId,
-    practiceDayKey: session.practiceDayKey || session.dayKey || '',
-    practiceDayLabel: session.practiceDayLabel || session.dayLabel || '',
-    practiceUrl: session.practiceUrl || '',
+  const existingSessions = Array.isArray(existingBucket.sessions) ? [...existingBucket.sessions] : [];
+  const saved = list.map((session) => {
+    const index = existingSessions.findIndex((item) => item.id === session.id || (
+      session.detailUrl && !item.detailUrl && item.source === 'liverc-practice'
+        && item.practiceDayKey === session.practiceDayKey && item.transponder === session.transponder
+        && item.startedAt === session.startedAt
+    ));
+    const previous = existingSessions[index];
+    const previousLaps = previous?.laps?.length ? previous.laps : previous?.stats?.laps || [];
+    const incoming = { ...previous, ...session };
+    if (session.detailStatus && session.detailStatus !== 'complete' && previousLaps.length) {
+      const byNumber = new Map(previousLaps.map((lap) => [Number(lap.lapNumber), lap]));
+      for (const lap of session.laps || []) byNumber.set(lap.lapNumber, lap);
+      incoming.laps = Array.from(byNumber.values()).sort((a, b) => a.lapNumber - b.lapNumber);
+    }
+    const next = normalizePracticeSession(incoming, { raceDayId: id, vehicleId: vId });
+    if (index >= 0) existingSessions[index] = next;
+    else existingSessions.push(next);
+    return next;
   });
-  const existingSessions = Array.isArray(existingBucket.sessions) ? existingBucket.sessions : [];
-  const nextSessions = [
-    nextSession,
-    ...existingSessions.filter((item) => item.id !== nextSession.id),
-  ].sort(latestFirst).slice(0, MAX_SESSIONS_PER_VEHICLE);
+  const nextSessions = existingSessions.sort(latestFirst).slice(0, MAX_SESSIONS_PER_VEHICLE);
 
   const nextBucket = {
     ...existingBucket,
@@ -260,16 +275,7 @@ export async function upsertRaceDayPracticeSession(raceDayId, vehicleId, session
   };
 
   await saveRaceDayPractice(id, nextBundle);
-  return nextSession;
-}
-
-export async function appendRaceDayPracticeSessions(raceDayId, vehicleId, sessions = []) {
-  const list = Array.isArray(sessions) ? sessions : [sessions];
-  const saved = [];
-  for (const session of list.filter(Boolean)) {
-    saved.push(await upsertRaceDayPracticeSession(raceDayId, vehicleId, session));
-  }
-  return saved.filter(Boolean);
+  return saved;
 }
 
 export async function getRaceDayPracticeArchiveSummary(raceDayId) {

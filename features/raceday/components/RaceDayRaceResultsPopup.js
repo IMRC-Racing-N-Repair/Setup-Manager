@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import RaceDayPopup from './RaceDayPopup';
+import RaceDayLapComparison, { sortRaceDayStandings } from './RaceDayLapComparison';
 import { raceDayColors, raceDayStyles } from '../styles/raceDayStyles';
 import { buildRaceResultsForRun } from '../lib/liverc/liveRcRaceResultsParser';
 
@@ -121,7 +122,7 @@ export default function RaceDayRaceResultsPopup({ visible, run, onClose }) {
     }
 
     setLoading(true);
-    buildRaceResultsForRun(run)
+    buildRaceResultsForRun(run, { includeAll: true })
       .then((nextRows) => {
         if (cancelled) return;
         setRows(Array.isArray(nextRows) ? nextRows : []);
@@ -141,6 +142,8 @@ export default function RaceDayRaceResultsPopup({ visible, run, onClose }) {
     };
   }, [visible, run]);
 
+  const sortedRows = useMemo(() => sortRaceDayStandings(rows, displayPosition), [rows]);
+
   return (
     <RaceDayPopup
       visible={visible}
@@ -149,7 +152,6 @@ export default function RaceDayRaceResultsPopup({ visible, run, onClose }) {
       onClose={onClose}
       centered
       showScrollIndicator
-      bodyScroll={false}
       contentContainerStyle={localStyles.popupContent}
     >
       {loading ? (
@@ -158,6 +160,7 @@ export default function RaceDayRaceResultsPopup({ visible, run, onClose }) {
         </View>
       ) : rows.length ? (
         <View style={localStyles.shell}>
+          <RaceDayLapComparison rows={sortedRows} run={run} makeRowKey={makeRowKey} />
           <Text style={localStyles.scrollHint} numberOfLines={1}>Swipe left/right to compare this race</Text>
           <ScrollView
             horizontal
@@ -170,7 +173,7 @@ export default function RaceDayRaceResultsPopup({ visible, run, onClose }) {
             onContentSizeChange={(width) => setContentWidth(width)}
           >
             <View style={localStyles.sharedScrollContent}>
-              {rows.map((row, index) => (
+              {sortedRows.map((row, index) => (
                 <DriverRaceResultCard key={makeRowKey(row, index)} row={row} />
               ))}
             </View>

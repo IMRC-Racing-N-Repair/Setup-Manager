@@ -1,4 +1,5 @@
 import { normalizePracticeUrl } from './liveRcPracticeUrls';
+import { getAnchors, getRows } from './liveRcHtml';
 
 function decodeHtml(value = '') {
   return String(value || '')
@@ -19,11 +20,6 @@ function stripTags(value = '') {
       .replace(/<style[\s\S]*?<\/style>/gi, ' ')
       .replace(/<[^>]+>/g, ' '),
   );
-}
-
-function getAttr(tag = '', attr = '') {
-  const pattern = new RegExp(`${attr}\\s*=\\s*["']([^"']+)["']`, 'i');
-  return String(tag || '').match(pattern)?.[1] || '';
 }
 
 function normalizeTx(value = '') {
@@ -110,6 +106,69 @@ function makePracticeSessionId({ dayKey, vehicleId, tx, time, index }) {
     .replace(/[^a-zA-Z0-9_-]/g, '_');
 }
 
+function getPracticeSessionLink(row, siteUrl) {
+  if (!siteUrl) return null;
+  const base = new URL(siteUrl);
+  for (const { href } of getAnchors(row)) {
+    try {
+      const url = new URL(href, base);
+      const id = url.searchParams.get('id');
+      if (url.origin === base.origin && /^\/practice\/?$/i.test(url.pathname)
+          && url.searchParams.get('p') === 'view_session' && /^\d+$/.test(id || '')) {
+        return { id, url: url.toString() };
+      }
+    } catch {
+      // Ignore malformed links in the list.
+    }
+  }
+  return null;
+}
+
+export function parsePracticeSessionDetail(html, { transponder }) {
+  const fields = new Map(getRows(html).map((row) => {
+    const [label, value] = splitCells(row);
+    return [label?.toLowerCase(), value || ''];
+  }));
+  if (!transponder || normalizeTx(fields.get('transponder')) !== transponder) return null;
+
+  const script = html.match(/\b(?:var|let|const)\s+lapsObj\s*=\s*(\[[\s\S]*?\])\s*;/)?.[1];
+  let entries = [];
+  if (script) {
+    try {
+      const data = JSON.parse(script);
+      if (Array.isArray(data)) entries = data.map((lap) => ({
+        lapNumber: Number(lap?.x),
+        lapTime: String(lap?.lap_time ?? ''),
+        invalid: lap?.is_valid === false || String(lap?.is_valid) === '0',
+      }));
+    } catch {
+      // Older pages may only have the displayed lap list.
+    }
+  }
+  if (!entries.length) {
+    const lapList = html.match(/class=["'][^"']*\blaps_list\b[^"']*["'][^>]*>([\s\S]*?)(?:<div>\s*<em>|<\/section>|$)/i)?.[1] || '';
+    entries = [...stripTags(lapList).matchAll(/\bLap\s+(\d+)\s*:\s*((?:\d+:)?\d+(?:\.\d+)?)(\s*\*)?/gi)]
+      .map(([, number, time, invalid]) => ({ lapNumber: Number(number), lapTime: time, invalid: Boolean(invalid) }));
+  }
+  const laps = entries.filter(({ lapNumber, lapTime }) => Number.isInteger(lapNumber) && lapNumber > 0
+    && /^(?:\d+:)?\d+(?:\.\d+)?$/.test(lapTime) && Number(lapTime.replace(':', '')) > 0)
+    .sort((a, b) => a.lapNumber - b.lapNumber);
+
+  const averages = fields.get('averages') || '';
+  const sessionTime = fields.get('session time') || '';
+  const metrics = {
+    fastLap: fields.get('fastest lap'),
+    avgLap: averages.match(/\bAvg:\s*([\d:.]+)/i)?.[1],
+    top5Avg: averages.match(/\bTop 5:\s*([\d:.]+)/i)?.[1],
+    top10Avg: averages.match(/\bTop 10:\s*([\d:.]+)/i)?.[1],
+    top15Avg: averages.match(/\bTop 15:\s*([\d:.]+)/i)?.[1],
+    stdDeviation: averages.match(/\bStd Deviation:\s*([\d:.]+)/i)?.[1],
+    consistency: averages.match(/\bConsistency:\s*([\d.]+\s*%?)/i)?.[1]?.trim(),
+    totalTime: sessionTime.match(/\bLength of Session:\s*([\d:.]+)/i)?.[1],
+  };
+  return { ...Object.fromEntries(Object.entries(metrics).filter(([, value]) => value)), laps };
+}
+
 export function getVehicleTransponder(vehicle = {}) {
   const fields = [
     vehicle.transponder,
@@ -138,7 +197,7 @@ export function parsePracticeSessionsFromHtml(html = '', {
   const dayKey = practiceDay?.key || practiceDay?.dateKey || '';
   if (!targetTx) return [];
 
-  const rows = String(html || '').match(/<tr[\s\S]*?<\/tr>/gi) || [];
+  const rows = getRows(html);
   const sessions = [];
 
   rows.forEach((row, index) => {
@@ -149,13 +208,14 @@ export function parsePracticeSessionsFromHtml(html = '', {
     if (cells.length < 4) return;
 
     const driverClass = parseDriverClassCell(cells[0] || rowText);
-    if (normalizeTx(driverClass.transponder) !== targetTx && !normalizeTx(rowText).includes(targetTx)) return;
+    if (driverClass.transponder !== targetTx) return;
 
-    const timeText = cells[1] || '';
+    const timeText = (cells[1] || '').replace(/^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\s+(?=\d)/, '');
     const lapsLength = parseLapsLengthCell(cells[2] || '');
     const fastAvg = parseFastAvgCell(cells[3] || rowText);
     const startedAt = normalizePracticeTime(timeText, dayKey);
-    const sessionId = makePracticeSessionId({ dayKey, vehicleId, tx: targetTx, time: timeText, index });
+    const detail = getPracticeSessionLink(row, siteUrl);
+    const sessionId = makePracticeSessionId({ dayKey, vehicleId, tx: targetTx, time: detail ? '' : timeText, index: detail?.id || index });
 
     sessions.push({
       id: sessionId,
@@ -165,6 +225,7 @@ export function parsePracticeSessionsFromHtml(html = '', {
       practiceDayKey: dayKey,
       practiceDayLabel: practiceDay?.label || practiceDay?.dateLabel || dayKey,
       practiceUrl: normalizePracticeUrl(practiceDay?.practiceUrl || '', siteUrl),
+      detailUrl: detail?.url || '',
       source: 'liverc-practice',
       driver: driverClass.driver,
       className: driverClass.className,

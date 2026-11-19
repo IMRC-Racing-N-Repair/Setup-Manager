@@ -1,4 +1,5 @@
 import React from 'react';
+import RaceDayLapChart from './RaceDayLapChart';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { getCompareLabel, sortCompareFieldsForDashboard } from '../lib/raceDayCompare';
 import { raceDayColors, raceDayStyles } from '../styles/raceDayStyles';
@@ -92,6 +93,8 @@ export default function RaceDayResultCard({ run, compareFields = [], onToggleCom
           </TouchableOpacity>
         </View>
       </View>
+
+      <RaceDayLapChart run={run} detailed />
 
       <View style={raceDayStyles.dashboardBlockHintBox}>
         <Text style={raceDayStyles.dashboardBlockHintTitle}>Dashboard Blocks</Text>

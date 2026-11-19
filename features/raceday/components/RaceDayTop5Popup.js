@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import RaceDayPopup from './RaceDayPopup';
+import RaceDayLapComparison, { sortRaceDayStandings } from './RaceDayLapComparison';
 import { raceDayStyles } from '../styles/raceDayStyles';
 import { buildQualifierTop5ForRun } from '../lib/liverc/liveRcTop5Parser';
 import { buildMainTop5ForRun } from '../lib/liverc/liveRcMainTop5Parser';
@@ -229,6 +230,8 @@ export default function RaceDayTop5Popup({ visible, run, onClose }) {
     };
   }, [visible, run, savedRows, shouldBuildTop5, shouldBuildMainTop5]);
 
+  const sortedRows = useMemo(() => sortRaceDayStandings(rows, displayPosition), [rows]);
+
   return (
     <RaceDayPopup
       visible={visible}
@@ -237,7 +240,6 @@ export default function RaceDayTop5Popup({ visible, run, onClose }) {
       onClose={onClose}
       centered
       showScrollIndicator
-      bodyScroll={false}
       contentContainerStyle={[raceDayStyles.top5PopupContent, localStyles.popupContent]}
     >
       {loading ? (
@@ -246,6 +248,7 @@ export default function RaceDayTop5Popup({ visible, run, onClose }) {
         </View>
       ) : rows.length ? (
         <View style={localStyles.shell}>
+          <RaceDayLapComparison rows={sortedRows} run={run} makeRowKey={makeRowKey} />
           <Text style={localStyles.scrollHint} numberOfLines={1}>Swipe left/right to compare all drivers</Text>
           <ScrollView
             horizontal
@@ -258,7 +261,7 @@ export default function RaceDayTop5Popup({ visible, run, onClose }) {
             onContentSizeChange={(width) => setContentWidth(width)}
           >
             <View style={localStyles.sharedScrollContent}>
-              {rows.map((row, index) => (
+              {sortedRows.map((row, index) => (
                 <DriverTop5Card key={makeRowKey(row, index)} row={row} />
               ))}
             </View>

@@ -115,6 +115,7 @@ export default function RaceDayDashboardScreen() {
   const pendingPracticeDayRef = useRef(null);
   const practiceDismissTimerRef = useRef(null);
   const autoSyncRunningRef = useRef(false);
+  const endingRaceDayRef = useRef(false);
   const autoSyncCancelRef = useRef(null);
 
   useEffect(() => () => {
@@ -500,17 +501,29 @@ export default function RaceDayDashboardScreen() {
     router.push(`/setups/editor/${trackId}/${vehicleId}?returnTo=raceday`);
   }
 
+  async function finishRaceDay() {
+    if (endingRaceDayRef.current) return;
+    endingRaceDayRef.current = true;
+    try {
+      cancelAutoSync();
+      await endRaceDay();
+      router.replace('/');
+    } catch (error) {
+      console.warn('[RaceDay] Could not end the session', error);
+      const message = 'Could not end Race Day. Please try again.';
+      Alert.alert('End Race Day', message);
+    } finally {
+      endingRaceDayRef.current = false;
+    }
+  }
+
   function confirmEndRaceDay() {
-    Alert.alert('End Race Day?', 'This clears the active RaceDay session keys and returns to Dashboard. Saved runs stay local.', [
+    if (endingRaceDayRef.current) return;
+    const title = 'End Race Day?';
+    const message = 'This ends the active session and returns to Dashboard. Saved runs stay in RaceDay History.';
+    Alert.alert(title, message, [
       { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'End Race Day',
-        style: 'destructive',
-        onPress: async () => {
-          await endRaceDay();
-          router.replace('/');
-        },
-      },
+      { text: 'End Race Day', style: 'destructive', onPress: finishRaceDay },
     ]);
   }
 

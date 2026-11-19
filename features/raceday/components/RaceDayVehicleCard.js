@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { buildCompareRows } from '../lib/raceDayCompare';
-import { getVehicleDisplayName } from '../lib/raceDayModel';
+import { getVehicleDisplayName, getVehicleTransponder } from '../lib/raceDayModel';
 import { pickPreferredLineup } from '../lib/raceDayLineupPriority';
 import RaceDayLineupBadge from './RaceDayLineupBadge';
 import { raceDayStyles } from '../styles/raceDayStyles';
@@ -115,6 +115,50 @@ function getLineupFromRunList(runs = []) {
   return candidates[0] || null;
 }
 
+const vehicleColors = ['#8ABAFF', '#E7A8FB', '#79DBC5', '#FBB48C', '#C4BBFF', '#B5D58A'];
+
+function vehicleColor(vehicle, title) {
+  const key = String(vehicle?.id || vehicle?.vehicleId || title);
+  let hash = 0;
+  for (const letter of key) hash = (Math.imul(31, hash) + letter.codePointAt(0)) >>> 0;
+  return vehicleColors[hash % vehicleColors.length];
+}
+
+export function RaceDayVehicleCardFrame({ vehicle, lineup, onOpenSetup, subtitle, children }) {
+  const title = getVehicleDisplayName(vehicle);
+  const accent = vehicleColor(vehicle, title);
+  const initials = title.trim().split(/\s+/).slice(0, 2).map((word) => Array.from(word)[0]).join('').toUpperCase();
+  const model = [vehicle?.manufacturer, vehicle?.model].filter(Boolean).join(' ');
+  const transponder = getVehicleTransponder(vehicle);
+  const identity = [model, vehicle?.chassisStyle || vehicle?.vehicleStyle, transponder && `TX ${transponder}`].filter(Boolean).join(' · ');
+
+  return (
+    <View style={raceDayStyles.raceVehicleCard}>
+      <View style={[raceDayStyles.cardAccent, { backgroundColor: accent }]} />
+      <View style={raceDayStyles.raceVehicleHeader}>
+        <View style={raceDayStyles.raceVehicleMain}>
+          <View accessible={false} style={{ width: 30, height: 30, marginRight: 8, borderRadius: 6, alignItems: 'center', justifyContent: 'center', backgroundColor: accent + '20' }}>
+            <Text style={{ color: accent, fontSize: 12, fontWeight: '800' }}>{initials}</Text>
+          </View>
+          {lineup && <RaceDayLineupBadge lineup={lineup} />}
+          <View style={raceDayStyles.raceVehicleIdentity}>
+            <Text style={raceDayStyles.cardTitle}>{title}</Text>
+            <Text style={raceDayStyles.raceVehicleMeta} numberOfLines={1}>{identity || 'Manufacturer / Model not set'}</Text>
+            {!!subtitle && <Text style={raceDayStyles.raceVehicleMeta}>{subtitle}</Text>}
+          </View>
+        </View>
+        <View style={raceDayStyles.raceVehicleActions}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel={`Open setup for ${title}`} style={raceDayStyles.raceVehicleWrench} onPress={onOpenSetup} activeOpacity={0.82}>
+            <WrenchIcon />
+            <Text style={raceDayStyles.raceVehicleWrenchText}>WRENCH</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+      {children}
+    </View>
+  );
+}
+
 export default function RaceDayVehicleCard({
   vehicle,
   latestRun,
@@ -124,7 +168,6 @@ export default function RaceDayVehicleCard({
   onOpenResults,
   onOpenSetup,
 }) {
-  const title = getVehicleDisplayName(vehicle);
   const raceRuns = useMemo(() => {
     const list = Array.isArray(runsForVehicle) && runsForVehicle.length
       ? runsForVehicle
@@ -146,27 +189,7 @@ export default function RaceDayVehicleCard({
   );
 
   return (
-    <View style={raceDayStyles.raceVehicleCard}>
-      <View style={raceDayStyles.cardAccent} />
-
-      <View style={raceDayStyles.raceVehicleHeader}>
-        <View style={raceDayStyles.raceVehicleMain}>
-          <RaceDayLineupBadge lineup={displayLineup} />
-          <View style={raceDayStyles.raceVehicleIdentity}>
-            <Text style={raceDayStyles.cardTitle}>{title}</Text>
-            <Text style={raceDayStyles.raceVehicleMeta} numberOfLines={1}>
-              {vehicle?.manufacturer || vehicle?.model ? [vehicle.manufacturer, vehicle.model].filter(Boolean).join(' ') : 'Manufacturer / Model not set'}
-            </Text>
-          </View>
-        </View>
-        <View style={raceDayStyles.raceVehicleActions}>
-          <TouchableOpacity style={raceDayStyles.raceVehicleWrench} onPress={onOpenSetup} activeOpacity={0.82}>
-            <WrenchIcon />
-            <Text style={raceDayStyles.raceVehicleWrenchText}>WRENCH</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
+    <RaceDayVehicleCardFrame vehicle={vehicle} lineup={displayLineup} onOpenSetup={onOpenSetup}>
       {raceRuns.length ? (
         <View style={raceDayStyles.raceRunList}>
           {raceRuns.map((run, index) => (
@@ -181,7 +204,7 @@ export default function RaceDayVehicleCard({
       ) : (
         <Text style={[raceDayStyles.cardSub, { marginTop: 8 }]}>No results synced yet</Text>
       )}
-    </View>
+    </RaceDayVehicleCardFrame>
   );
 }
 

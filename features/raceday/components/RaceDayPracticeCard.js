@@ -1,7 +1,7 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { RaceDayVehicleCardFrame } from './RaceDayVehicleCard';
-import { raceDayColors } from '../styles/raceDayStyles';
+import { Text, TouchableOpacity, View } from 'react-native';
+import { RaceDayVehicleCardFrame, RaceRunStat } from './RaceDayVehicleCard';
+import { raceDayStyles } from '../styles/raceDayStyles';
 
 function clean(value) {
   if (value === undefined || value === null || value === '') return '—';
@@ -17,15 +17,6 @@ function formatTime(value) {
   }
 }
 
-function Stat({ label, value }) {
-  return (
-    <View style={styles.statBox}>
-      <Text style={styles.statLabel} numberOfLines={1}>{label}</Text>
-      <Text style={styles.statValue} numberOfLines={1}>{clean(value)}</Text>
-    </View>
-  );
-}
-
 export default function RaceDayPracticeCard({ vehicle, summary = {}, onOpenSessions, onOpenSetup }) {
   const runCount = summary?.runCount || 0;
   const latest = summary?.latestSession || null;
@@ -35,111 +26,35 @@ export default function RaceDayPracticeCard({ vehicle, summary = {}, onOpenSessi
 
   return (
     <RaceDayVehicleCardFrame vehicle={vehicle} onOpenSetup={onOpenSetup} subtitle={subtitle}>
-      {hasSessions ? (
-        <>
-          <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionTitle}>Latest</Text>
-            <Text style={styles.sectionMeta}>{formatTime(latest?.endedAt || latest?.startedAt)}</Text>
+      <View style={raceDayStyles.raceRunCardThin}>
+        <View style={raceDayStyles.raceRunTopRow}>
+          <Text style={raceDayStyles.raceRunTitleThin}>
+            {hasSessions ? `Latest practice • ${formatTime(latest?.endedAt || latest?.startedAt)}` : 'Practice'}
+          </Text>
+          <TouchableOpacity accessibilityRole="button" style={raceDayStyles.resultsMiniButton} onPress={onOpenSessions} activeOpacity={0.82}>
+            <Text style={raceDayStyles.resultsMiniButtonText}>View Practice Sessions</Text>
+          </TouchableOpacity>
+        </View>
+        {hasSessions ? (
+          <View style={raceDayStyles.raceRunStatsRow}>
+            <RaceRunStat label="Fast lap" value={clean(summary.latestFastLap || latest?.fastLap)} />
+            <RaceRunStat label="Avg lap" value={clean(latest?.avgLap)} />
+            <RaceRunStat label="Top 5" value={clean(summary.latestTop5Avg || latest?.top5Avg)} />
           </View>
-          <View style={styles.statRow}>
-            <Stat label="Fast" value={summary.latestFastLap || latest?.fastLap} />
-            <Stat label="Avg" value={latest?.avgLap} />
-            <Stat label="Top 5" value={summary.latestTop5Avg || latest?.top5Avg} />
+        ) : <Text style={raceDayStyles.cardSub}>No practice sessions saved for this vehicle yet.</Text>}
+      </View>
+      {hasSessions && (
+        <View style={raceDayStyles.raceRunCardThin}>
+          <Text style={raceDayStyles.raceRunTitleThin}>Practice day totals</Text>
+          <View style={raceDayStyles.raceRunStatsRow}>
+            <RaceRunStat label="Best lap" value={clean(summary.bestLap)} />
+            <RaceRunStat label="Best top 5" value={clean(summary.bestTop5)} />
+            <RaceRunStat label="Total laps" value={summary.totalLaps || 0} />
           </View>
-          <View style={styles.statRow}>
-            <Stat label="Best Lap" value={summary.bestLap} />
-            <Stat label="Best Top 5" value={summary.bestTop5} />
-            <Stat label="Total Laps" value={summary.totalLaps || 0} />
-          </View>
-        </>
-      ) : (
-        <View style={styles.emptyPracticeBox}>
-          <Text style={styles.emptyPracticeText}>No practice sessions saved for this vehicle yet.</Text>
         </View>
       )}
-
-      <TouchableOpacity style={styles.sessionsButton} onPress={onOpenSessions} activeOpacity={0.82}>
-        <Text style={styles.sessionsButtonText}>View Practice Sessions</Text>
-      </TouchableOpacity>
     </RaceDayVehicleCardFrame>
   );
 }
 
 export { RaceDayPracticeCard };
-
-const styles = StyleSheet.create({
-  sectionHeaderRow: {
-    marginTop: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  sectionTitle: {
-    color: raceDayColors.accent,
-    fontSize: 11,
-    fontWeight: '900',
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  sectionMeta: {
-    color: raceDayColors.faint,
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  statRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 8,
-  },
-  statBox: {
-    flex: 1,
-    minHeight: 48,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: raceDayColors.border,
-    backgroundColor: raceDayColors.cardAlt,
-    paddingHorizontal: 9,
-    paddingVertical: 8,
-  },
-  statLabel: {
-    color: raceDayColors.faint,
-    fontSize: 9,
-    fontWeight: '900',
-    textTransform: 'uppercase',
-  },
-  statValue: {
-    color: raceDayColors.text,
-    fontSize: 13,
-    fontWeight: '900',
-    marginTop: 3,
-  },
-  emptyPracticeBox: {
-    marginTop: 12,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    borderColor: raceDayColors.border,
-    backgroundColor: raceDayColors.cardAlt,
-    padding: 12,
-  },
-  emptyPracticeText: {
-    color: raceDayColors.muted,
-    fontSize: 12,
-    textAlign: 'center',
-  },
-  sessionsButton: {
-    marginTop: 12,
-    minHeight: 38,
-    borderRadius: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: raceDayColors.accent,
-    backgroundColor: raceDayColors.accentSoft,
-  },
-  sessionsButtonText: {
-    color: raceDayColors.text,
-    fontSize: 12,
-    fontWeight: '900',
-  },
-});

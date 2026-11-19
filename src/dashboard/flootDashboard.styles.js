@@ -184,29 +184,37 @@ export const desktopDashboardStyles = {
   ])),
 };
 
+// Stack the website's workspace panels on narrow screens and leave room for
+// the native tab bar. The surfaces, text and accents come from the same styles.
 const mobileWorkspaceOverrides = StyleSheet.create({
+  content: { paddingHorizontal: 14, paddingBottom: 92 },
+  topbar: { minHeight: 70 },
   pageTitle: { fontSize: 27, lineHeight: 32, letterSpacing: -0.7 },
-  eyebrow: { color: '#8EBCFF' },
-  iconButton: { borderRadius: 8 },
-  syncButton: { borderRadius: 8, minHeight: 44 },
-  sponsorStrip: { borderRadius: 10, borderWidth: 1, borderColor: AppColors.border, backgroundColor: AppColors.surface },
-  primaryGrid: { borderWidth: 0, borderRadius: 12 },
-  racePanel: { borderWidth: 0, borderTopWidth: 2, borderTopColor: '#548BD4', borderRadius: 12 },
-  raceBadge: { borderRadius: 7, borderWidth: 0, backgroundColor: 'rgba(255,172,112,0.12)' },
-  raceBadgeTop: { color: '#FFAC70' },
-  raceBadgeValue: { color: '#FFAC70' },
-  nextRaceNumber: { color: '#FFAC70' },
-  primaryButton: { borderRadius: 8, minHeight: 44, backgroundColor: '#2366C5' },
-  garageSection: { padding: 12, borderRadius: 12, borderWidth: 0, backgroundColor: AppColors.surface },
+  syncButton: { maxWidth: 125, paddingHorizontal: 8 },
+  syncName: { maxWidth: 86 },
+  sponsorStrip: { paddingHorizontal: 10, marginTop: 12 },
+  sponsorLogo: { width: 90, height: 40 },
+  sponsorFallback: { width: 66, height: 40 },
+  workspaceGrid: { flexDirection: 'column', alignItems: 'stretch', gap: 12, marginTop: 12 },
+  primaryGrid: { flex: 0 },
+  racePanel: { padding: 14 },
+  racePanelCompact: { padding: 12 },
+  raceLine: { minHeight: 76, marginTop: 10 },
+  raceBadge: { width: 48, height: 48 },
+  raceBadgeValue: { fontSize: 21 },
+  raceMainTitle: { fontSize: 16 },
+  nextRaceBlock: { paddingTop: 10 },
+  garageColumn: { flex: 0, gap: 12 },
+  garageSection: { padding: 12 },
   garageSectionCompact: { padding: 12 },
-  countCell: { minHeight: 44, borderWidth: 0, borderRightWidth: 1, borderColor: AppColors.border, backgroundColor: 'transparent' },
-  trackStrip: { minHeight: 52, marginTop: 12, paddingHorizontal: 12, borderWidth: 1, borderColor: AppColors.border, borderRadius: 10 },
-  trackMeta: { fontSize: 11, lineHeight: 15 },
+  sectionTitle: { fontSize: 21, lineHeight: 26 },
+  countCell: { minHeight: 44 },
+  trackStrip: { minHeight: 52, padding: 12 },
 });
 
 export const mobileWorkspaceDashboardStyles = {
-  ...flootDashboardStyles,
+  ...desktopDashboardStyles,
   ...Object.fromEntries(Object.entries(mobileWorkspaceOverrides).map(([key, style]) => [
-    key, StyleSheet.compose(flootDashboardStyles[key], style),
+    key, StyleSheet.compose(desktopDashboardStyles[key], style),
   ])),
 };

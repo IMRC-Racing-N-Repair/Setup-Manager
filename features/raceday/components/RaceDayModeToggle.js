@@ -31,14 +31,13 @@ const styles = StyleSheet.create({
   wrap: {
     alignSelf: 'stretch',
     flexDirection: 'row',
-    borderTopWidth: 1,
     borderBottomWidth: 1,
     borderColor: raceDayColors.border,
     marginBottom: 10,
   },
   button: {
     flex: 1,
-    minHeight: 36,
+    minHeight: 44,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 8,
@@ -51,9 +50,8 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: raceDayColors.muted,
-    fontSize: 10,
+    fontSize: 13,
     fontWeight: '900',
-    textTransform: 'uppercase',
     letterSpacing: 0.75,
   },
   activeButtonText: {

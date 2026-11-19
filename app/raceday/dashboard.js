@@ -709,7 +709,6 @@ export default function RaceDayDashboardScreen() {
       <View style={[raceDayStyles.container, isTabletLandscape && raceDayStyles.containerTabletLandscape, { paddingTop: insets.top }]}>
         <RaceDayHeader
           title="RaceDay"
-          subtitle={trackName}
           leftLabel="‹ BACK"
           onLeftPress={handleBack}
           rightLabel="END"
@@ -741,7 +740,7 @@ export default function RaceDayDashboardScreen() {
               <View style={raceDayStyles.trackCardHeader}>
                 <View style={raceDayStyles.flex1}>
                   <Text style={raceDayStyles.trackCardEyebrow}>Live RaceDay</Text>
-                  <Text style={raceDayStyles.cardTitle}>{trackName}</Text>
+                  <Text style={raceDayStyles.workspaceTrackTitle}>{trackName}</Text>
                   <Text style={raceDayStyles.trackEventStatusText} numberOfLines={1}>{eventStatusText}</Text>
                 </View>
 
@@ -792,6 +791,7 @@ export default function RaceDayDashboardScreen() {
             </View>
           )}
 
+          <Text accessibilityRole="header" style={raceDayStyles.workspaceResultsHeading}>{dashboardMode === 'practice' ? 'Practice results' : 'Vehicle results'}</Text>
           {vehicles.length ? (
             <View style={isTabletLandscape ? raceDayStyles.vehicleGridTabletLandscape : null}>
               {dashboardMode === 'race' ? vehicles.map((vehicle) => {

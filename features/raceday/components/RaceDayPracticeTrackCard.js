@@ -23,12 +23,9 @@ export default function RaceDayPracticeTrackCard({
       <View style={raceDayStyles.trackCardHeader}>
         <View style={raceDayStyles.flex1}>
           <Text style={raceDayStyles.trackCardEyebrow}>Live Practice</Text>
-          <Text style={raceDayStyles.cardTitle}>{trackName}</Text>
+          <Text style={raceDayStyles.workspaceTrackTitle}>{trackName}</Text>
           <Text style={raceDayStyles.cardSub} numberOfLines={1}>
             {startedLabel} • {vehicleCount} vehicle{vehicleCount === 1 ? '' : 's'}
-          </Text>
-          <Text style={raceDayStyles.dashboardEventDate} numberOfLines={1}>
-            {dayLabel}
           </Text>
         </View>
 
@@ -46,11 +43,14 @@ export default function RaceDayPracticeTrackCard({
 
       <View style={raceDayStyles.trackNavigationRow}>
         <TouchableOpacity style={raceDayStyles.trackNavigationButton} onPress={onSelectPracticeDay} activeOpacity={0.82}>
-          <View>
+          <View style={raceDayStyles.trackEventIdentity}>
             <Text style={raceDayStyles.trackNavigationLabel}>PRACTICE DATE</Text>
-            <Text style={raceDayStyles.trackNavigationText}>Change Date</Text>
+            <Text style={raceDayStyles.trackNavigationText}>{dayLabel}</Text>
           </View>
-          <Text style={raceDayStyles.trackNavigationArrow}>›</Text>
+          <View style={raceDayStyles.trackEventChangeAction}>
+            <Text style={raceDayStyles.trackEventChangeText}>{practiceDayLabel ? 'CHANGE' : 'SELECT'}</Text>
+            <Text style={raceDayStyles.trackNavigationArrow}>›</Text>
+          </View>
         </TouchableOpacity>
 
         <TouchableOpacity

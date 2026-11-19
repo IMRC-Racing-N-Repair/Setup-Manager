@@ -1,9 +1,10 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import { buildCompareRows } from '../lib/raceDayCompare';
+import { buildCompareRows, getCompareValue } from '../lib/raceDayCompare';
 import { getVehicleDisplayName, getVehicleTransponder } from '../lib/raceDayModel';
 import { pickPreferredLineup } from '../lib/raceDayLineupPriority';
+import RaceDayLapChart from './RaceDayLapChart';
 import RaceDayLineupBadge from './RaceDayLineupBadge';
 import { raceDayStyles } from '../styles/raceDayStyles';
 
@@ -21,11 +22,11 @@ function WrenchIcon() {
   );
 }
 
-function RaceRunStat({ label, value }) {
+export function RaceRunStat({ label, value }) {
   return (
     <View style={raceDayStyles.raceRunStatBox}>
       <Text style={raceDayStyles.raceRunStatLabel} numberOfLines={1}>{label}</Text>
-      <Text style={raceDayStyles.raceRunStatValue} numberOfLines={1}>{value}</Text>
+      <Text style={raceDayStyles.raceRunStatValue} numberOfLines={1}>{value ?? '—'}</Text>
     </View>
   );
 }
@@ -53,18 +54,31 @@ function getRunTitle(run = {}) {
 }
 
 function RaceRunCard({ run, compareFields, onOpenResults }) {
+  const [expanded, setExpanded] = useState(false);
   const rows = buildCompareRows(run, compareFields);
+  const position = getCompareValue(run, 'position');
+  const showPosition = position !== '—' && !rows.some((row) => row.key === 'position');
 
   return (
     <View style={raceDayStyles.raceRunCardThin}>
       <View style={raceDayStyles.raceRunTopRow}>
         <Text style={raceDayStyles.raceRunTitleThin} numberOfLines={1}>{getRunTitle(run)}</Text>
-        <TouchableOpacity style={raceDayStyles.resultsMiniButton} onPress={() => onOpenResults?.(run)} activeOpacity={0.82}>
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityState={{ expanded }}
+          style={raceDayStyles.resultsMiniButton}
+          onPress={() => setExpanded((value) => !value)}
+        >
+          <Text style={raceDayStyles.resultsMiniButtonText}>{expanded ? 'Hide laps' : 'Lap chart'}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity accessibilityRole="button" style={raceDayStyles.resultsMiniButton} onPress={() => onOpenResults?.(run)} activeOpacity={0.82}>
           <Text style={raceDayStyles.resultsMiniButtonText}>Results</Text>
         </TouchableOpacity>
       </View>
 
+      {!!run.className && <Text style={raceDayStyles.raceRunSub}>{run.className}</Text>}
       <View style={raceDayStyles.raceRunStatsRow}>
+        {showPosition && <RaceRunStat label="Position" value={position} />}
         {rows.map((row) => (
           <RaceRunStat
             key={`${run.id || run.raceUrl || getRunTitle(run)}_${row.key}`}
@@ -73,6 +87,7 @@ function RaceRunCard({ run, compareFields, onOpenResults }) {
           />
         ))}
       </View>
+      {expanded && <RaceDayLapChart run={run} />}
     </View>
   );
 }
@@ -142,7 +157,7 @@ export function RaceDayVehicleCardFrame({ vehicle, lineup, onOpenSetup, subtitle
           </View>
           {lineup && <RaceDayLineupBadge lineup={lineup} />}
           <View style={raceDayStyles.raceVehicleIdentity}>
-            <Text style={raceDayStyles.cardTitle}>{title}</Text>
+            <Text style={raceDayStyles.workspaceVehicleTitle}>{title}</Text>
             <Text style={raceDayStyles.raceVehicleMeta} numberOfLines={1}>{identity || 'Manufacturer / Model not set'}</Text>
             {!!subtitle && <Text style={raceDayStyles.raceVehicleMeta}>{subtitle}</Text>}
           </View>

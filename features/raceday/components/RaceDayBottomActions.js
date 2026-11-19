@@ -48,8 +48,6 @@ export default function RaceDayBottomActions({
                 raceDayStyles.actionNavItem,
                 tabletLandscape && raceDayStyles.actionNavItemTabletLandscape,
                 action.disabled && raceDayStyles.actionNavItemDisabled,
-                desktopWeb && styles.desktopItem,
-                desktopWeb && action.primary && styles.desktopPrimaryItem,
               ]}
               onPress={action.disabled ? undefined : action.onPress}
               activeOpacity={0.72}
@@ -112,37 +110,22 @@ export { RaceDayBottomActions };
 
 const styles = StyleSheet.create({
   desktopBar: {
-    position: 'relative',
+    position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
-    zIndex: 1,
+    zIndex: 50,
     width: '100%',
     maxWidth: '100%',
     alignSelf: 'stretch',
-    paddingHorizontal: 0,
-    paddingTop: 0,
-    paddingBottom: 8,
-    backgroundColor: 'transparent',
-    borderTopWidth: 0,
+    paddingHorizontal: 22,
+    paddingTop: 4,
+    paddingBottom: 4,
+    backgroundColor: raceDayColors.bg,
+    borderTopWidth: 1,
+    borderTopColor: raceDayColors.border,
   },
   desktopRow: {
-    minHeight: 40,
-    justifyContent: 'flex-end',
-    gap: 8,
-  },
-  desktopItem: {
-    flex: 0,
-    width: 128,
-    minHeight: 38,
-    flexDirection: 'row',
-    gap: 7,
-    borderWidth: 1,
-    borderColor: raceDayColors.border,
-    backgroundColor: raceDayColors.cardAlt,
-  },
-  desktopPrimaryItem: {
-    borderColor: raceDayColors.blue,
-    backgroundColor: raceDayColors.blueSoft,
+    minHeight: 54,
   },
 });

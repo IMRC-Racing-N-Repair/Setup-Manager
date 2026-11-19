@@ -706,21 +706,7 @@ export default function RaceDayDashboardScreen() {
           topOffset={false}
         />
 
-        {isDesktopWeb ? (
-          <RaceDayBottomActions
-            docked
-            desktop
-            tabletLandscape
-            secondaryLabel="Notes"
-            onSecondaryPress={() => setNotesOpen(true)}
-            tertiaryLabel="Changes"
-            onTertiaryPress={() => setChangesOpen(true)}
-            primaryLabel="Add Vehicles"
-            onPrimaryPress={() => router.push('/raceday/select-vehicles?add=1')}
-          />
-        ) : null}
-
-        <ScrollView contentContainerStyle={[raceDayStyles.scrollContent, isTabletLandscape && raceDayStyles.scrollContentTabletLandscape, { paddingBottom: isDesktopWeb ? 24 : 142 + insets.bottom }]} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={[raceDayStyles.scrollContent, isTabletLandscape && raceDayStyles.scrollContentTabletLandscape, { paddingBottom: isDesktopWeb ? 76 : 142 + insets.bottom }]} showsVerticalScrollIndicator={false}>
           <RaceDayModeToggle mode={dashboardMode} onChange={handleDashboardModeChange} />
 
           {dashboardMode === 'practice' ? (
@@ -833,18 +819,17 @@ export default function RaceDayDashboardScreen() {
         </ScrollView>
       </View>
 
-      {!isDesktopWeb ? (
-        <RaceDayBottomActions
-          docked
-          tabletLandscape={isTabletLandscape}
-          secondaryLabel="Notes"
-          onSecondaryPress={() => setNotesOpen(true)}
-          tertiaryLabel="Changes"
-          onTertiaryPress={() => setChangesOpen(true)}
-          primaryLabel="Add Vehicles"
-          onPrimaryPress={() => router.push('/raceday/select-vehicles?add=1')}
-        />
-      ) : null}
+      <RaceDayBottomActions
+        docked
+        desktop={isDesktopWeb}
+        tabletLandscape={isTabletLandscape}
+        secondaryLabel="Notes"
+        onSecondaryPress={() => setNotesOpen(true)}
+        tertiaryLabel="Changes"
+        onTertiaryPress={() => setChangesOpen(true)}
+        primaryLabel="Add Vehicles"
+        onPrimaryPress={() => router.push('/raceday/select-vehicles?add=1')}
+      />
 
       <RaceDayPopup
         visible={resultsOpen}

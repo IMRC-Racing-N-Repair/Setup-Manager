@@ -155,12 +155,7 @@ export function RaceDayVehicleCardFrame({ vehicle, desktop, lineup, onOpenSetup,
 
       <View style={[raceDayStyles.raceVehicleHeader, desktop && desktopStyles.vehicleHeader]}>
         <View style={raceDayStyles.raceVehicleMain}>
-          {desktop && (
-            <View aria-hidden style={[desktopStyles.vehicleMarker, { borderColor: accent + '64', backgroundColor: accent + '20' }]}>
-              <Text style={[desktopStyles.vehicleInitials, { color: accent }]}>{title.trim().split(/\s+/).slice(0, 2).map((word) => Array.from(word)[0]).join('').toUpperCase()}</Text>
-            </View>
-          )}
-          {!desktop && <RaceDayLineupBadge lineup={lineup} />}
+          <RaceDayLineupBadge lineup={lineup} />
           <View style={raceDayStyles.raceVehicleIdentity}>
             <Text style={[raceDayStyles.cardTitle, desktop && desktopStyles.vehicleTitle]}>{title}</Text>
             <Text style={[raceDayStyles.raceVehicleMeta, desktop && desktopStyles.vehicleMeta]} numberOfLines={1}>
@@ -168,7 +163,6 @@ export function RaceDayVehicleCardFrame({ vehicle, desktop, lineup, onOpenSetup,
             </Text>
           </View>
         </View>
-        {desktop && <RaceDayLineupBadge lineup={lineup} />}
         <View style={raceDayStyles.raceVehicleActions}>
           <TouchableOpacity accessibilityRole="button" accessibilityLabel={desktop ? `Open setup for ${title}` : undefined} style={[raceDayStyles.raceVehicleWrench, desktop && desktopStyles.setupButton]} onPress={onOpenSetup} activeOpacity={0.82}>
             <WrenchIcon />

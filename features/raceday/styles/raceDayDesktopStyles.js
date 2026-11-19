@@ -20,8 +20,6 @@ export const raceDayDesktopStyles = StyleSheet.create({
   resultsHeading: { color: AppColors.textStrong, fontSize: 20, fontWeight: '800', paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: AppColors.border },
   vehicle: { backgroundColor: AppColors.surface, borderWidth: 1, borderRadius: 12, marginTop: 12, marginBottom: 4, padding: 0, paddingHorizontal: 0, paddingTop: 0, paddingBottom: 4 },
   vehicleHeader: { minHeight: 76, paddingVertical: 12, paddingHorizontal: 14, borderBottomWidth: 1, borderBottomColor: AppColors.border },
-  vehicleMarker: { width: 38, height: 38, marginRight: 10, borderRadius: 8, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
-  vehicleInitials: { fontSize: 14, fontWeight: '800' },
   vehicleRuns: { paddingHorizontal: 14 },
   vehicleEmpty: { padding: 14 },
   setupButton: { minHeight: 38, width: '100%', borderRadius: 6, backgroundColor: AppColors.backgroundSoft },

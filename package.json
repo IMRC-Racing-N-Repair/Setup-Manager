@@ -15,7 +15,10 @@
     "export:all": "expo export --platform all",
     "prebuild:ios:clean": "expo prebuild --platform ios --clean",
     "clean:generated": "node scripts/cleanGenerated.mjs",
-    "build:ios:clean": "npm run clean:generated && npm ci && npm run doctor && npx eas-cli build --platform ios --profile production --clear-cache"
+    "build:ios:clean": "npm run clean:generated && npm ci && npm run doctor && npx eas-cli build --platform ios --profile production --clear-cache",
+    "web": "expo start --web",
+    "web:export": "expo export --platform web",
+    "web:serve": "expo serve"
   },
   "overrides": {
     "minimatch": "^10.2.1"

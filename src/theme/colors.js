@@ -7,6 +7,8 @@ export const AppColors = {
   vehicle: '#2F8CFF',
   setups: '#2F8CFF',
   raceDay: '#2F8CFF',
+  raceNumber: '#FFAC70',
+  raceNumberSoft: 'rgba(255,172,112,0.12)',
 
   background: '#070B13',
   backgroundSoft: '#0A0F19',

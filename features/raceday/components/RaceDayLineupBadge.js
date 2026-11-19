@@ -1,5 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { AppColors } from '../../../src/theme/colors';
 import { getLineupRaceNumber } from '../lib/raceDayLineupPriority';
 
 export default function RaceDayLineupBadge({ lineup, style }) {
@@ -30,27 +31,20 @@ const styles = StyleSheet.create({
   badge: {
     width: 54,
     minHeight: 42,
-    borderRadius: 5,
-    backgroundColor: '#facc15',
-    borderWidth: 1,
-    borderColor: '#fde68a',
+    borderRadius: 8,
+    backgroundColor: AppColors.raceNumberSoft,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 3,
     paddingVertical: 3,
     marginRight: 10,
-    shadowColor: '#facc15',
-    shadowOpacity: 0,
-    shadowRadius: 0,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 0,
   },
   label: {
     width: '100%',
     fontSize: 8,
     lineHeight: 10,
     fontWeight: '900',
-    color: '#422006',
+    color: AppColors.raceNumber,
     letterSpacing: 0.4,
     textAlign: 'center',
     textAlignVertical: 'center',
@@ -62,7 +56,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     lineHeight: 20,
     fontWeight: '900',
-    color: '#111827',
+    color: AppColors.raceNumber,
     textAlign: 'center',
     textAlignVertical: 'center',
     includeFontPadding: false,

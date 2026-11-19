@@ -72,7 +72,7 @@ export default function FlootDashboardView({
           : 'No race is currently live'
         : 'Confirming the selected event with LiveRC';
   const lineupTitle = !currentEvent
-    ? (desktop ? 'No upcoming race' : 'No Current Event')
+    ? 'No upcoming race'
     : eventMismatch
       ? "Event does not match RaceDay's"
       : !eventMatches

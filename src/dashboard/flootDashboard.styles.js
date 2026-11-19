@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native';
 
 import { AppColors } from '../theme/colors';
 
-export const flootDashboardStyles = StyleSheet.create({
+const flootDashboardStyles = StyleSheet.create({
   root: { flex: 1, backgroundColor: AppColors.background },
   content: { width: '100%', maxWidth: 1080, alignSelf: 'center', paddingHorizontal: 15, paddingBottom: 92 },
   contentCompact: { paddingHorizontal: 12, paddingBottom: 76 },
@@ -49,9 +49,9 @@ export const flootDashboardStyles = StyleSheet.create({
   idleText: { color: AppColors.mutedText },
   raceLine: { minHeight: 70, flexDirection: 'row', alignItems: 'center', marginTop: 12, paddingVertical: 8, borderTopWidth: 1, borderTopColor: AppColors.border, borderBottomWidth: 1, borderBottomColor: AppColors.border },
   raceLineCompact: { minHeight: 62, marginTop: 8, paddingVertical: 5 },
-  raceBadge: { width: 54, height: 52, alignItems: 'center', justifyContent: 'center', marginRight: 11, borderRadius: 3, backgroundColor: AppColors.warning },
-  raceBadgeTop: { color: '#171204', fontSize: 8, fontWeight: '900', letterSpacing: 0.9 },
-  raceBadgeValue: { marginTop: 2, color: '#171204', fontSize: 22, lineHeight: 24, fontWeight: '900' },
+  raceBadge: { width: 54, height: 52, alignItems: 'center', justifyContent: 'center', marginRight: 11, borderRadius: 8, backgroundColor: AppColors.raceNumberSoft },
+  raceBadgeTop: { color: AppColors.raceNumber, fontSize: 8, fontWeight: '900', letterSpacing: 0.9 },
+  raceBadgeValue: { marginTop: 2, color: AppColors.raceNumber, fontSize: 22, lineHeight: 24, fontWeight: '900' },
   raceMain: { flex: 1, minWidth: 0 },
   mutedLabel: { color: AppColors.mutedText, fontSize: 8, fontWeight: '900', letterSpacing: 0.9 },
   raceMainTitle: { marginTop: 3, color: AppColors.text, fontSize: 18, fontWeight: '900' },
@@ -64,13 +64,12 @@ export const flootDashboardStyles = StyleSheet.create({
   nextRaceClass: { marginTop: 2, color: AppColors.mutedText, fontSize: 9 },
   nextRaceNumberBox: { minWidth: 52, alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center', borderLeftWidth: 1, borderLeftColor: AppColors.border },
   nextRaceNumberLabel: { color: AppColors.mutedText, fontSize: 7, fontWeight: '900', letterSpacing: 0.7 },
-  nextRaceNumber: { marginTop: 1, color: AppColors.primary, fontSize: 18, fontWeight: '900' },
+  nextRaceNumber: { marginTop: 1, color: AppColors.raceNumber, fontSize: 18, fontWeight: '900' },
   countRow: { flexDirection: 'row', marginTop: 10, borderWidth: 1, borderColor: AppColors.border },
   countCell: { flex: 1, minHeight: 52, justifyContent: 'center', paddingHorizontal: 10, borderRightWidth: 1, borderRightColor: AppColors.border },
   countValue: { marginTop: 5, color: AppColors.textStrong, fontSize: 21, lineHeight: 23, fontWeight: '900' },
   primaryButton: { minHeight: 40, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 10, paddingHorizontal: 12, backgroundColor: AppColors.primary },
   primaryButtonText: { color: '#FFFFFF', fontSize: 10, fontWeight: '900', letterSpacing: 0.55 },
-  primaryButtonArrow: { color: '#FFFFFF', fontSize: 21 },
   garageSection: { marginTop: 18 },
   garageSectionCompact: { marginTop: 12 },
   garageSectionNoTrack: { marginTop: 10 },
@@ -125,9 +124,9 @@ const desktopOverrides = StyleSheet.create({
   liveBadge: { borderRadius: 20, paddingHorizontal: 10 },
   liveText: { fontSize: 11 },
   raceLine: { minHeight: 100, marginTop: 18, paddingHorizontal: 0, borderRadius: 0, borderWidth: 0, borderTopWidth: 1, borderBottomWidth: 1, borderColor: AppColors.border, backgroundColor: 'transparent' },
-  raceBadge: { width: 62, height: 62, borderRadius: 8, borderWidth: 0, backgroundColor: 'rgba(255,172,112,0.12)' },
-  raceBadgeTop: { fontSize: 11, color: '#FFAC70' },
-  raceBadgeValue: { fontSize: 25, color: '#FFAC70' },
+  raceBadge: { width: 62, height: 62 },
+  raceBadgeTop: { fontSize: 11 },
+  raceBadgeValue: { fontSize: 25 },
   mutedLabel: { fontSize: 11 },
   raceMainTitle: { fontSize: 19 },
   raceMainMeta: { fontSize: 13 },
@@ -136,7 +135,7 @@ const desktopOverrides = StyleSheet.create({
   nextRaceVehicle: { fontSize: 15 },
   nextRaceClass: { fontSize: 13 },
   nextRaceNumberLabel: { fontSize: 11 },
-  nextRaceNumber: { fontSize: 23, color: '#FFAC70' },
+  nextRaceNumber: { fontSize: 23 },
   primaryButton: { minHeight: 46, marginTop: 15, justifyContent: 'center', borderRadius: 8, backgroundColor: '#2366C5' },
   primaryButtonText: { fontSize: 13 },
   garageMetrics: { borderWidth: 0, gap: 6, marginTop: 14 },
@@ -158,7 +157,7 @@ export const desktopDashboardStyles = {
 };
 
 // Stack the website's workspace panels on narrow screens and leave room for
-// the native tab bar. The surfaces, text and accents come from the same styles.
+// the bottom navigation. The surfaces, text and accents come from the same styles.
 const mobileWorkspaceOverrides = StyleSheet.create({
   content: { paddingHorizontal: 14, paddingBottom: 92 },
   topbar: { minHeight: 70 },

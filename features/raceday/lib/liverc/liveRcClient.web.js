@@ -2,7 +2,7 @@ import { normalizeLiveRcSiteUrl } from './liveRcUrls';
 
 const DEFAULT_TIMEOUT_MS = 15000;
 
-function proxyUrl(target) {
+export function getLiveRcProxyUrl(target) {
   return `/api/liverc?url=${encodeURIComponent(String(target || ''))}`;
 }
 
@@ -12,7 +12,7 @@ export async function fetchLiveRcText(url, options = {}) {
   const timer = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
 
   try {
-    const response = await fetch(proxyUrl(url), {
+    const response = await fetch(getLiveRcProxyUrl(url), {
       method: 'GET',
       headers: { Accept: 'text/html,text/plain,*/*' },
       signal: controller?.signal,

@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import useViewport from '../src/layout/useViewport';
+import { DESKTOP_WEB_MIN_WIDTH } from '../src/layout/desktopWorkspace';
 import { Slot } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -9,7 +10,7 @@ import WebSidebar from '../src/navigation/WebSidebar';
 
 export default function WebRootLayout() {
   const { width } = useViewport();
-  const desktop = width >= 900;
+  const desktop = width >= DESKTOP_WEB_MIN_WIDTH;
 
   return (
     <SafeAreaProvider style={styles.root}>

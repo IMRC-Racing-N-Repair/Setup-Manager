@@ -1,3 +1,4 @@
+import { DESKTOP_WORKSPACE_MAX_WIDTH } from '../layout/desktopWorkspace';
 import { StyleSheet } from 'react-native';
 
 import { AppColors } from '../theme/colors';
@@ -121,7 +122,7 @@ export const flootDashboardStyles = StyleSheet.create({
 });
 
 const desktopOverrides = StyleSheet.create({
-  content: { maxWidth: 1480, paddingHorizontal: 28, paddingBottom: 32 },
+  content: { maxWidth: DESKTOP_WORKSPACE_MAX_WIDTH, paddingHorizontal: 28, paddingBottom: 32 },
   topbar: { minHeight: 87 },
   pageTitle: { fontSize: 36, lineHeight: 43, letterSpacing: -1.1 },
   eyebrow: { fontSize: 11, lineHeight: 16, color: '#8EBCFF' },
@@ -138,16 +139,17 @@ const desktopOverrides = StyleSheet.create({
   sponsorVisit: { fontSize: 12, color: '#93C4FF' },
   workspaceGrid: { flexDirection: 'row', alignItems: 'flex-start', gap: 18, marginTop: 18 },
   primaryGrid: { flex: 3, minWidth: 0, marginTop: 0, borderWidth: 0, borderRadius: 14 },
-  racePanel: { padding: 20, borderWidth: 1, borderColor: AppColors.border, borderTopColor: '#548BD4', borderRadius: 14 },
+  racePanel: { padding: 22, borderWidth: 0, borderTopWidth: 2, borderTopColor: '#548BD4', borderRadius: 14 },
   garageColumn: { flex: 2, minWidth: 0, gap: 14 },
-  garageSection: { marginTop: 0, padding: 16, borderRadius: 14, borderWidth: 1, borderColor: AppColors.border, backgroundColor: AppColors.card },
+  garageSection: { marginTop: 0, padding: 18, borderRadius: 14, borderWidth: 0, backgroundColor: AppColors.surface },
   microLabel: { color: '#8EBCFF', fontSize: 11, lineHeight: 15 },
   sectionTitle: { fontSize: 24, lineHeight: 29 },
   liveBadge: { borderRadius: 20, paddingHorizontal: 10 },
   liveText: { fontSize: 11 },
-  raceLine: { minHeight: 96, marginTop: 18, paddingHorizontal: 10, borderRadius: 9, borderWidth: 1, borderColor: AppColors.border, backgroundColor: AppColors.backgroundSoft },
-  raceBadge: { width: 59, height: 59, borderRadius: 8 },
-  raceBadgeTop: { fontSize: 11 },
+  raceLine: { minHeight: 100, marginTop: 18, paddingHorizontal: 0, borderRadius: 0, borderWidth: 0, borderTopWidth: 1, borderBottomWidth: 1, borderColor: AppColors.border, backgroundColor: 'transparent' },
+  raceBadge: { width: 62, height: 62, borderRadius: 8, borderWidth: 0, backgroundColor: 'rgba(255,172,112,0.12)' },
+  raceBadgeTop: { fontSize: 11, color: '#FFAC70' },
+  raceBadgeValue: { fontSize: 25, color: '#FFAC70' },
   mutedLabel: { fontSize: 11 },
   raceMainTitle: { fontSize: 19 },
   raceMainMeta: { fontSize: 13 },
@@ -156,16 +158,17 @@ const desktopOverrides = StyleSheet.create({
   nextRaceVehicle: { fontSize: 15 },
   nextRaceClass: { fontSize: 13 },
   nextRaceNumberLabel: { fontSize: 11 },
+  nextRaceNumber: { fontSize: 23, color: '#FFAC70' },
   primaryButton: { minHeight: 46, marginTop: 15, justifyContent: 'center', borderRadius: 8, backgroundColor: '#2366C5' },
   primaryButtonText: { fontSize: 13 },
   garageMetrics: { borderWidth: 0, gap: 6, marginTop: 14 },
-  countCell: { paddingHorizontal: 7, borderWidth: 1, borderColor: AppColors.border, borderRadius: 8, backgroundColor: AppColors.backgroundSoft, minHeight: 66 },
+  countCell: { paddingHorizontal: 7, borderWidth: 0, borderRightWidth: 1, borderColor: AppColors.border, backgroundColor: 'transparent', minHeight: 56 },
   viewAll: { color: '#93C4FF', fontSize: 11 },
-  vehicleIndex: { fontSize: 10, width: 34 },
+  vehicleIndex: { display: 'none' },
   vehicleMeta: { fontSize: 13 },
   vehicleStatus: { fontSize: 11, display: 'flex' },
   emptyCopy: { fontSize: 13 },
-  activityStrip: { marginTop: 0, padding: 14, borderWidth: 1, borderColor: AppColors.border, borderRadius: 12, backgroundColor: AppColors.surface },
+  activityStrip: { marginTop: 0, padding: 14, borderWidth: 1, borderColor: AppColors.border, borderRadius: 0, backgroundColor: 'transparent' },
   activityText: { fontSize: 13 },
   trackStrip: { padding: 14, borderWidth: 1, borderColor: AppColors.border, borderRadius: 12, backgroundColor: AppColors.surface },
   trackName: { marginTop: 4, fontSize: 15 },

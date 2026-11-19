@@ -3,6 +3,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { DESKTOP_WEB_MIN_WIDTH } from '../../src/layout/desktopWorkspace';
 import useViewport from '../../src/layout/useViewport';
 import {
   ToolScaffold,
@@ -96,7 +97,7 @@ function buildRolloutStat(state) {
 
 export default function ToolsHomeScreen(props) {
   const { width, height } = useViewport();
-  const desktop = Platform.OS === 'web' && width >= 900;
+  const desktop = Platform.OS === 'web' && width >= DESKTOP_WEB_MIN_WIDTH;
   const threeColumns = desktop && width >= 1330;
   const isLandscape = width > height;
   const isShort = height < 720;
@@ -166,12 +167,14 @@ export default function ToolsHomeScreen(props) {
             <Pressable
               key={tool.route}
               onPress={() => openTool(tool)}
-              style={({ pressed }) => [
+              accessibilityRole="button"
+              style={({ hovered, pressed }) => [
                 styles.card,
                 isShort && styles.cardShort,
                 (desktop || isLandscape) && styles.cardLandscape,
                 desktop && styles.desktopCard,
                 threeColumns && styles.thirdCard,
+                desktop && hovered && styles.desktopHover,
                 pressed && styles.pressed,
               ]}
             >
@@ -179,7 +182,7 @@ export default function ToolsHomeScreen(props) {
 
               <View style={styles.textWrap}>
                 <View style={[styles.titleRow, desktop && styles.desktopTitleRow]}>
-                  <Text style={styles.toolTitle} numberOfLines={1}>{tool.title}</Text>
+                  <Text style={[styles.toolTitle, desktop && styles.desktopToolTitle]} numberOfLines={1}>{tool.title}</Text>
                   {!!tool.experimental && (
                     <View style={styles.experimentalPill}>
                       <Text style={styles.experimentalText}>EXPERIMENTAL</Text>
@@ -213,7 +216,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   desktopGrid: { gap: 12, paddingTop: 9 },
-  desktopCard: { minHeight: 99, paddingHorizontal: 14, paddingVertical: 12, borderRadius: 12 },
+  desktopCard: { minHeight: 99, paddingHorizontal: 14, paddingVertical: 12, borderRadius: 8, borderWidth: 0 },
+  desktopHover: { backgroundColor: '#162235' },
+  desktopToolTitle: { fontSize: 17 },
   thirdCard: { width: '32%' },
   desktopTitleRow: { flexWrap: 'wrap' },
   desktopDescription: { fontSize: 13 },

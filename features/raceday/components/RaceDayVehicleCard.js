@@ -1,10 +1,12 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import { buildCompareRows } from '../lib/raceDayCompare';
+import { buildCompareRows, getCompareValue } from '../lib/raceDayCompare';
 import { getVehicleDisplayName } from '../lib/raceDayModel';
 import { pickPreferredLineup } from '../lib/raceDayLineupPriority';
 import RaceDayLineupBadge from './RaceDayLineupBadge';
+import RaceDayLapChart from './RaceDayLapChart';
+import { raceDayDesktopStyles as desktopStyles } from '../styles/raceDayDesktopStyles';
 import { raceDayStyles } from '../styles/raceDayStyles';
 
 function WrenchIcon() {
@@ -21,11 +23,11 @@ function WrenchIcon() {
   );
 }
 
-function RaceRunStat({ label, value }) {
+function RaceRunStat({ label, value, desktop }) {
   return (
-    <View style={raceDayStyles.raceRunStatBox}>
-      <Text style={raceDayStyles.raceRunStatLabel} numberOfLines={1}>{label}</Text>
-      <Text style={raceDayStyles.raceRunStatValue} numberOfLines={1}>{value}</Text>
+    <View style={[raceDayStyles.raceRunStatBox, desktop && desktopStyles.stat]}>
+      <Text style={[raceDayStyles.raceRunStatLabel, desktop && desktopStyles.statLabel]} numberOfLines={1}>{label}</Text>
+      <Text style={[raceDayStyles.raceRunStatValue, desktop && desktopStyles.statValue]} numberOfLines={1}>{value}</Text>
     </View>
   );
 }
@@ -52,31 +54,42 @@ function getRunTitle(run = {}) {
   return title;
 }
 
-function RaceRunCard({ run, compareFields, onOpenResults }) {
+function RaceRunCard({ run, compareFields, onOpenResults, desktop }) {
+  const [expanded, setExpanded] = useState(false);
   const rows = buildCompareRows(run, compareFields);
+  const position = desktop ? getCompareValue(run, 'position') : '—';
+  const showPosition = position !== '—' && !rows.some((row) => row.key === 'position');
 
   return (
-    <View style={raceDayStyles.raceRunCardThin}>
+    <View style={[raceDayStyles.raceRunCardThin, desktop && desktopStyles.run]}>
       <View style={raceDayStyles.raceRunTopRow}>
-        <Text style={raceDayStyles.raceRunTitleThin} numberOfLines={1}>{getRunTitle(run)}</Text>
-        <TouchableOpacity style={raceDayStyles.resultsMiniButton} onPress={() => onOpenResults?.(run)} activeOpacity={0.82}>
-          <Text style={raceDayStyles.resultsMiniButtonText}>Results</Text>
+        <Text style={[raceDayStyles.raceRunTitleThin, desktop && desktopStyles.runTitle]} numberOfLines={1}>{getRunTitle(run)}</Text>
+        {desktop && (
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityState={{ expanded }}
+            style={[raceDayStyles.resultsMiniButton, desktopStyles.resultsButton]}
+            onPress={() => setExpanded((value) => !value)}
+          >
+            <Text style={desktopStyles.resultsButtonText}>{expanded ? 'Hide laps' : 'Lap chart'}</Text>
+          </TouchableOpacity>
+        )}
+        <TouchableOpacity accessibilityRole="button" style={[raceDayStyles.resultsMiniButton, desktop && desktopStyles.resultsButton]} onPress={() => onOpenResults?.(run)} activeOpacity={0.82}>
+          <Text style={[raceDayStyles.resultsMiniButtonText, desktop && desktopStyles.resultsButtonText]}>Results</Text>
         </TouchableOpacity>
       </View>
+      {desktop && !!run.className && <Text style={desktopStyles.runClass}>{run.className}</Text>}
 
-      <View style={raceDayStyles.raceRunStatsRow}>
+      <View style={[raceDayStyles.raceRunStatsRow, desktop && desktopStyles.runStats]}>
+        {showPosition && <RaceRunStat desktop label="Position" value={position} />}
         {rows.map((row) => (
-          <RaceRunStat
-            key={`${run.id || run.raceUrl || getRunTitle(run)}_${row.key}`}
-            label={row.label}
-            value={row.value}
-          />
+          <RaceRunStat key={row.key} label={row.label} value={row.value} desktop={desktop} />
         ))}
       </View>
+      {desktop && expanded && <RaceDayLapChart run={run} />}
     </View>
   );
 }
-
 
 function getLineupFromRunList(runs = []) {
   const list = Array.isArray(runs) ? runs.filter(Boolean) : [];
@@ -117,6 +130,7 @@ function getLineupFromRunList(runs = []) {
 
 export default function RaceDayVehicleCard({
   vehicle,
+  desktop = false,
   latestRun,
   runsForVehicle = [],
   lineup = null,
@@ -146,15 +160,15 @@ export default function RaceDayVehicleCard({
   );
 
   return (
-    <View style={raceDayStyles.raceVehicleCard}>
-      <View style={raceDayStyles.cardAccent} />
+    <View style={[raceDayStyles.raceVehicleCard, desktop && desktopStyles.vehicle]}>
+      {!desktop && <View style={raceDayStyles.cardAccent} />}
 
       <View style={raceDayStyles.raceVehicleHeader}>
         <View style={raceDayStyles.raceVehicleMain}>
-          <RaceDayLineupBadge lineup={displayLineup} />
+          <RaceDayLineupBadge lineup={displayLineup} desktop={desktop} />
           <View style={raceDayStyles.raceVehicleIdentity}>
-            <Text style={raceDayStyles.cardTitle}>{title}</Text>
-            <Text style={raceDayStyles.raceVehicleMeta} numberOfLines={1}>
+            <Text style={[raceDayStyles.cardTitle, desktop && desktopStyles.vehicleTitle]}>{title}</Text>
+            <Text style={[raceDayStyles.raceVehicleMeta, desktop && desktopStyles.vehicleMeta]} numberOfLines={1}>
               {vehicle?.manufacturer || vehicle?.model ? [vehicle.manufacturer, vehicle.model].filter(Boolean).join(' ') : 'Manufacturer / Model not set'}
             </Text>
           </View>
@@ -162,7 +176,7 @@ export default function RaceDayVehicleCard({
         <View style={raceDayStyles.raceVehicleActions}>
           <TouchableOpacity style={raceDayStyles.raceVehicleWrench} onPress={onOpenSetup} activeOpacity={0.82}>
             <WrenchIcon />
-            <Text style={raceDayStyles.raceVehicleWrenchText}>WRENCH</Text>
+            <Text style={[raceDayStyles.raceVehicleWrenchText, desktop && desktopStyles.vehicleAction]}>WRENCH</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -173,6 +187,7 @@ export default function RaceDayVehicleCard({
             <RaceRunCard
               key={run.id || `${run.raceUrl || 'race'}_${run.roundLabel || 'round'}_${run.raceNumber || index}`}
               run={run}
+              desktop={desktop}
               compareFields={compareFields}
               onOpenResults={onOpenResults}
             />

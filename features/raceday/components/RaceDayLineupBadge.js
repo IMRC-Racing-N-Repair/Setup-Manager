@@ -2,23 +2,23 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { getLineupRaceNumber } from '../lib/raceDayLineupPriority';
 
-export default function RaceDayLineupBadge({ lineup, style }) {
+export default function RaceDayLineupBadge({ lineup, style, desktop = false }) {
   const raceNumber = getLineupRaceNumber(lineup);
   if (!raceNumber) return null;
 
   return (
-    <View style={[styles.badge, style]}>
+    <View style={[styles.badge, desktop && styles.desktopBadge, style]}>
       <Text
         allowFontScaling={false}
         numberOfLines={1}
-        style={styles.label}
+        style={[styles.label, desktop && styles.desktopText]}
       >
         RACE
       </Text>
       <Text
         allowFontScaling={false}
         numberOfLines={1}
-        style={styles.number}
+        style={[styles.number, desktop && styles.desktopText]}
       >
         {raceNumber}
       </Text>
@@ -45,6 +45,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     elevation: 0,
   },
+  desktopBadge: { backgroundColor: 'rgba(255,172,112,0.12)', borderWidth: 0 },
+  desktopText: { color: '#FFAC70' },
   label: {
     width: '100%',
     fontSize: 8,

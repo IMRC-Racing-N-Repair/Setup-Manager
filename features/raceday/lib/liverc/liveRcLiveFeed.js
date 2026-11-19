@@ -254,7 +254,9 @@ export class LiveRcLiveFeed {
     this.onState = typeof onState === 'function' ? onState : () => {};
     this.fetchImpl = fetchImpl || (typeof fetch !== 'undefined' ? fetch : null);
     this.WebSocketImpl = WebSocketImpl || (typeof WebSocket !== 'undefined' ? WebSocket : null);
-    this.XHRImpl = XHRImpl || (typeof XMLHttpRequest !== 'undefined' ? XMLHttpRequest : null);
+    this.XHRImpl = XHRImpl === undefined
+      ? (typeof XMLHttpRequest !== 'undefined' ? XMLHttpRequest : null)
+      : XHRImpl;
     this.socket = null;
     this.transportToken = null;
     this.pollUrl = '';

@@ -2,6 +2,9 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ActivityIndicator, Alert, Platform, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import useViewport from '../../src/layout/useViewport';
+import { DESKTOP_WEB_MIN_WIDTH } from '../../src/layout/desktopWorkspace';
+import RaceDayDesktopSidebar from '../../features/raceday/components/RaceDayDesktopSidebar';
+import { raceDayDesktopStyles as desktopStyles } from '../../features/raceday/styles/raceDayDesktopStyles';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import RaceDayHeader from '../../features/raceday/components/RaceDayHeader';
@@ -80,7 +83,8 @@ export default function RaceDayDashboardScreen() {
   const insets = useSafeAreaInsets();
   const { width, height } = useViewport();
   const isTabletLandscape = width >= 700 && width > height;
-  const isDesktopWeb = Platform.OS === 'web' && width >= 900;
+  const isDesktopWeb = Platform.OS === 'web' && width >= DESKTOP_WEB_MIN_WIDTH;
+  const useTabletGrid = isTabletLandscape && !isDesktopWeb;
   const [loading, setLoading] = useState(true);
   const [active, setActive] = useState(null);
   const [track, setTrack] = useState(null);
@@ -666,7 +670,7 @@ export default function RaceDayDashboardScreen() {
   if (loading) {
     return (
       <View style={raceDayStyles.screen}>
-        <View style={[raceDayStyles.container, isTabletLandscape && raceDayStyles.containerTabletLandscape, { paddingTop: insets.top }]}>
+        <View style={[raceDayStyles.container, isTabletLandscape && raceDayStyles.containerTabletLandscape, isDesktopWeb && desktopStyles.container, { paddingTop: insets.top }]}>
           <RaceDayHeader title="RaceDay" subtitle="Loading" onLeftPress={handleBack} leftLabel="‹ BACK" topOffset={false} />
           <View style={[raceDayStyles.empty, raceDayStyles.loadingShell]}>
             <ActivityIndicator color={raceDayColors.accent} />
@@ -681,7 +685,7 @@ export default function RaceDayDashboardScreen() {
   if (!active?.trackId) {
     return (
       <View style={raceDayStyles.screen}>
-        <View style={[raceDayStyles.container, isTabletLandscape && raceDayStyles.containerTabletLandscape, { paddingTop: insets.top }]}>
+        <View style={[raceDayStyles.container, isTabletLandscape && raceDayStyles.containerTabletLandscape, isDesktopWeb && desktopStyles.container, { paddingTop: insets.top }]}>
           <RaceDayHeader title="RaceDay" subtitle="No active session" onLeftPress={handleBack} leftLabel="‹ BACK" topOffset={false} />
           <View style={raceDayStyles.empty}>
             <Text style={raceDayStyles.emptyText}>No active Race Day was found. Start Race Day from the Dashboard.</Text>
@@ -693,12 +697,122 @@ export default function RaceDayDashboardScreen() {
     );
   }
 
+  const eventPanel = dashboardMode === 'practice' ? (
+    <RaceDayPracticeTrackCard
+      raceDay={active}
+      trackName={trackName}
+      vehicleCount={vehicles.length}
+      practiceDayLabel={selectedPracticeDayLabel}
+      onSelectPracticeDay={() => setPracticeDayPickerOpen(true)}
+      onRefreshPractice={refreshPracticeSummaries}
+      refreshing={practiceRefreshing}
+      liveEnabled={liveEnabled}
+      liveMatched={liveIsActive}
+      onToggleLive={toggleLiveFeed}
+    >
+      {liveIsActive && !isDesktopWeb ? <RaceDayLiveHeader liveState={liveRcState} embedded /> : null}
+    </RaceDayPracticeTrackCard>
+  ) : (
+    <View style={[raceDayStyles.trackCard, isDesktopWeb && desktopStyles.event]}>
+      <View style={raceDayStyles.trackCardHeader}>
+        <View style={raceDayStyles.flex1}>
+          {!isDesktopWeb && <Text style={raceDayStyles.trackCardEyebrow}>Live RaceDay</Text>}
+          <Text style={[raceDayStyles.cardTitle, isDesktopWeb && desktopStyles.eventTitle]}>{trackName}</Text>
+          {!isDesktopWeb && <Text style={raceDayStyles.trackEventStatusText} numberOfLines={1}>{eventStatusText}</Text>}
+        </View>
+
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel={liveEnabled ? 'Turn live feed off' : 'Turn live feed on'}
+          style={[raceDayStyles.trackLiveBadge, (!liveEnabled || !liveIsActive) && raceDayStyles.trackLiveBadgeInactive, isDesktopWeb && desktopStyles.liveButton]}
+          onPress={toggleLiveFeed}
+          activeOpacity={0.76}
+        >
+          <View style={[raceDayStyles.trackLiveDot, (!liveEnabled || !liveIsActive) && raceDayStyles.trackLiveDotInactive]} />
+          <Text style={[raceDayStyles.trackLiveBadgeText, (!liveEnabled || !liveIsActive) && raceDayStyles.trackLiveBadgeTextInactive, isDesktopWeb && liveIsActive && desktopStyles.liveLabel]}>
+            {liveBadgeLabel}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={[raceDayStyles.trackNavigationRow, isDesktopWeb && desktopStyles.navigation]}>
+        <TouchableOpacity style={raceDayStyles.trackNavigationButton} onPress={() => setSyncOpen(true)} activeOpacity={0.82}>
+          <View style={raceDayStyles.trackEventIdentity}>
+            <Text style={[raceDayStyles.trackNavigationLabel, isDesktopWeb && desktopStyles.navigationLabel]}>{hasLiveRcEvent ? 'SELECTED EVENT' : 'RACEDAY EVENT'}</Text>
+            <Text style={[raceDayStyles.trackNavigationText, isDesktopWeb && desktopStyles.navigationText]} numberOfLines={1}>
+              {hasLiveRcEvent ? selectedEventTitleLabel : 'Choose LiveRC Event'}
+            </Text>
+            <Text style={[raceDayStyles.trackNavigationMeta, isDesktopWeb && desktopStyles.navigationMeta]} numberOfLines={1}>
+              {hasLiveRcEvent ? selectedEventDateLabel || 'Date not listed' : 'No event is currently selected'}
+            </Text>
+          </View>
+          <View style={raceDayStyles.trackEventChangeAction}>
+            <Text style={[raceDayStyles.trackEventChangeText, isDesktopWeb && desktopStyles.navigationAction]}>{hasLiveRcEvent ? 'CHANGE' : 'SELECT'}</Text>
+            <Text style={raceDayStyles.trackNavigationArrow}>›</Text>
+          </View>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[raceDayStyles.trackSyncButton, isDesktopWeb && desktopStyles.sync, syncing && { opacity: 0.55 }]}
+          onPress={handleSyncPress}
+          disabled={syncing}
+          activeOpacity={0.82}
+        >
+          {syncing ? <ActivityIndicator size="small" /> : (
+            <>
+              <Text style={[raceDayStyles.trackNavigationLabel, isDesktopWeb && desktopStyles.navigationLabel]}>LIVERC</Text>
+              <Text style={[raceDayStyles.trackSyncText, isDesktopWeb && desktopStyles.navigationAction]}>{hasLiveRcEvent ? 'RE-SYNC' : 'SYNC'}</Text>
+            </>
+          )}
+        </TouchableOpacity>
+      </View>
+      {liveIsActive && !isDesktopWeb ? <RaceDayLiveHeader liveState={liveRcState} embedded /> : null}
+    </View>
+  );
+  const vehicleResults = vehicles.length ? (
+    <View style={useTabletGrid ? raceDayStyles.vehicleGridTabletLandscape : null}>
+      {dashboardMode === 'race' ? vehicles.map((vehicle) => {
+        const id = normalizeId(vehicle.id || vehicle.vehicleId);
+        return (
+          <View key={id} style={useTabletGrid ? raceDayStyles.vehicleGridCellTabletLandscape : null}>
+            <RaceDayVehicleCard
+              vehicle={vehicle}
+              desktop={isDesktopWeb}
+              latestRun={latestRunsByVehicle.get(id)}
+              runsForVehicle={runsByVehicle.get(id)}
+              lineup={lineupsByVehicle.get(id) || null}
+              compareFields={compareFields}
+              onOpenResults={(run) => openResults(vehicle, run)}
+              onOpenSetup={() => openSetup(vehicle)}
+            />
+          </View>
+        );
+      }) : vehicles.map((vehicle) => {
+        const id = normalizeId(vehicle.id || vehicle.vehicleId);
+        return (
+          <View key={id} style={useTabletGrid ? raceDayStyles.vehicleGridCellTabletLandscape : null}>
+            <RaceDayPracticeCard
+              vehicle={vehicle}
+              summary={practiceSummaries[id]}
+              onOpenSessions={() => openPracticeSessions(vehicle)}
+              onOpenSetup={() => openSetup(vehicle)}
+            />
+          </View>
+        );
+      })}
+    </View>
+  ) : (
+    <View style={raceDayStyles.empty}>
+      <Text style={raceDayStyles.emptyText}>No vehicles selected yet. Add vehicles to continue Race Day.</Text>
+    </View>
+  );
+
   return (
     <View style={raceDayStyles.screen}>
-      <View style={[raceDayStyles.container, isTabletLandscape && raceDayStyles.containerTabletLandscape, { paddingTop: insets.top }]}>
+      <View style={[raceDayStyles.container, isTabletLandscape && raceDayStyles.containerTabletLandscape, isDesktopWeb && desktopStyles.container, { paddingTop: insets.top }]}>
         <RaceDayHeader
           title="RaceDay"
-          subtitle={trackName}
+          subtitle={isDesktopWeb ? undefined : trackName}
           leftLabel="‹ BACK"
           onLeftPress={handleBack}
           rightLabel="END"
@@ -707,116 +821,32 @@ export default function RaceDayDashboardScreen() {
           topOffset={false}
         />
 
-        <ScrollView contentContainerStyle={[raceDayStyles.scrollContent, isTabletLandscape && raceDayStyles.scrollContentTabletLandscape, { paddingBottom: isDesktopWeb ? 76 : 142 + insets.bottom }]} showsVerticalScrollIndicator={false}>
-          <RaceDayModeToggle mode={dashboardMode} onChange={handleDashboardModeChange} />
+        <ScrollView contentContainerStyle={[raceDayStyles.scrollContent, isTabletLandscape && raceDayStyles.scrollContentTabletLandscape, isDesktopWeb ? desktopStyles.scroll : { paddingBottom: 142 + insets.bottom }]} showsVerticalScrollIndicator={false}>
+          <RaceDayModeToggle desktop={isDesktopWeb} mode={dashboardMode} onChange={handleDashboardModeChange} />
 
-          {dashboardMode === 'practice' ? (
-            <RaceDayPracticeTrackCard
-              raceDay={active}
-              trackName={trackName}
-              vehicleCount={vehicles.length}
-              practiceDayLabel={selectedPracticeDayLabel}
-              onSelectPracticeDay={() => setPracticeDayPickerOpen(true)}
-              onRefreshPractice={refreshPracticeSummaries}
-              refreshing={practiceRefreshing}
-              liveEnabled={liveEnabled}
-              liveMatched={liveIsActive}
-              onToggleLive={toggleLiveFeed}
-            >
-              {liveIsActive ? <RaceDayLiveHeader liveState={liveRcState} embedded /> : null}
-            </RaceDayPracticeTrackCard>
-          ) : (
-            <View style={raceDayStyles.trackCard}>
-              <View style={raceDayStyles.trackCardHeader}>
-                <View style={raceDayStyles.flex1}>
-                  <Text style={raceDayStyles.trackCardEyebrow}>Live RaceDay</Text>
-                  <Text style={raceDayStyles.cardTitle}>{trackName}</Text>
-                  <Text style={raceDayStyles.trackEventStatusText} numberOfLines={1}>{eventStatusText}</Text>
-                </View>
-
-                <TouchableOpacity
-                  style={[raceDayStyles.trackLiveBadge, (!liveEnabled || !liveIsActive) && raceDayStyles.trackLiveBadgeInactive]}
-                  onPress={toggleLiveFeed}
-                  activeOpacity={0.76}
-                >
-                  <View style={[raceDayStyles.trackLiveDot, (!liveEnabled || !liveIsActive) && raceDayStyles.trackLiveDotInactive]} />
-                  <Text style={[raceDayStyles.trackLiveBadgeText, (!liveEnabled || !liveIsActive) && raceDayStyles.trackLiveBadgeTextInactive]}>
-                    {liveBadgeLabel}
-                  </Text>
-                </TouchableOpacity>
+          {isDesktopWeb ? (
+            <View style={desktopStyles.columns}>
+              <View style={desktopStyles.main}>
+                {eventPanel}
+                <Text accessibilityRole="header" style={desktopStyles.resultsHeading}>
+                  {dashboardMode === 'race' ? 'Vehicle results' : 'Practice results'}
+                </Text>
+                {vehicleResults}
               </View>
-
-              <View style={raceDayStyles.trackNavigationRow}>
-                <TouchableOpacity style={raceDayStyles.trackNavigationButton} onPress={() => setSyncOpen(true)} activeOpacity={0.82}>
-                  <View style={raceDayStyles.trackEventIdentity}>
-                    <Text style={raceDayStyles.trackNavigationLabel}>{hasLiveRcEvent ? 'SELECTED EVENT' : 'RACEDAY EVENT'}</Text>
-                    <Text style={raceDayStyles.trackNavigationText} numberOfLines={1}>
-                      {hasLiveRcEvent ? selectedEventTitleLabel : 'Choose LiveRC Event'}
-                    </Text>
-                    <Text style={raceDayStyles.trackNavigationMeta} numberOfLines={1}>
-                      {hasLiveRcEvent ? selectedEventDateLabel || 'Date not listed' : 'No event is currently selected'}
-                    </Text>
-                  </View>
-                  <View style={raceDayStyles.trackEventChangeAction}>
-                    <Text style={raceDayStyles.trackEventChangeText}>{hasLiveRcEvent ? 'CHANGE' : 'SELECT'}</Text>
-                    <Text style={raceDayStyles.trackNavigationArrow}>›</Text>
-                  </View>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[raceDayStyles.trackSyncButton, syncing && { opacity: 0.55 }]}
-                  onPress={handleSyncPress}
-                  disabled={syncing}
-                  activeOpacity={0.82}
-                >
-                  {syncing ? <ActivityIndicator size="small" /> : (
-                    <>
-                      <Text style={raceDayStyles.trackNavigationLabel}>LIVERC</Text>
-                      <Text style={raceDayStyles.trackSyncText}>{hasLiveRcEvent ? 'RE-SYNC' : 'SYNC'}</Text>
-                    </>
-                  )}
-                </TouchableOpacity>
-              </View>
-              {liveIsActive ? <RaceDayLiveHeader liveState={liveRcState} embedded /> : null}
+              <RaceDayDesktopSidebar
+                raceDayId={active.id || active.raceDayId}
+                vehicles={vehicles}
+                lineups={lineups}
+                liveState={liveRcState}
+                liveIsActive={liveIsActive}
+                eventStatus={liveEnabled ? eventStatusText : 'Live feed is off'}
+                notesOpen={notesOpen}
+                changesOpen={changesOpen}
+                onOpenNotes={() => setNotesOpen(true)}
+                onOpenChanges={() => setChangesOpen(true)}
+              />
             </View>
-          )}
-
-          {vehicles.length ? (
-            <View style={isTabletLandscape ? raceDayStyles.vehicleGridTabletLandscape : null}>
-              {dashboardMode === 'race' ? vehicles.map((vehicle) => {
-                const id = normalizeId(vehicle.id || vehicle.vehicleId);
-                return (
-                  <View key={id} style={isTabletLandscape ? raceDayStyles.vehicleGridCellTabletLandscape : null}>
-                    <RaceDayVehicleCard
-                      vehicle={vehicle}
-                      latestRun={latestRunsByVehicle.get(id)}
-                      runsForVehicle={runsByVehicle.get(id)}
-                      lineup={lineupsByVehicle.get(id) || null}
-                      compareFields={compareFields}
-                      onOpenResults={(run) => openResults(vehicle, run)}
-                      onOpenSetup={() => openSetup(vehicle)}
-                    />
-                  </View>
-                );
-              }) : vehicles.map((vehicle) => {
-                const id = normalizeId(vehicle.id || vehicle.vehicleId);
-                return (
-                  <View key={id} style={isTabletLandscape ? raceDayStyles.vehicleGridCellTabletLandscape : null}>
-                    <RaceDayPracticeCard
-                      vehicle={vehicle}
-                      summary={practiceSummaries[id]}
-                      onOpenSessions={() => openPracticeSessions(vehicle)}
-                      onOpenSetup={() => openSetup(vehicle)}
-                    />
-                  </View>
-                );
-              })}
-            </View>
-          ) : (
-            <View style={raceDayStyles.empty}>
-              <Text style={raceDayStyles.emptyText}>No vehicles selected yet. Add vehicles to continue Race Day.</Text>
-            </View>
-          )}
+          ) : <>{eventPanel}{vehicleResults}</>}
         </ScrollView>
       </View>
 

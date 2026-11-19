@@ -1,0 +1,34 @@
+import { StyleSheet } from 'react-native';
+import { DESKTOP_WORKSPACE_MAX_WIDTH } from '../../../src/layout/desktopWorkspace';
+import { AppColors } from '../../../src/theme/colors';
+
+export const raceDayDesktopStyles = StyleSheet.create({
+  container: { maxWidth: DESKTOP_WORKSPACE_MAX_WIDTH, paddingHorizontal: 28 },
+  scroll: { paddingTop: 10, paddingBottom: 84 },
+  columns: { flexDirection: 'row', alignItems: 'flex-start', gap: 26 },
+  main: { flex: 2.1, minWidth: 0 },
+  event: { backgroundColor: 'transparent', borderWidth: 0, padding: 0, marginBottom: 22 },
+  eventTitle: { fontSize: 25 },
+  liveButton: { minHeight: 36, borderRadius: 6, paddingHorizontal: 10 },
+  liveLabel: { fontSize: 11, color: '#74DFAB' },
+  navigation: { minHeight: 66, marginTop: 14, borderWidth: 0, borderTopWidth: 0, borderBottomWidth: 0, borderRadius: 9, overflow: 'hidden' },
+  navigationLabel: { fontSize: 10, color: '#A6CDFF' },
+  navigationText: { fontSize: 16, lineHeight: 21 },
+  navigationMeta: { fontSize: 12, lineHeight: 16 },
+  navigationAction: { fontSize: 12, lineHeight: 15, color: '#A6CDFF' },
+  sync: { width: 75 },
+  resultsHeading: { color: AppColors.textStrong, fontSize: 20, fontWeight: '800', paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: AppColors.border },
+  vehicle: { backgroundColor: 'transparent', borderWidth: 0, paddingHorizontal: 0, paddingTop: 10, paddingBottom: 16 },
+  vehicleTitle: { fontSize: 21 },
+  vehicleMeta: { fontSize: 13, lineHeight: 18, fontWeight: '500' },
+  vehicleAction: { fontSize: 10, lineHeight: 14 },
+  run: { backgroundColor: 'transparent', paddingVertical: 10, marginTop: 5 },
+  runTitle: { fontSize: 14, lineHeight: 20, color: '#FFAC70' },
+  runClass: { color: AppColors.mutedText, fontSize: 12, lineHeight: 17 },
+  runStats: { flexWrap: 'wrap', gap: 14, marginTop: 7 },
+  stat: { flexGrow: 0, flexBasis: 'auto', paddingHorizontal: 0, paddingVertical: 4, borderWidth: 0, backgroundColor: 'transparent' },
+  statLabel: { color: AppColors.mutedText, fontSize: 11, lineHeight: 16 },
+  statValue: { fontSize: 17, lineHeight: 22, fontVariant: ['tabular-nums'] },
+  resultsButton: { minHeight: 36, paddingHorizontal: 10, borderRadius: 6 },
+  resultsButtonText: { color: '#A6CDFF', fontSize: 12 },
+});

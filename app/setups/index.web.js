@@ -1,10 +1,12 @@
-import { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, FlatList, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import useViewport from '../../src/layout/useViewport';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 
+import { DESKTOP_WEB_MIN_WIDTH, DESKTOP_WORKSPACE_MAX_WIDTH } from '../../src/layout/desktopWorkspace';
+import CornerWeightChart from '../../src/components/CornerWeightChart';
 import AppScreenHeader from '../../src/layout/AppScreenHeader';
-import { getLastViewedSetup, getSetups, getTracks, getVehicles } from '../../features/setups/lib/setupStorage';
+import { getLastViewedSetup, getSetupHistory, getSetups, getTracks, getVehicles } from '../../features/setups/lib/setupStorage';
 import { getEntityId, getTrackDisplayName, getVehicleDisplayName } from '../../features/setups/lib/setupModel';
 import { importSetupsExportJson, shareSetupsExportJson } from '../../features/setups/lib/setupFileTransfer';
 import { AppColors as colors } from '../../src/theme/colors';
@@ -48,27 +50,69 @@ function Choice({ name, detail, count, selected, onPress }) {
   );
 }
 
+const setupFields = [
+  ['Spur', 'gearing', 'spur'],
+  ['Pinion', 'gearing', 'pinion'],
+  ['Tire diameter', 'gearing', 'tireDiameter'],
+  ['Rollout', 'gearing', 'rollout'],
+  ['Fast lap', 'results', 'fastLap'],
+  ['Average lap', 'results', 'avgLap'],
+  ['Cross weight', 'cornerWeights', 'crossWeight'],
+];
+
+function setupValue(setup, section, field) {
+  return String(setup?.[section]?.[field] ?? '').trim();
+}
+
 function SetupPreview({ row, onOpen }) {
-  const gears = row.setup.gearing || {};
-  const fields = [
-    ['Spur', gears.spur], ['Pinion', gears.pinion],
-    ['Tire diameter', gears.tireDiameter], ['Rollout', gears.rollout],
-  ].filter(([, value]) => value !== undefined && value !== null && String(value).trim());
+  const [history, setHistory] = useState([]);
+  const [compare, setCompare] = useState(false);
+  const { trackId, vehicleId, setup } = row;
+
+  useEffect(() => {
+    let current = true;
+    getSetupHistory(vehicleId, trackId).then((versions) => {
+      if (current) setHistory(versions);
+    }).catch(() => {
+      if (current) setHistory([]);
+    });
+    return () => { current = false; };
+  }, [vehicleId, trackId, setup.id, setup.savedAt]);
+
+  const earlier = history.find((version) => version.id !== setup.id && setupTime(version) < setupTime(setup));
+  const previous = compare ? earlier : null;
+  const fields = setupFields.map(([label, section, field]) => ({
+    label,
+    current: setupValue(setup, section, field),
+    previous: setupValue(previous, section, field),
+  })).filter((field) => field.current || field.previous);
+
   return (
     <View style={styles.preview}>
       <Text style={styles.sectionTitle}>{getTrackDisplayName(row.track)}</Text>
-      <Text style={styles.muted}>Saved {formatDate(row.setup)}</Text>
+      <Text style={styles.muted}>Saved {formatDate(setup)}</Text>
+      <Action primary onPress={() => onOpen(row)}>Open setup</Action>
+      {earlier && <Action onPress={() => setCompare((value) => !value)}>{compare ? 'Hide comparison' : 'Compare previous save'}</Action>}
+      {previous && <Text style={styles.muted}>Previous save · {formatDate(previous)}</Text>}
       {!!fields.length && (
-        <View style={styles.gearing}>
-          {fields.map(([label, value]) => (
-            <View key={label} style={styles.field}>
-              <Text style={styles.muted}>{label}</Text>
-              <Text style={styles.name}>{value}</Text>
+        <View>
+          {previous && (
+            <View style={styles.field}>
+              <Text style={[styles.muted, styles.identity]}>Setting</Text>
+              <Text style={[styles.muted, styles.fieldValue]}>Current</Text>
+              <Text style={[styles.muted, styles.fieldValue]}>Previous</Text>
+            </View>
+          )}
+          {fields.map((field) => (
+            <View key={field.label} style={styles.field}>
+              <Text style={[styles.muted, styles.identity]}>{field.label}</Text>
+              <Text style={[styles.name, styles.fieldValue]}>{field.current || '—'}</Text>
+              {previous && <Text style={[styles.muted, styles.fieldValue]}>{field.previous || '—'}</Text>}
             </View>
           ))}
         </View>
       )}
-      <Action primary onPress={() => onOpen(row)}>Open setup</Action>
+      <CornerWeightChart weights={setup.cornerWeights} />
     </View>
   );
 }
@@ -76,7 +120,7 @@ function SetupPreview({ row, onOpen }) {
 export default function SetupsWebScreen() {
   const router = useRouter();
   const { width } = useViewport();
-  const desktop = width >= 900;
+  const desktop = width >= DESKTOP_WEB_MIN_WIDTH;
   const params = useLocalSearchParams();
   const vehicleId = String(params.vehicleId || '');
   const selectedTrackId = String(params.setupTrackId || '');
@@ -195,7 +239,7 @@ export default function SetupsWebScreen() {
       ) : (
         <View style={[styles.workspace, desktop && styles.workspaceWide]}>
           {(desktop || !vehicle) && (
-            <View style={[styles.panel, desktop && styles.vehiclePanel]}>
+            <View style={[styles.panel, desktop && styles.panelWide, desktop && styles.vehiclePanel]}>
               <Text style={styles.panelTitle}>Vehicles</Text>
               <FlatList
                 data={vehicles}
@@ -212,7 +256,7 @@ export default function SetupsWebScreen() {
           )}
 
           {(desktop || vehicle) && (
-            <View style={styles.panel}>
+            <View style={[styles.panel, desktop && styles.panelWide]}>
               <Text style={styles.panelTitle}>{vehicle ? getVehicleDisplayName(vehicle) : 'Track setups'}</Text>
               {vehicle ? (
                 <FlatList
@@ -231,9 +275,13 @@ export default function SetupsWebScreen() {
           )}
 
           {desktop && (
-            <View style={styles.panel}>
+            <View style={[styles.panel, styles.panelWide, styles.detailsPanel]}>
               <Text style={styles.panelTitle}>Setup details</Text>
-              {preview ? <SetupPreview row={preview} onOpen={openSetup} /> : <Text style={styles.empty}>Select a saved setup to see its details.</Text>}
+              <ScrollView>
+                {preview
+                  ? <SetupPreview key={`${preview.vehicleId}/${preview.trackId}`} row={preview} onOpen={openSetup} />
+                  : <Text style={styles.empty}>Select a saved setup to see its details.</Text>}
+              </ScrollView>
             </View>
           )}
         </View>
@@ -254,14 +302,16 @@ export default function SetupsWebScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background, paddingHorizontal: 14, paddingTop: 8, paddingBottom: 14, gap: 12 },
-  screenWide: { paddingHorizontal: 28, paddingTop: 16, paddingBottom: 20, gap: 16 },
+  screenWide: { width: '100%', maxWidth: DESKTOP_WORKSPACE_MAX_WIDTH, alignSelf: 'center', paddingHorizontal: 28, paddingTop: 16, paddingBottom: 20, gap: 16 },
   toolbar: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 10 },
   identity: { flex: 1, minWidth: 0, gap: 4 },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   workspace: { flex: 1, minHeight: 0, gap: 12 },
-  workspaceWide: { flexDirection: 'row' },
+  workspaceWide: { flexDirection: 'row', gap: 16 },
   panel: { flex: 1, minWidth: 0, borderWidth: 1, borderColor: colors.border, borderRadius: 12, backgroundColor: colors.surface },
-  vehiclePanel: { flex: 0.9 },
+  panelWide: { borderWidth: 0, borderRadius: 10 },
+  vehiclePanel: { flex: 0.85 },
+  detailsPanel: { flex: 1.45 },
   panelTitle: { paddingVertical: 12, paddingHorizontal: 13, borderBottomWidth: 1, borderBottomColor: colors.border, color: colors.text, fontSize: 16, fontWeight: '800' },
   sectionTitle: { color: colors.text, fontSize: 18, fontWeight: '800' },
   name: { color: colors.text, fontSize: 14, fontWeight: '700' },
@@ -271,8 +321,8 @@ const styles = StyleSheet.create({
   choiceSelected: { backgroundColor: colors.primarySoft, borderColor: '#426A99' },
   count: { color: '#A8CBFC', fontSize: 12 },
   preview: { padding: 13, gap: 10 },
-  gearing: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  field: { flexBasis: '46%', flexGrow: 1, backgroundColor: colors.backgroundSoft, borderRadius: 8, padding: 8, gap: 5 },
+  field: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: colors.border },
+  fieldValue: { flex: 1, minWidth: 0, textAlign: 'right', fontVariant: ['tabular-nums'] },
   empty: { padding: 14, color: colors.mutedText, fontSize: 14 },
   lastOpened: { flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 10, backgroundColor: colors.card },
   button: { alignSelf: 'flex-start', justifyContent: 'center', minHeight: 38, borderWidth: 1, borderColor: colors.borderStrong, backgroundColor: colors.surface, borderRadius: 7, paddingHorizontal: 10 },

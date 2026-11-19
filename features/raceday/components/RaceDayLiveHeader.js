@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Easing, Text, View } from 'react-native';
-import { raceDayStyles } from '../styles/raceDayStyles';
+import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
+import { raceDayColors, raceDayStyles } from '../styles/raceDayStyles';
 
 const MARQUEE_PIXELS_PER_SECOND = 58;
 
@@ -48,7 +48,7 @@ function driverItemLabel(driver) {
   return `${driver.position ? `${driver.position}. ` : ''}${driver.name || `Car ${driver.carNumber}`}`;
 }
 
-export default function RaceDayLiveHeader({ liveState, embedded = false }) {
+export default function RaceDayLiveHeader({ liveState, embedded = false, desktop = false }) {
   const translateX = useRef(new Animated.Value(0)).current;
   const animationRef = useRef(null);
   const [viewportWidth, setViewportWidth] = useState(0);
@@ -85,6 +85,21 @@ export default function RaceDayLiveHeader({ liveState, embedded = false }) {
 
     return () => animation.stop();
   }, [active, contentWidth, driversText, translateX, viewportWidth]);
+
+  if (desktop && active) {
+    return (
+      <View style={desktopStyles.live}>
+        <Text style={desktopStyles.number}>{raceLabel(liveState)}</Text>
+        <Text style={desktopStyles.className}>{liveState.className || 'Live Track'}</Text>
+        {details ? <Text style={desktopStyles.copy}>{details}</Text> : null}
+        {marqueeDrivers.length
+          ? marqueeDrivers.map((driver, index) => (
+            <Text key={driver.key || driver.driverId || index} style={desktopStyles.copy}>{driverItemLabel(driver)}</Text>
+          ))
+          : <Text style={desktopStyles.copy}>Waiting for drivers on track…</Text>}
+      </View>
+    );
+  }
 
   if (!liveState?.configured) return null;
 
@@ -161,3 +176,10 @@ export default function RaceDayLiveHeader({ liveState, embedded = false }) {
 }
 
 export { RaceDayLiveHeader };
+
+const desktopStyles = StyleSheet.create({
+  live: { gap: 5 },
+  number: { color: '#FFAC70', fontSize: 27, fontWeight: '900', fontVariant: ['tabular-nums'] },
+  className: { color: raceDayColors.text, fontSize: 20, fontWeight: '800' },
+  copy: { color: raceDayColors.muted, fontSize: 14, lineHeight: 20 },
+});

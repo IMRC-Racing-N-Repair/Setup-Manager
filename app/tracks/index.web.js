@@ -8,8 +8,10 @@ import {
   Text,
   View,
 } from 'react-native';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 
+import useViewport from '../../src/layout/useViewport';
+import { DESKTOP_WORKSPACE_MAX_WIDTH } from '../../src/layout/desktopWorkspace';
 import AppScreenHeader from '../../src/layout/AppScreenHeader';
 import TrackEditSheet from '../../features/tracks/components/TrackEditSheet';
 import TrackImportSheet from '../../features/tracks/components/TrackImportSheet';
@@ -67,7 +69,7 @@ function downloadJson(fileName, payload) {
 }
 
 function selectTrackFile() {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.json,.imrctrack,application/json,text/plain';
@@ -77,7 +79,19 @@ function selectTrackFile() {
     input.addEventListener('change', async () => {
       const file = input.files?.[0] || null;
       input.remove();
-      resolve(file ? { name: file.name, text: await file.text() } : null);
+      if (!file) {
+        resolve(null);
+        return;
+      }
+      try {
+        resolve({ name: file.name, text: await file.text() });
+      } catch (error) {
+        reject(error);
+      }
+    }, { once: true });
+    input.addEventListener('cancel', () => {
+      input.remove();
+      resolve(null);
     }, { once: true });
     input.click();
   });
@@ -85,6 +99,10 @@ function selectTrackFile() {
 
 export default function TracksWebScreen() {
   const router = useRouter();
+  const { addTrack, editTrackId } = useLocalSearchParams();
+  const { width } = useViewport();
+  const showColumns = width >= 1100;
+  const handledAction = useRef('');
   const [tracks, setTracks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingTrack, setEditingTrack] = useState(null);
@@ -102,6 +120,21 @@ export default function TracksWebScreen() {
   useFocusEffect(useCallback(() => {
     loadTracks();
   }, [loadTracks]));
+
+  useFocusEffect(useCallback(() => {
+    const action = editTrackId ? `edit:${editTrackId}` : addTrack === '1' ? 'add' : '';
+    if (!action) {
+      handledAction.current = '';
+      return;
+    }
+    if (loading || handledAction.current === action) return;
+    const track = editTrackId ? tracks.find((item) => String(item.id) === String(editTrackId)) : NEW_TRACK;
+    if (!track) return;
+    handledAction.current = action;
+    setEditingTrack({ ...track });
+    setSheetVisible(true);
+    router.setParams({ addTrack: '', editTrackId: '' });
+  }, [addTrack, editTrackId, loading, router, tracks]));
 
   async function saveTrack(nextTrack) {
     try {
@@ -184,26 +217,26 @@ export default function TracksWebScreen() {
         />
 
         <View style={styles.intro}>
-          <Text style={styles.introText}>Saved tracks are used for Setups and RaceDay.</Text>
+          <Text style={styles.listTitle}>Saved tracks</Text>
           <Text style={styles.savedCount}>{tracks.length} SAVED</Text>
         </View>
 
         <View style={styles.actions}>
           <Pressable style={styles.actionButton} onPress={importFile}>
             <Text style={styles.actionIcon}>⇩</Text>
-            <View><Text style={styles.actionTitle}>IMPORT FILE</Text><Text style={styles.actionMeta}>JSON / IMRC TRACK</Text></View>
+            <Text style={styles.actionTitle}>Import file</Text>
           </Pressable>
           <Pressable style={styles.actionButton} onPress={exportTracks} disabled={!tracks.length}>
             <Text style={styles.actionIcon}>⇧</Text>
-            <View><Text style={styles.actionTitle}>EXPORT ALL</Text><Text style={styles.actionMeta}>DOWNLOAD BACKUP</Text></View>
+            <Text style={styles.actionTitle}>Export all</Text>
           </Pressable>
           <Pressable style={styles.actionButton} onPress={() => setDirectoryVisible(true)}>
             <Text style={styles.actionIcon}>◎</Text>
-            <View><Text style={styles.actionTitle}>ONLINE DIRECTORY</Text><Text style={styles.actionMeta}>FIND A TRACK</Text></View>
+            <Text style={styles.actionTitle}>Online directory</Text>
           </Pressable>
           <Pressable style={[styles.actionButton, styles.submitButton]} onPress={() => router.push('/tracks/submit')}>
             <Text style={styles.actionIcon}>↗</Text>
-            <View><Text style={styles.actionTitle}>SUBMIT TRACK</Text><Text style={styles.actionMeta}>SHARE WITH IMRC</Text></View>
+            <Text style={styles.actionTitle}>Submit track</Text>
           </Pressable>
         </View>
 
@@ -214,14 +247,29 @@ export default function TracksWebScreen() {
             data={tracks}
             keyExtractor={(item) => String(item.id)}
             contentContainerStyle={styles.list}
-            renderItem={({ item, index }) => (
-              <Pressable style={({ pressed }) => [styles.row, pressed && styles.pressed]} onPress={() => openTrack(item)}>
-                <Text style={styles.number}>{String(index + 1).padStart(2, '0')}</Text>
-                <View style={styles.identity}>
-                  <Text style={styles.name}>{trackName(item)}</Text>
-                  <Text style={styles.meta}>{trackMeta(item)}</Text>
-                  <Text style={styles.location}>{trackLocation(item)}</Text>
-                </View>
+            ListHeaderComponent={showColumns && tracks.length > 0 ? (
+              <View style={[styles.row, styles.tableHeader]}>
+                <Text style={[styles.column, styles.columnLabel]}>Track</Text>
+                <Text style={[styles.column, styles.columnLabel]}>Surface & layout</Text>
+                <Text style={[styles.column, styles.columnLabel]}>Location</Text>
+                <View style={styles.chevron} />
+              </View>
+            ) : null}
+            renderItem={({ item }) => (
+              <Pressable accessibilityRole="button" style={({ hovered, pressed }) => [styles.row, hovered && styles.hover, pressed && styles.pressed]} onPress={() => openTrack(item)}>
+                {showColumns ? (
+                  <>
+                    <Text style={[styles.column, styles.name]}>{trackName(item)}</Text>
+                    <Text style={[styles.column, styles.meta]}>{trackMeta(item)}</Text>
+                    <Text style={[styles.column, styles.location]}>{trackLocation(item)}</Text>
+                  </>
+                ) : (
+                  <View style={styles.column}>
+                    <Text style={styles.name}>{trackName(item)}</Text>
+                    <Text style={styles.meta}>{trackMeta(item)}</Text>
+                    <Text style={styles.location}>{trackLocation(item)}</Text>
+                  </View>
+                )}
                 <Text style={styles.chevron}>›</Text>
               </Pressable>
             )}
@@ -263,27 +311,28 @@ export default function TracksWebScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: AppColors.background },
-  content: { flex: 1, width: '100%', paddingHorizontal: 22, paddingTop: 16 },
+  content: { flex: 1, width: '100%', maxWidth: DESKTOP_WORKSPACE_MAX_WIDTH, alignSelf: 'center', paddingHorizontal: 22, paddingTop: 16 },
   intro: { minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: AppColors.border },
-  introText: { color: AppColors.mutedText, fontSize: 12 },
-  savedCount: { color: AppColors.mutedText, fontSize: 9, fontWeight: '900', letterSpacing: 0.7 },
+  listTitle: { color: AppColors.text, fontSize: 19, fontWeight: '800' },
+  savedCount: { color: AppColors.mutedText, fontSize: 11, fontWeight: '800', letterSpacing: 0.7 },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: AppColors.borderStrong },
-  actionButton: { minWidth: 210, minHeight: 54, flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, borderWidth: 1, borderColor: AppColors.borderStrong, backgroundColor: AppColors.surface },
-  submitButton: { borderColor: AppColors.primary, backgroundColor: AppColors.primarySoft },
-  actionIcon: { width: 26, color: AppColors.primary, fontSize: 20, fontWeight: '900', textAlign: 'center' },
-  actionTitle: { color: AppColors.textStrong, fontSize: 11, fontWeight: '900', letterSpacing: 0.5 },
-  actionMeta: { marginTop: 2, color: AppColors.subtleText, fontSize: 7, fontWeight: '800', letterSpacing: 0.35 },
+  actionButton: { minHeight: 43, flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, borderRadius: 7, backgroundColor: AppColors.surface },
+  submitButton: { backgroundColor: AppColors.primarySoft },
+  actionIcon: { width: 20, color: AppColors.primary, fontSize: 17, fontWeight: '900', textAlign: 'center' },
+  actionTitle: { color: AppColors.textStrong, fontSize: 13, fontWeight: '700' },
   list: { paddingBottom: 30 },
   row: { minHeight: 72, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 10, borderBottomWidth: 1, borderBottomColor: AppColors.border },
-  number: { width: 28, color: AppColors.subtleText, fontSize: 10, fontWeight: '800' },
-  identity: { flex: 1, minWidth: 0 },
-  name: { color: AppColors.textStrong, fontSize: 16, fontWeight: '900' },
-  meta: { marginTop: 3, color: AppColors.mutedText, fontSize: 10 },
-  location: { marginTop: 3, color: AppColors.subtleText, fontSize: 9, fontWeight: '700' },
-  chevron: { color: AppColors.primary, fontSize: 24 },
+  tableHeader: { minHeight: 46 },
+  column: { flex: 1, minWidth: 0 },
+  columnLabel: { color: AppColors.mutedText, fontSize: 12, fontWeight: '700' },
+  name: { color: AppColors.textStrong, fontSize: 17, fontWeight: '800' },
+  meta: { marginTop: 3, color: AppColors.mutedText, fontSize: 14 },
+  location: { marginTop: 3, color: AppColors.mutedText, fontSize: 13 },
+  chevron: { width: 18, color: AppColors.primary, fontSize: 24 },
   loading: { minHeight: 160, alignItems: 'center', justifyContent: 'center', gap: 10 },
   empty: { minHeight: 180, alignItems: 'center', justifyContent: 'center', gap: 8 },
   emptyTitle: { color: AppColors.textStrong, fontSize: 18, fontWeight: '900' },
   muted: { color: AppColors.mutedText, fontSize: 11 },
+  hover: { backgroundColor: AppColors.surface },
   pressed: { opacity: 0.72 },
 });

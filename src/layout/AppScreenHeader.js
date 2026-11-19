@@ -1,6 +1,7 @@
 import React from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import useViewport from './useViewport';
+import { DESKTOP_WEB_MIN_WIDTH } from './desktopWorkspace';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Constants from 'expo-constants';
 
@@ -24,14 +25,14 @@ export default function AppScreenHeader({
   const insets = useSafeAreaInsets();
   const { width, height } = useViewport();
   const narrow = width < 375;
-  const desktop = Platform.OS === 'web' && width >= 900;
+  const desktop = Platform.OS === 'web' && width >= DESKTOP_WEB_MIN_WIDTH;
   const compact = !desktop && (height < 620 || width > height);
   const showRightAction = Boolean(rightLabel && onRightPress);
 
   return (
     <View style={[styles.header, compact && styles.headerCompact, desktop && styles.headerDesktop, applyTopInset && { paddingTop: Math.max(insets.top, 8) }, style]}>
       {onBack ? (
-        <Pressable style={({ pressed }) => [styles.backButton, desktop && styles.buttonDesktop, narrow && styles.sideNarrow, compact && styles.buttonCompact, pressed && styles.pressed]} onPress={onBack}>
+        <Pressable style={({ pressed }) => [styles.backButton, desktop && styles.buttonDesktop, desktop && styles.backButtonDesktop, narrow && styles.sideNarrow, compact && styles.buttonCompact, pressed && styles.pressed]} onPress={onBack}>
           <Text style={[styles.backText, desktop && styles.actionTextDesktop, compact && styles.actionTextCompact]}>‹ {String(backLabel || 'BACK').toUpperCase()}</Text>
         </Pressable>
       ) : <View style={[styles.sideSpacer, narrow && styles.sideNarrow, compact && styles.buttonCompact]} />}
@@ -87,6 +88,7 @@ const styles = StyleSheet.create({
   },
   headerDesktop: { minHeight: 78, gap: 14 },
   buttonDesktop: { minHeight: 40, borderRadius: 7, paddingHorizontal: 12 },
+  backButtonDesktop: { width: 80 },
   actionTextDesktop: { fontSize: 12 },
   kickerDesktop: { fontSize: 11, lineHeight: 15, color: '#8EBCFF' },
   versionDesktop: { fontSize: 11, lineHeight: 15, color: AppColors.mutedText },

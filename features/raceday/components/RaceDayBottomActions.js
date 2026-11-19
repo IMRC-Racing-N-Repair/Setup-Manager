@@ -1,5 +1,6 @@
 import React from 'react';
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { DESKTOP_WORKSPACE_MAX_WIDTH } from '../../../src/layout/desktopWorkspace';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { raceDayColors, raceDayStyles } from '../styles/raceDayStyles';
 
@@ -44,9 +45,13 @@ export default function RaceDayBottomActions({
           {actions.map((action) => (
             <TouchableOpacity
               key={action.key}
+              accessibilityRole="button"
+              disabled={action.disabled}
               style={[
                 raceDayStyles.actionNavItem,
                 tabletLandscape && raceDayStyles.actionNavItemTabletLandscape,
+                desktopWeb && styles.desktopAction,
+                desktopWeb && action.primary && styles.desktopPrimary,
                 action.disabled && raceDayStyles.actionNavItemDisabled,
               ]}
               onPress={action.disabled ? undefined : action.onPress}
@@ -56,12 +61,14 @@ export default function RaceDayBottomActions({
                 raceDayStyles.actionNavGlyph,
                 tabletLandscape && raceDayStyles.actionNavGlyphTabletLandscape,
                 action.primary && raceDayStyles.actionNavPrimary,
+                desktopWeb && styles.desktopGlyph,
               ]}>{action.glyph}</Text>
               <Text style={[
                 raceDayStyles.actionNavLabel,
                 tabletLandscape && raceDayStyles.actionNavLabelTabletLandscape,
                 action.primary && raceDayStyles.actionNavPrimary,
-              ]} numberOfLines={1}>{action.label}</Text>
+                desktopWeb && styles.desktopLabel,
+              ]} numberOfLines={desktopWeb ? undefined : 1}>{action.label}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -126,6 +133,16 @@ const styles = StyleSheet.create({
     borderTopColor: raceDayColors.border,
   },
   desktopRow: {
-    minHeight: 54,
+    width: '100%',
+    maxWidth: DESKTOP_WORKSPACE_MAX_WIDTH - 56,
+    alignSelf: 'center',
+    minHeight: 60,
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 8,
   },
+  desktopAction: { flexGrow: 0, flexShrink: 0, flexBasis: 'auto', minHeight: 40, paddingHorizontal: 13, flexDirection: 'row', gap: 7, borderRadius: 7, backgroundColor: raceDayColors.panel },
+  desktopPrimary: { backgroundColor: '#2366C5' },
+  desktopGlyph: { color: '#EEF5FF', fontSize: 17, lineHeight: 20 },
+  desktopLabel: { color: '#EEF5FF', fontSize: 13, lineHeight: 17 },
 });

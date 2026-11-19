@@ -107,6 +107,7 @@ export default function RaceDayDashboardScreen() {
   const pendingPracticeDayRef = useRef(null);
   const practiceDismissTimerRef = useRef(null);
   const autoSyncRunningRef = useRef(false);
+  const vehicleLinkDismissedRef = useRef(false);
 
   useEffect(() => () => {
     if (resultDismissTimerRef.current) clearTimeout(resultDismissTimerRef.current);
@@ -223,6 +224,7 @@ export default function RaceDayDashboardScreen() {
       if (cancelled || !raceDay?.eventUrl || !nextVehicles.length || autoSyncRunningRef.current) return;
 
       autoSyncRunningRef.current = true;
+      vehicleLinkDismissedRef.current = false;
       setAutoSyncProgress(nextVehicles.map((vehicle) => ({
         key: normalizeId(vehicle.id || vehicle.vehicleId) || getVehicleDisplayName(vehicle),
         vehicleId: vehicle.id || vehicle.vehicleId,
@@ -242,7 +244,7 @@ export default function RaceDayDashboardScreen() {
           onProgress: (update) => {
             if (!cancelled) {
               setAutoSyncProgress((previous) => mergeSyncProgress(previous, update));
-              if (update?.status === 'needs-driver-name' || update?.status === 'needs-selection') {
+              if (!vehicleLinkDismissedRef.current && (update?.status === 'needs-driver-name' || update?.status === 'needs-selection')) {
                 setVehicleLinkSessionItem((current) => {
                   const currentId = normalizeId(current?.vehicleId);
                   const updateId = normalizeId(update?.vehicleId);
@@ -254,7 +256,7 @@ export default function RaceDayDashboardScreen() {
           },
         });
         waitingForClassSelection = Boolean(result?.needsUserInput?.length);
-        if (waitingForClassSelection && result?.needsUserInput?.[0]) {
+        if (!vehicleLinkDismissedRef.current && waitingForClassSelection && result?.needsUserInput?.[0]) {
           setVehicleLinkSessionItem((current) => {
             const nextItem = result.needsUserInput[0];
             const currentId = normalizeId(current?.vehicleId);
@@ -453,7 +455,7 @@ export default function RaceDayDashboardScreen() {
   function handleSyncProgress(update) {
     setSyncStatusOpen(true);
     setSyncProgress((previous) => mergeSyncProgress(previous, update));
-    if (update?.status === 'needs-driver-name' || update?.status === 'needs-selection') {
+    if (!vehicleLinkDismissedRef.current && (update?.status === 'needs-driver-name' || update?.status === 'needs-selection')) {
       setVehicleLinkSessionItem((current) => {
         const currentId = normalizeId(current?.vehicleId);
         const updateId = normalizeId(update?.vehicleId);
@@ -474,6 +476,7 @@ export default function RaceDayDashboardScreen() {
     }
 
     await waitForSyncPopupDismissal();
+    vehicleLinkDismissedRef.current = false;
     setSyncing(true);
     setSyncStatusOpen(true);
     setSyncProgress([]);
@@ -511,7 +514,7 @@ export default function RaceDayDashboardScreen() {
       await load({ showLoading: false });
       if (result?.progress?.length) setSyncProgress(result.progress);
       waitingForClassSelection = Boolean(result?.needsUserInput?.length);
-      if (waitingForClassSelection && result?.needsUserInput?.[0]) {
+      if (!vehicleLinkDismissedRef.current && waitingForClassSelection && result?.needsUserInput?.[0]) {
         setVehicleLinkSessionItem((current) => {
           const nextItem = result.needsUserInput[0];
           const currentId = normalizeId(current?.vehicleId);
@@ -536,6 +539,7 @@ export default function RaceDayDashboardScreen() {
     const vehicleId = item?.vehicleId;
     if (!raceDayId || !eventUrl || !vehicleId || !option?.className) return;
 
+    vehicleLinkDismissedRef.current = false;
     await saveRaceDayEventVehicleLink(active, eventUrl, vehicleId, option);
     setAutoSyncProgress((previous) => mergeSyncProgress(previous, {
       ...item,
@@ -569,6 +573,7 @@ export default function RaceDayDashboardScreen() {
     const cleanName = String(driverName || '').replace(/\s+/g, ' ').trim();
     if (!raceDayId || !eventUrl || !vehicleId || !cleanName) return;
 
+    vehicleLinkDismissedRef.current = false;
     await saveRaceDayEventVehicleDriverName(active, eventUrl, vehicleId, cleanName);
     const searchingItem = {
       ...item,
@@ -808,6 +813,7 @@ export default function RaceDayDashboardScreen() {
         key={`${vehicleLinkItem?.vehicleId || vehicleLinkItem?.vehicleName || 'vehicle'}`}
         item={vehicleLinkItem}
         onClose={() => {
+          vehicleLinkDismissedRef.current = true;
           setVehicleLinkSessionItem(null);
           setAutoSyncProgress([]);
           setSyncProgress([]);

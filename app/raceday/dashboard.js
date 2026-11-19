@@ -919,6 +919,7 @@ export default function RaceDayDashboardScreen() {
       />
 
       <RaceDayPracticeSessionsPopup
+        desktop={isDesktopWeb}
         visible={practiceSessionsOpen}
         raceDay={active}
         vehicle={selectedPracticeVehicle}

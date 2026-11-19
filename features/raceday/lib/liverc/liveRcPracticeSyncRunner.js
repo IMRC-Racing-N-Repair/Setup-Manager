@@ -2,7 +2,9 @@ import { appendRaceDayPracticeSessions } from '../raceDayPracticeStorage';
 import { normalizeId } from '../raceDayModel';
 import { fetchLiveRcText } from './liveRcClient';
 import { getPracticeDayUrl, normalizeLiveRcPracticeSiteUrl } from './liveRcPracticeUrls';
-import { getVehicleTransponder, parsePracticeSessionsFromHtml } from './liveRcPracticeSessionParser';
+import { getVehicleTransponder, parsePracticeSessionDetail, parsePracticeSessionsFromHtml } from './liveRcPracticeSessionParser';
+
+const DETAIL_BATCH_SIZE = 4;
 
 async function fetchHtml(url = '') {
   console.log('[IMRC RaceDay Practice] fetch practice sessions URL', { url });
@@ -35,6 +37,27 @@ export async function syncLiveRcPracticeDay({
 
   onProgress?.({ type: 'practice-start', message: `Checking Practice ${practiceDay?.label || practiceDay?.key || ''}` });
   const html = await fetchHtml(practiceUrl);
+  const detailRequests = new Map();
+
+  async function loadDetails(session) {
+    if (!session.detailUrl) return { ...session, detailStatus: 'unavailable' };
+    try {
+      if (!detailRequests.has(session.detailUrl)) {
+        detailRequests.set(session.detailUrl, fetchLiveRcText(session.detailUrl));
+      }
+      const detail = parsePracticeSessionDetail(await detailRequests.get(session.detailUrl), session);
+      if (detail) {
+        return {
+          ...session,
+          ...detail,
+          detailStatus: detail.laps.length >= Math.max(1, session.lapCount) ? 'complete' : 'partial',
+        };
+      }
+    } catch (error) {
+      console.warn('[IMRC RaceDay Practice] Could not load practice laps', error.message);
+    }
+    return { ...session, detailStatus: 'unavailable' };
+  }
 
   const summary = {
     practiceUrl,
@@ -61,7 +84,12 @@ export async function syncLiveRcPracticeDay({
       siteUrl: normalizedSite,
     });
 
-    const saved = await appendRaceDayPracticeSessions(raceDayId, vehicleId, sessions);
+    const detailedSessions = [];
+    for (let index = 0; index < sessions.length; index += DETAIL_BATCH_SIZE) {
+      const batch = sessions.slice(index, index + DETAIL_BATCH_SIZE);
+      detailedSessions.push(...await Promise.all(batch.map(loadDetails)));
+    }
+    const saved = await appendRaceDayPracticeSessions(raceDayId, vehicleId, detailedSessions);
     summary.savedCount += saved.length;
     summary.vehicles.push({ vehicleId, tx, savedCount: saved.length });
     onProgress?.({ vehicleId, tx, status: 'complete', savedCount: saved.length, message: `${saved.length} practice session${saved.length === 1 ? '' : 's'} found` });

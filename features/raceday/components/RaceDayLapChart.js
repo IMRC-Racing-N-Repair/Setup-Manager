@@ -13,27 +13,29 @@ function getLapSeconds(value) {
 function LapPlot({ laps, detailed }) {
   const first = laps[0].number;
   const last = laps[laps.length - 1].number;
-  const best = laps.reduce((fastest, lap) => lap.seconds < fastest.seconds ? lap : fastest);
-  const slowest = Math.max(...laps.map((lap) => lap.seconds));
-  const span = slowest - best.seconds;
+  const best = laps.reduce((fastest, lap) => !lap.invalid && (!fastest || lap.seconds < fastest.seconds) ? lap : fastest, null);
+  const fastest = laps.reduce((min, lap) => Math.min(min, lap.seconds), Infinity);
+  const slowest = laps.reduce((max, lap) => Math.max(max, lap.seconds), 0);
+  const span = slowest - fastest;
   const x = (lap) => 8 + (lap.number - first) / (last - first || 1) * 344;
   const y = (lap) => span ? 10 + (slowest - lap.seconds) / span * 64 : 42;
   const points = laps.map((lap) => `${x(lap)},${y(lap)}`).join(' ');
 
   return (
     <View style={styles.plot}>
-      <Svg accessibilityLabel={`Lap progression. Fastest lap ${best.number} at ${best.seconds.toFixed(3)} seconds.`} width="100%" height={detailed ? 158 : 94} viewBox="0 0 360 84" preserveAspectRatio="none">
+      <Svg accessibilityRole="image" accessibilityLabel={best ? `Lap progression. Fastest lap ${best.number} at ${best.seconds.toFixed(3)} seconds.` : 'Lap progression. No valid laps.'} width="100%" height={detailed ? 158 : 94} viewBox="0 0 360 84" preserveAspectRatio="none">
         {[10, 42, 74].map((position) => (
           <Line key={position} x1={8} x2={352} y1={position} y2={position} stroke={AppColors.border} vectorEffect="non-scaling-stroke" />
         ))}
-        <Polyline points={points} fill="none" stroke="#82B9FF" strokeWidth={2} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
-        <Circle cx={x(best)} cy={y(best)} r={3} fill="#74DFAB" />
+        {laps.length > 1 && <Polyline points={points} fill="none" stroke="#82B9FF" strokeWidth={2} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />}
+        {laps.filter((lap) => lap.invalid).map((lap) => <Circle key={lap.number} cx={x(lap)} cy={y(lap)} r={3} fill="#FFB479" />)}
+        {best && <Circle cx={x(best)} cy={y(best)} r={3} fill="#74DFAB" />}
       </Svg>
-      {detailed && <Text style={styles.caption}>Lap time range · {best.seconds.toFixed(3)}–{slowest.toFixed(3)} s</Text>}
+      {detailed && <Text style={styles.caption}>Lap time range · {fastest.toFixed(3)}–{slowest.toFixed(3)} s</Text>}
       <View style={styles.axis}>
         <Text style={styles.caption}>Lap {first}</Text>
-        <Text style={styles.caption}>Best {best.seconds.toFixed(3)}s · Lap {best.number}</Text>
-        <Text style={styles.caption}>Lap {last}</Text>
+        {best && <Text style={styles.caption}>Best {best.seconds.toFixed(3)}s · Lap {best.number}</Text>}
+        {last !== first && <Text style={styles.caption}>Lap {last}</Text>}
       </View>
     </View>
   );
@@ -42,8 +44,9 @@ function LapPlot({ laps, detailed }) {
 export function getTimedLaps(run) {
   const entries = Array.isArray(run.stats?.laps) && run.stats.laps.length ? run.stats.laps : run.laps;
   return (Array.isArray(entries) ? entries : []).map((lap) => ({
-    number: Number(lap.lapNumber),
-    seconds: getLapSeconds(lap.lapTime),
+    number: Number(lap?.lapNumber ?? lap?.lap),
+    seconds: getLapSeconds(lap?.lapTime ?? lap?.time ?? lap?.value),
+    invalid: lap?.invalid === true,
   })).filter(({ number, seconds }) => Number.isInteger(number) && number > 0 && Number.isFinite(seconds) && seconds > 0)
     .sort((a, b) => a.number - b.number);
 }
@@ -57,7 +60,7 @@ export default function RaceDayLapChart({ run, detailed = false }) {
   return (
     <View style={styles.panel}>
       <Text style={styles.title}>Lap progression</Text>
-      {laps.length > 1 && laps[0].number < laps[laps.length - 1].number
+      {laps.length > 0
         ? <LapPlot laps={laps} detailed={detailed} />
         : <Text style={styles.caption}>Lap-by-lap times are unavailable for this run.</Text>}
       {hasConsistency && (

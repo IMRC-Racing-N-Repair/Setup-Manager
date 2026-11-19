@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import RaceDayPopup from './RaceDayPopup';
+import RaceDayLapChart from './RaceDayLapChart';
 import { getVehicleDisplayName, normalizeId } from '../lib/raceDayModel';
 import { getPracticeSessionsForVehicle } from '../lib/raceDayPracticeStorage';
 import { raceDayColors, raceDayStyles } from '../styles/raceDayStyles';
@@ -88,20 +89,27 @@ function Stat({ label, value }) {
 
 function PracticeSessionRow({ session, expanded, onToggle }) {
   const title = formatPracticeSessionTitle(session);
+  const laps = Array.isArray(session.laps) ? session.laps : [];
   return (
-    <TouchableOpacity style={styles.sessionCard} onPress={onToggle} activeOpacity={0.86}>
-      <View style={styles.sessionHeaderRow}>
+    <View style={styles.sessionCard}>
+      <TouchableOpacity style={styles.sessionHeaderRow} onPress={onToggle} activeOpacity={0.86} accessibilityRole="button" accessibilityState={{ expanded }}>
         <View style={raceDayStyles.flex1}>
           <Text style={styles.sessionTitle} numberOfLines={1}>{title}</Text>
           <Text style={styles.sessionSub} numberOfLines={1}>
             Fast {clean(session.fastLap)} • Avg {clean(session.avgLap)} • Laps {session.lapCount || 0}
           </Text>
         </View>
-        <Text style={styles.expandText}>{expanded ? 'Hide' : 'View'}</Text>
-      </View>
+        <Text style={styles.expandText}>{expanded ? 'Hide' : 'View laps'}</Text>
+      </TouchableOpacity>
 
       {expanded ? (
         <View style={styles.detailWrap}>
+          <RaceDayLapChart run={session} detailed />
+          {session.source === 'liverc-practice' && session.detailStatus !== 'complete' && (
+            <Text style={styles.notesText}>{laps.length
+              ? 'Showing the available lap times. Refresh Practice to check for more.'
+              : 'Refresh Practice to pull lap times from LiveRC.'}</Text>
+          )}
           <View style={styles.detailGrid}>
             <Stat label="Fast Lap" value={session.fastLap} />
             <Stat label="Avg Lap" value={session.avgLap} />
@@ -113,27 +121,30 @@ function PracticeSessionRow({ session, expanded, onToggle }) {
             <Stat label="Total Time" value={session.totalTime} />
           </View>
           {session.notes ? <Text style={styles.notesText}>{session.notes}</Text> : null}
-          {Array.isArray(session.laps) && session.laps.length ? (
+          {laps.length > 0 && (
             <View style={styles.lapBox}>
-              {session.laps.slice(0, 50).map((lap, index) => (
+              <View style={styles.lapRow}>
+                <Text accessibilityRole="header" style={styles.sessionTitle}>Lap times · {laps.length}</Text>
+              </View>
+              {laps.map((lap, index) => (
                 <View key={`${session.id}_${index}`} style={styles.lapRow}>
                   <Text style={styles.lapNum}>L{lap.lapNumber || lap.lap || index + 1}</Text>
-                  <Text style={styles.lapTime}>{lap.lapTime || lap.time || lap.value || '—'}</Text>
+                  <Text style={[styles.lapTime, lap.invalid && styles.invalidLap]}>{lap.lapTime || lap.time || lap.value || '—'}{lap.invalid ? ' · Invalid' : ''}</Text>
                 </View>
               ))}
             </View>
-          ) : null}
+          )}
         </View>
       ) : null}
-    </TouchableOpacity>
+    </View>
   );
 }
 
-export default function RaceDayPracticeSessionsPopup({ visible, raceDay, vehicle, practiceDayKey, practiceDayLabel, onClose }) {
+export default function RaceDayPracticeSessionsPopup({ visible, raceDay, vehicle, practiceDayKey, practiceDayLabel, onClose, desktop = false }) {
   const [loading, setLoading] = useState(false);
   const [sessions, setSessions] = useState([]);
   const [sortMode, setSortMode] = useState('latest');
-  const [expandedId, setExpandedId] = useState(null);
+  const [expandedId, setExpandedId] = useState(undefined);
 
   const raceDayId = raceDay?.id || raceDay?.raceDayId;
   const vehicleId = normalizeId(vehicle?.id || vehicle?.vehicleId);
@@ -144,6 +155,7 @@ export default function RaceDayPracticeSessionsPopup({ visible, raceDay, vehicle
     async function load() {
       if (!visible || !raceDayId || !vehicleId) return;
       setLoading(true);
+      setExpandedId(undefined);
       try {
         const next = await getPracticeSessionsForVehicle(raceDayId, vehicleId, practiceDayKey);
         if (!cancelled) setSessions(next);
@@ -164,6 +176,7 @@ export default function RaceDayPracticeSessionsPopup({ visible, raceDay, vehicle
     if (sortMode === 'bestTop5') return list.sort((a, b) => compareLapValues(a.top5Avg, b.top5Avg));
     return list.sort((a, b) => new Date(b.endedAt || b.startedAt || 0).getTime() - new Date(a.endedAt || a.startedAt || 0).getTime());
   }, [sessions, sortMode]);
+  const openSessionId = expandedId === undefined ? sortedSessions[0]?.id : expandedId;
 
   return (
     <RaceDayPopup
@@ -172,6 +185,7 @@ export default function RaceDayPracticeSessionsPopup({ visible, raceDay, vehicle
       subtitle={`${vehicleName} • ${practiceDayLabel || 'Practice'} • ${sessions.length} run${sessions.length === 1 ? '' : 's'}`}
       onClose={onClose}
       centered
+      desktop={desktop}
       showScrollIndicator
       contentContainerStyle={styles.popupContent}
     >
@@ -189,8 +203,8 @@ export default function RaceDayPracticeSessionsPopup({ visible, raceDay, vehicle
             <PracticeSessionRow
               key={session.id}
               session={session}
-              expanded={expandedId === session.id}
-              onToggle={() => setExpandedId(expandedId === session.id ? null : session.id)}
+              expanded={openSessionId === session.id}
+              onToggle={() => setExpandedId(openSessionId === session.id ? null : session.id)}
             />
           ))}
         </View>
@@ -217,7 +231,7 @@ const styles = StyleSheet.create({
   },
   sortButton: {
     flex: 1,
-    minHeight: 30,
+    minHeight: 38,
     borderRadius: 4,
     alignItems: 'center',
     justifyContent: 'center',
@@ -232,7 +246,7 @@ const styles = StyleSheet.create({
   },
   sortButtonText: {
     color: raceDayColors.muted,
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: '900',
   },
   sortButtonTextActive: {
@@ -254,15 +268,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    minHeight: 36,
   },
   sessionTitle: {
     color: raceDayColors.text,
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '900',
   },
   sessionSub: {
     color: raceDayColors.muted,
-    fontSize: 10,
+    fontSize: 12,
     marginTop: 2,
   },
   expandText: {
@@ -280,6 +295,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 6,
+    marginTop: 10,
   },
   detailStatBox: {
     width: '48%',
@@ -317,7 +333,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   lapRow: {
-    minHeight: 24,
+    minHeight: 30,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -335,4 +351,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '900',
   },
+  invalidLap: { color: '#FFB479' },
 });

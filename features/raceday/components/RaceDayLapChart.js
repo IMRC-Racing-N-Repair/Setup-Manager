@@ -10,7 +10,7 @@ function getLapSeconds(value) {
   return parts.length === 2 ? parts[0] * 60 + parts[1] : parts[0];
 }
 
-function LapPlot({ laps, detailed }) {
+function LapPlot({ laps, detailed, compact }) {
   const first = laps[0].number;
   const last = laps[laps.length - 1].number;
   const best = laps.reduce((fastest, lap) => !lap.invalid && (!fastest || lap.seconds < fastest.seconds) ? lap : fastest, null);
@@ -23,7 +23,7 @@ function LapPlot({ laps, detailed }) {
 
   return (
     <View style={styles.plot}>
-      <Svg accessibilityRole="image" accessibilityLabel={best ? `Lap progression. Fastest lap ${best.number} at ${best.seconds.toFixed(3)} seconds.` : 'Lap progression. No valid laps.'} width="100%" height={detailed ? 158 : 94} viewBox="0 0 360 84" preserveAspectRatio="none">
+      <Svg accessibilityRole="image" accessibilityLabel={best ? `Lap progression. Fastest lap ${best.number} at ${best.seconds.toFixed(3)} seconds.` : 'Lap progression. No valid laps.'} width="100%" height={detailed ? (compact ? 112 : 158) : 94} viewBox="0 0 360 84" preserveAspectRatio="none">
         {[10, 42, 74].map((position) => (
           <Line key={position} x1={8} x2={352} y1={position} y2={position} stroke={AppColors.border} vectorEffect="non-scaling-stroke" />
         ))}
@@ -51,17 +51,17 @@ export function getTimedLaps(run) {
     .sort((a, b) => a.number - b.number);
 }
 
-export default function RaceDayLapChart({ run, detailed = false }) {
+export default function RaceDayLapChart({ run, detailed = false, compact = !detailed }) {
   const laps = getTimedLaps(run);
   const consistencyValue = getCompareValue(run, 'consistency').trim();
   const consistency = /^\d+(?:\.\d+)?\s*%?$/.test(consistencyValue) ? Number.parseFloat(consistencyValue) : null;
   const hasConsistency = consistency !== null && consistency <= 100;
 
   return (
-    <View style={styles.panel}>
+    <View style={[styles.panel, compact && styles.panelCompact]}>
       <Text style={styles.title}>Lap progression</Text>
       {laps.length > 0
-        ? <LapPlot laps={laps} detailed={detailed} />
+        ? <LapPlot laps={laps} detailed={detailed} compact={compact} />
         : <Text style={styles.caption}>Lap-by-lap times are unavailable for this run.</Text>}
       {hasConsistency && (
         <View style={styles.consistency}>
@@ -78,6 +78,7 @@ export default function RaceDayLapChart({ run, detailed = false }) {
 
 const styles = StyleSheet.create({
   panel: { marginTop: 8, padding: 12, borderRadius: 9, gap: 8, backgroundColor: AppColors.surface },
+  panelCompact: { marginTop: 3, padding: 7, gap: 4 },
   title: { color: AppColors.text, fontSize: 14, fontWeight: '700' },
   plot: { gap: 4 },
   axis: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 5 },

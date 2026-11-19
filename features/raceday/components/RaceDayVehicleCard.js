@@ -63,22 +63,22 @@ function RaceRunCard({ run, compareFields, onOpenResults, desktop, first }) {
   return (
     <View style={[raceDayStyles.raceRunCardThin, desktop && desktopStyles.run, desktop && first && desktopStyles.firstRun]}>
       <View style={raceDayStyles.raceRunTopRow}>
-        <Text style={[raceDayStyles.raceRunTitleThin, desktop && desktopStyles.runTitle]} numberOfLines={1}>{getRunTitle(run)}</Text>
-        {desktop && (
-          <TouchableOpacity
-            accessibilityRole="button"
-            accessibilityState={{ expanded }}
-            style={[raceDayStyles.resultsMiniButton, desktopStyles.resultsButton]}
-            onPress={() => setExpanded((value) => !value)}
-          >
-            <Text style={desktopStyles.resultsButtonText}>{expanded ? 'Hide laps' : 'Lap chart'}</Text>
-          </TouchableOpacity>
-        )}
+        <View style={raceDayStyles.flex1}>
+          <Text style={[raceDayStyles.raceRunTitleThin, desktop && desktopStyles.runTitle]}>{getRunTitle(run)}</Text>
+          {!!run.className && <Text style={[raceDayStyles.raceRunSub, desktop && desktopStyles.runClass]}>{run.className}</Text>}
+        </View>
+        <TouchableOpacity
+          accessibilityRole="button"
+          aria-expanded={expanded}
+          style={[raceDayStyles.resultsMiniButton, desktop && desktopStyles.resultsButton]}
+          onPress={() => setExpanded((value) => !value)}
+        >
+          <Text style={[raceDayStyles.resultsMiniButtonText, desktop && desktopStyles.resultsButtonText]}>{expanded ? 'Hide laps' : 'Lap chart'}</Text>
+        </TouchableOpacity>
         <TouchableOpacity accessibilityRole="button" style={[raceDayStyles.resultsMiniButton, desktop && desktopStyles.resultsButton]} onPress={() => onOpenResults?.(run)} activeOpacity={0.82}>
           <Text style={[raceDayStyles.resultsMiniButtonText, desktop && desktopStyles.resultsButtonText]}>Results</Text>
         </TouchableOpacity>
       </View>
-      {desktop && !!run.className && <Text style={desktopStyles.runClass}>{run.className}</Text>}
 
       <View style={[raceDayStyles.raceRunStatsRow, desktop && desktopStyles.runStats]}>
         {showPosition && <RaceRunStat desktop label="Position" value={position} />}
@@ -86,7 +86,7 @@ function RaceRunCard({ run, compareFields, onOpenResults, desktop, first }) {
           <RaceRunStat key={row.key} label={row.label} value={row.value} desktop={desktop} />
         ))}
       </View>
-      {desktop && expanded && <RaceDayLapChart run={run} />}
+      {expanded && <RaceDayLapChart run={run} />}
     </View>
   );
 }

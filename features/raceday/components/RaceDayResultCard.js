@@ -17,6 +17,7 @@ function Stat({
   label,
   value,
   wide = false,
+  third = false,
   desktop = false,
   compareKey,
   activeCompareFields = [],
@@ -31,6 +32,7 @@ function Stat({
       style={[
         raceDayStyles.resultStatBox,
         wide && raceDayStyles.resultStatBoxWide,
+        third && raceDayStyles.resultStatBoxThird,
         selectable && raceDayStyles.resultStatBoxSelectable,
         selected && raceDayStyles.resultStatBoxSelected,
         desktop && localStyles.desktopStat,
@@ -101,7 +103,7 @@ export default function RaceDayResultCard({ run, desktop = false, compareFields 
         </View>
       </View>
 
-      {desktop && <RaceDayLapChart run={run} detailed />}
+      {desktop && <RaceDayLapChart run={run} detailed compact />}
       <View style={[raceDayStyles.dashboardBlockHintBox, desktop && localStyles.desktopHint]}>
         <Text style={raceDayStyles.dashboardBlockHintTitle}>Dashboard Blocks</Text>
         <Text style={[raceDayStyles.dashboardBlockHintText, desktop && localStyles.desktopMeta]} numberOfLines={2}>
@@ -120,9 +122,9 @@ export default function RaceDayResultCard({ run, desktop = false, compareFields 
 
       <SectionTitle desktop={desktop}>Averages</SectionTitle>
       <View style={[raceDayStyles.resultStatGrid, desktop && localStyles.desktopGrid]}>
-        <Stat desktop={desktop} label="Avg Top 5" value={getRunValue(run, 'top5Avg')} compareKey="top5Avg" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
-        <Stat desktop={desktop} label="Avg Top 10" value={getRunValue(run, 'top10Avg')} compareKey="top10Avg" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
-        <Stat desktop={desktop} label="Avg Top 15" value={getRunValue(run, 'top15Avg')} compareKey="top15Avg" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
+        <Stat desktop={desktop} third label="Avg Top 5" value={getRunValue(run, 'top5Avg')} compareKey="top5Avg" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
+        <Stat desktop={desktop} third label="Avg Top 10" value={getRunValue(run, 'top10Avg')} compareKey="top10Avg" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
+        <Stat desktop={desktop} third label="Avg Top 15" value={getRunValue(run, 'top15Avg')} compareKey="top15Avg" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
       </View>
 
       <SectionTitle desktop={desktop}>Consecutive / Consistency</SectionTitle>
@@ -154,20 +156,20 @@ export default function RaceDayResultCard({ run, desktop = false, compareFields 
 export { RaceDayResultCard };
 
 const localStyles = StyleSheet.create({
-  desktopCard: { backgroundColor: 'transparent', borderWidth: 0, padding: 0, gap: 5 },
+  desktopCard: { backgroundColor: 'transparent', borderWidth: 0, padding: 0, gap: 2 },
   desktopHeader: { alignItems: 'center', gap: 10 },
   desktopRound: { fontSize: 21 },
   desktopMeta: { fontSize: 13, lineHeight: 18 },
   desktopActions: { flexWrap: 'wrap', marginLeft: 0 },
   desktopButton: { minHeight: 38, borderRadius: 6, backgroundColor: raceDayColors.cardAlt },
   desktopButtonText: { fontSize: 13, color: '#A6CDFF' },
-  desktopHint: { backgroundColor: 'transparent', borderWidth: 0, paddingHorizontal: 0, marginTop: 10 },
-  desktopGrid: { gap: 8 },
-  desktopStat: { flexBasis: '20%', minHeight: 65, backgroundColor: raceDayColors.card, borderRadius: 8 },
+  desktopHint: { backgroundColor: 'transparent', borderWidth: 0, paddingHorizontal: 0, marginTop: 4 },
+  desktopGrid: { gap: 6 },
+  desktopStat: { flexBasis: '22%', minHeight: 46, backgroundColor: raceDayColors.card, borderRadius: 8 },
   desktopWideStat: { flexBasis: '100%' },
   desktopSelectedStat: { backgroundColor: raceDayColors.accentSoft },
   desktopStatLabel: { fontSize: 11, color: raceDayColors.muted },
-  desktopStatValue: { fontSize: 17, lineHeight: 22, fontVariant: ['tabular-nums'] },
+  desktopStatValue: { fontSize: 16, lineHeight: 20, fontVariant: ['tabular-nums'] },
   desktopSection: { color: raceDayColors.text, fontSize: 13, lineHeight: 19 },
   resultActionRow: {
     flexDirection: 'row',

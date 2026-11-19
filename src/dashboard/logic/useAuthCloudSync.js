@@ -38,6 +38,7 @@ function statusSignature(status) {
       state: status.state || '',
       color: status.color || '',
       label: status.label || '',
+      message: ['error', 'backoff', 'paused'].includes(status.state) ? status.message || '' : '',
       dirty: !!status.dirty,
       pending: !!status.pending,
       paused: !!status.paused,

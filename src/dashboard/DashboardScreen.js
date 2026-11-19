@@ -16,6 +16,7 @@ import { useRecentChanges } from './logic/useRecentChanges';
 import { useSponsorBanner } from './logic/useSponsorBanner';
 import StableSafeAreaView from '../layout/StableSafeAreaView';
 
+import CloudSyncStatusModal from './modals/CloudSyncStatusModal';
 import ActiveRaceDayModal from './modals/ActiveRaceDayModal';
 import DashboardHeader from './components/DashboardHeader';
 import BottomActions from './components/BottomActions';
@@ -150,6 +151,7 @@ export default function DashboardScreen({
       setShowSponsorPopup(true);
     }
   }, []);
+  const [showCloudSyncStatus, setShowCloudSyncStatus] = useState(false);
   const [dashboardTrackId, setDashboardTrackId] = useState('');
   const [dashboardHydrated, setDashboardHydrated] = useState(false);
 
@@ -398,7 +400,15 @@ export default function DashboardScreen({
   const incomingDotColor = incomingSyncStatus?.color || '';
   const authDotResolved = !!auth.authUser && !!auth.statusDotColor && auth.statusDotColor !== '#6B7280';
   const dashboardStatusDotColor = authDotResolved ? auth.statusDotColor : (incomingDotColor || auth.statusDotColor);
-  const handleDashboardAuthPress = auth.handleAuthPress;
+  const dashboardSyncStatus = auth.syncStatus || incomingSyncStatus;
+  const dashboardSyncBusy = auth.syncBusy || auth.cloudBusy || auth.syncSettling;
+  const hasSyncProblem = Platform.OS === 'web' && !!auth.authUser && (
+    ['error', 'backoff', 'paused'].includes(dashboardSyncStatus?.state) ||
+    dashboardStatusDotColor === '#EF4444'
+  );
+  const handleDashboardAuthPress = hasSyncProblem
+    ? () => setShowCloudSyncStatus(true)
+    : auth.handleAuthPress;
 
   const finishStartModalDismissal = useCallback(async () => {
     const action = pendingStartActionRef.current;
@@ -580,7 +590,8 @@ export default function DashboardScreen({
       <FlootDashboardView
         userName={auth.userFirstName}
         signedIn={!!auth.authUser}
-        syncBusy={auth.syncBusy || auth.cloudBusy || auth.syncSettling}
+        syncBusy={dashboardSyncBusy}
+        syncProblemLabel={hasSyncProblem ? dashboardSyncStatus?.label || 'Sync error' : ''}
         statusDotColor={dashboardStatusDotColor}
         onAuthPress={handleDashboardAuthPress}
         onAuthLongPress={auth.handleAuthLongPress}
@@ -600,6 +611,16 @@ export default function DashboardScreen({
         onSelectDashboardTrack={selectDashboardTrack}
         loading={!dashboardHydrated}
       />
+
+      {showCloudSyncStatus && auth.authUser && (
+        <CloudSyncStatusModal
+          visible
+          status={dashboardSyncStatus}
+          busy={dashboardSyncBusy}
+          onClose={() => setShowCloudSyncStatus(false)}
+          onRetry={auth.handleAuthPress}
+        />
+      )}
 
       <RaceDayStartModal
         visible={raceDay.modals.showStartModal}

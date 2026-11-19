@@ -30,6 +30,7 @@ export default function FlootDashboardView({
   userName,
   signedIn,
   syncBusy,
+  syncProblemLabel,
   statusDotColor,
   onAuthPress,
   onAuthLongPress,
@@ -119,7 +120,7 @@ export default function FlootDashboardView({
   const syncColor = statusDotColor || '#6F7D74';
   const syncLabel = !signedIn ? 'SIGN IN'
     : syncBusy ? 'SYNCING'
-      : syncColor === '#22C55E' ? 'SYNCED' : 'CLOUD SYNC';
+      : syncProblemLabel?.toUpperCase() || (syncColor === '#22C55E' ? 'SYNCED' : 'CLOUD SYNC');
   const openSponsor = () => sponsor?.url && Linking.openURL(sponsor.url).catch(() => {});
   const chooseTrack = (trackId) => {
     onSelectDashboardTrack?.(trackId);
@@ -151,7 +152,7 @@ export default function FlootDashboardView({
             <Pressable
               style={({ pressed }) => [styles.syncButton, pressed && styles.pressed]}
               accessibilityRole="button"
-              accessibilityLabel={signedIn ? 'Sync account' : 'Sign in'}
+              accessibilityLabel={signedIn ? (syncProblemLabel ? 'View Cloud Sync details' : 'Sync account') : 'Sign in'}
               onPress={onAuthPress}
               onLongPress={onAuthLongPress}
             >

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import RaceDayLapChart from './RaceDayLapChart';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import RaceDayDesktopStandings from './RaceDayDesktopStandings';
 import RaceDayPopup from './RaceDayPopup';
 import { raceDayColors, raceDayStyles } from '../styles/raceDayStyles';
 import { buildRaceResultsForRun } from '../lib/liverc/liveRcRaceResultsParser';
@@ -95,70 +95,6 @@ function DriverRaceResultCard({ row = {} }) {
   );
 }
 
-function DesktopStandings({ rows, run }) {
-  const [expandedKey, setExpandedKey] = useState(null);
-
-  return (
-    <View style={desktopStyles.standings}>
-      <View style={[desktopStyles.row, desktopStyles.head]}>
-        <Text style={[desktopStyles.label, desktopStyles.identity]}>Driver</Text>
-        {buildStats().slice(0, 3).map((stat) => (
-          <Text key={stat.key} style={[desktopStyles.label, desktopStyles.number]}>{stat.label}</Text>
-        ))}
-        <View style={desktopStyles.actionCell} />
-      </View>
-      {rows.map((row, index) => {
-        const key = makeRowKey(row, index);
-        const name = clean(row.driver || row.driverName);
-        const expanded = expandedKey === key;
-        const stats = buildStats(row);
-        const chartRun = row.isMe && !row.laps?.length
-          ? { ...row, stats: run.stats, laps: run.laps }
-          : row;
-
-        return (
-          <View key={key} style={[desktopStyles.driver, row.isMe && desktopStyles.myDriver]}>
-            <View style={desktopStyles.row}>
-              <View style={[desktopStyles.identity, desktopStyles.driverIdentity]}>
-                <Text style={desktopStyles.position}>P{displayPosition(row)}</Text>
-                <View style={desktopStyles.driverCopy}>
-                  <Text style={desktopStyles.name}>{name}</Text>
-                  {row.isMe && <Text style={desktopStyles.me}>Selected driver</Text>}
-                </View>
-              </View>
-              {stats.slice(0, 3).map((stat) => (
-                <Text key={stat.key} style={[desktopStyles.value, desktopStyles.number]}>{clean(stat.value)}</Text>
-              ))}
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`${expanded ? 'Hide' : 'View'} lap chart for ${name}`}
-                accessibilityState={{ expanded }}
-                onPress={() => setExpandedKey(expanded ? null : key)}
-                style={desktopStyles.chartButton}
-              >
-                <Text style={desktopStyles.chartButtonText}>{expanded ? 'Hide chart' : 'Lap chart'}</Text>
-              </Pressable>
-            </View>
-            {expanded && (
-              <View style={desktopStyles.expanded}>
-                <RaceDayLapChart run={chartRun} detailed />
-                <View style={desktopStyles.stats}>
-                  {stats.slice(3).map((stat) => (
-                    <View key={stat.key} style={desktopStyles.stat}>
-                      <Text style={desktopStyles.label}>{stat.label}</Text>
-                      <Text style={desktopStyles.value}>{clean(stat.value)}</Text>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            )}
-          </View>
-        );
-      })}
-    </View>
-  );
-}
-
 export default function RaceDayRaceResultsPopup({ visible, run, onClose, desktop = false }) {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -223,7 +159,7 @@ export default function RaceDayRaceResultsPopup({ visible, run, onClose, desktop
           <Text style={raceDayStyles.emptyText}>Loading this race...</Text>
         </View>
       ) : rows.length && desktop ? (
-        <DesktopStandings rows={rows} run={run} />
+        <RaceDayDesktopStandings rows={rows} run={run} buildStats={buildStats} displayPosition={displayPosition} makeRowKey={makeRowKey} />
       ) : rows.length ? (
         <View style={localStyles.shell}>
           <Text style={localStyles.scrollHint} numberOfLines={1}>Swipe left/right to compare this race</Text>
@@ -379,27 +315,4 @@ const localStyles = StyleSheet.create({
     borderRadius: 999,
     backgroundColor: raceDayColors.accent,
   },
-});
-
-const desktopStyles = StyleSheet.create({
-  standings: { width: '100%', paddingBottom: 8 },
-  driver: { borderBottomWidth: 1, borderBottomColor: raceDayColors.border },
-  myDriver: { backgroundColor: raceDayColors.accentSofter },
-  row: { minHeight: 62, flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 10, paddingVertical: 9 },
-  head: { minHeight: 35, borderBottomWidth: 1, borderBottomColor: raceDayColors.border },
-  identity: { flex: 2, minWidth: 0 },
-  driverIdentity: { flexDirection: 'row', alignItems: 'center', gap: 9 },
-  driverCopy: { flex: 1, minWidth: 0 },
-  position: { color: '#FFAC70', fontSize: 14, fontWeight: '800', minWidth: 29, fontVariant: ['tabular-nums'] },
-  name: { color: raceDayColors.text, fontSize: 15, fontWeight: '800' },
-  me: { color: '#A6CDFF', fontSize: 11, marginTop: 2 },
-  number: { flex: 1, minWidth: 0 },
-  label: { color: raceDayColors.muted, fontSize: 12, fontWeight: '600' },
-  value: { color: raceDayColors.text, fontSize: 14, fontWeight: '700', fontVariant: ['tabular-nums'] },
-  actionCell: { width: 90 },
-  chartButton: { width: 90, minHeight: 38, alignItems: 'center', justifyContent: 'center', backgroundColor: raceDayColors.cardAlt, borderRadius: 6 },
-  chartButtonText: { color: '#A6CDFF', fontSize: 13, fontWeight: '700' },
-  expanded: { paddingHorizontal: 10, paddingBottom: 14 },
-  stats: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, paddingVertical: 10 },
-  stat: { minWidth: 84, gap: 3 },
 });

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import RaceDayDesktopStandings from './RaceDayDesktopStandings';
 import RaceDayPopup from './RaceDayPopup';
 import { raceDayStyles } from '../styles/raceDayStyles';
 import { buildQualifierTop5ForRun } from '../lib/liverc/liveRcTop5Parser';
@@ -154,7 +155,7 @@ function DriverTop5Card({ row = {} }) {
   );
 }
 
-export default function RaceDayTop5Popup({ visible, run, onClose }) {
+export default function RaceDayTop5Popup({ visible, run, onClose, desktop = false }) {
   const savedRows = useMemo(() => (Array.isArray(run?.top5) ? run.top5 : []), [run]);
   const [rows, setRows] = useState(savedRows);
   const [loading, setLoading] = useState(false);
@@ -237,13 +238,16 @@ export default function RaceDayTop5Popup({ visible, run, onClose }) {
       onClose={onClose}
       centered
       showScrollIndicator
-      bodyScroll={false}
+      desktop={desktop}
+      bodyScroll={desktop}
       contentContainerStyle={[raceDayStyles.top5PopupContent, localStyles.popupContent]}
     >
       {loading ? (
         <View style={raceDayStyles.empty}>
           <Text style={raceDayStyles.emptyText}>{shouldBuildMainTop5 ? 'Building Main Top 5...' : `Building ${isSeedingRound(roundLabel) ? 'Seeding' : 'Qualifier'} Round Top 5...`}</Text>
         </View>
+      ) : rows.length && desktop ? (
+        <RaceDayDesktopStandings rows={rows} run={run} buildStats={buildStats} displayPosition={displayPosition} makeRowKey={makeRowKey} />
       ) : rows.length ? (
         <View style={localStyles.shell}>
           <Text style={localStyles.scrollHint} numberOfLines={1}>Swipe left/right to compare all drivers</Text>

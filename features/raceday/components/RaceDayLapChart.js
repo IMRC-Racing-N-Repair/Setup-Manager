@@ -39,13 +39,17 @@ function LapPlot({ laps, detailed }) {
   );
 }
 
-export default function RaceDayLapChart({ run, detailed = false }) {
+export function getTimedLaps(run) {
   const entries = Array.isArray(run.stats?.laps) && run.stats.laps.length ? run.stats.laps : run.laps;
-  const laps = (Array.isArray(entries) ? entries : []).map((lap) => ({
+  return (Array.isArray(entries) ? entries : []).map((lap) => ({
     number: Number(lap.lapNumber),
     seconds: getLapSeconds(lap.lapTime),
   })).filter(({ number, seconds }) => Number.isInteger(number) && number > 0 && Number.isFinite(seconds) && seconds > 0)
     .sort((a, b) => a.number - b.number);
+}
+
+export default function RaceDayLapChart({ run, detailed = false }) {
+  const laps = getTimedLaps(run);
   const consistencyValue = getCompareValue(run, 'consistency').trim();
   const consistency = /^\d+(?:\.\d+)?\s*%?$/.test(consistencyValue) ? Number.parseFloat(consistencyValue) : null;
   const hasConsistency = consistency !== null && consistency <= 100;

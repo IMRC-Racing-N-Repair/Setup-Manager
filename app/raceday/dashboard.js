@@ -883,7 +883,7 @@ export default function RaceDayDashboardScreen() {
         />
       </RaceDayPopup>
 
-      <RaceDayTop5Popup visible={top5Open} run={selectedRun} onClose={() => setTop5Open(false)} />
+      <RaceDayTop5Popup desktop={isDesktopWeb} visible={top5Open} run={selectedRun} onClose={() => setTop5Open(false)} />
       <RaceDayRaceResultsPopup desktop={isDesktopWeb} visible={raceResultsOpen} run={selectedRun} onClose={() => setRaceResultsOpen(false)} />
 
       <RaceDayNotesPopup

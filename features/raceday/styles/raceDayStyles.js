@@ -1075,6 +1075,13 @@ export const raceDayStyles = StyleSheet.create({
     lineHeight: 18,
   },
 
+  webResultsHeading: { color: raceDayColors.text, fontSize: 17, fontWeight: '800', marginBottom: 7 },
+  webVehicleCard: { borderRadius: 10, backgroundColor: raceDayColors.panel },
+  webRunTitle: { color: '#FFAC70', fontSize: 14, lineHeight: 18 },
+  webResultsButton: { minHeight: 44, borderRadius: 6 },
+  webRunStats: { flexWrap: 'wrap', gap: 6, marginTop: 2 },
+  webRunStat: { flexBasis: 'auto', flexGrow: 0, flexShrink: 0, minWidth: 42, paddingHorizontal: 0, paddingVertical: 0, borderWidth: 0, backgroundColor: 'transparent' },
+
   raceRunList: {
     marginTop: 7,
   },

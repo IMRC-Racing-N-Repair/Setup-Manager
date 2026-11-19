@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { getCompareLabel, sortCompareFieldsForDashboard } from '../lib/raceDayCompare';
 import RaceDayLapChart from './RaceDayLapChart';
 import { raceDayColors, raceDayStyles } from '../styles/raceDayStyles';
@@ -66,6 +66,7 @@ export default function RaceDayResultCard({ run, desktop = false, compareFields 
     );
   }
 
+  const mobileWeb = Platform.OS === 'web' && !desktop;
   const round = run.roundLabel || 'Race Result';
   const raceNumber = run.raceNumber ? `Race ${run.raceNumber}` : '';
   const resultType = run.resultType ? String(run.resultType).toUpperCase() : 'RACE';
@@ -74,17 +75,17 @@ export default function RaceDayResultCard({ run, desktop = false, compareFields 
 
   return (
     <View style={[raceDayStyles.resultDetailCard, desktop && localStyles.desktopCard]}>
-      <View style={[raceDayStyles.rowBetween, desktop && localStyles.desktopHeader]}>
+      <View style={[raceDayStyles.rowBetween, desktop && localStyles.desktopHeader, mobileWeb && localStyles.mobileHeader]}>
         <View style={raceDayStyles.flex1}>
           <Text style={[raceDayStyles.cardTitle, desktop && localStyles.desktopRound]}>{round}</Text>
           <Text style={[raceDayStyles.cardSub, desktop && localStyles.desktopMeta]}>
             {[raceNumber, run.className, resultType].filter(Boolean).join(' • ')}
           </Text>
         </View>
-        <View style={[localStyles.resultActionRow, desktop && localStyles.desktopActions]}>
+        <View style={[localStyles.resultActionRow, desktop && localStyles.desktopActions, mobileWeb && localStyles.mobileActions]}>
           <TouchableOpacity
             accessibilityRole="button"
-            style={[raceDayStyles.resultTop5Button, localStyles.resultActionButton, desktop && localStyles.desktopButton, !hasRaceUrl && localStyles.disabledButton]}
+            style={[raceDayStyles.resultTop5Button, localStyles.resultActionButton, desktop && localStyles.desktopButton, mobileWeb && localStyles.mobileButton, !hasRaceUrl && localStyles.disabledButton]}
             onPress={onOpenRaceResults ? () => onOpenRaceResults(run) : undefined}
             disabled={!hasRaceUrl}
             activeOpacity={0.82}
@@ -93,7 +94,7 @@ export default function RaceDayResultCard({ run, desktop = false, compareFields 
           </TouchableOpacity>
           <TouchableOpacity
             accessibilityRole="button"
-            style={[raceDayStyles.resultTop5Button, localStyles.resultActionButton, desktop && localStyles.desktopButton]}
+            style={[raceDayStyles.resultTop5Button, localStyles.resultActionButton, desktop && localStyles.desktopButton, mobileWeb && localStyles.mobileButton]}
             onPress={onOpenTop5 ? () => onOpenTop5(run) : undefined}
             disabled={!onOpenTop5}
             activeOpacity={0.82}
@@ -103,7 +104,7 @@ export default function RaceDayResultCard({ run, desktop = false, compareFields 
         </View>
       </View>
 
-      {desktop && <RaceDayLapChart run={run} detailed compact />}
+      {(desktop || mobileWeb) && <RaceDayLapChart run={run} detailed compact />}
       <View style={[raceDayStyles.dashboardBlockHintBox, desktop && localStyles.desktopHint]}>
         <Text style={raceDayStyles.dashboardBlockHintTitle}>Dashboard Blocks</Text>
         <Text style={[raceDayStyles.dashboardBlockHintText, desktop && localStyles.desktopMeta]} numberOfLines={2}>
@@ -156,6 +157,9 @@ export default function RaceDayResultCard({ run, desktop = false, compareFields 
 export { RaceDayResultCard };
 
 const localStyles = StyleSheet.create({
+  mobileHeader: { flexWrap: 'wrap', gap: 6 },
+  mobileActions: { flexWrap: 'wrap', marginLeft: 0 },
+  mobileButton: { minHeight: 44, paddingHorizontal: 8, borderRadius: 6 },
   desktopCard: { backgroundColor: 'transparent', borderWidth: 0, padding: 0, gap: 2 },
   desktopHeader: { alignItems: 'center', gap: 10 },
   desktopRound: { fontSize: 21 },

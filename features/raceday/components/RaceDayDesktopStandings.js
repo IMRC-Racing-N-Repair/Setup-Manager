@@ -14,7 +14,7 @@ function clean(value) {
   return value === undefined || value === null || value === '' ? '—' : String(value);
 }
 
-function ComparisonPlot({ drivers, hiddenDrivers }) {
+function ComparisonPlot({ drivers, hiddenDrivers, compact }) {
   const visible = drivers.filter(({ id }) => !hiddenDrivers.has(id));
   const laps = drivers.flatMap((driver) => driver.laps);
   const lastLap = laps.reduce((max, lap) => Math.max(max, lap.number), 1);
@@ -32,7 +32,7 @@ function ComparisonPlot({ drivers, hiddenDrivers }) {
         <View style={styles.yAxis}>
           {ticks.map((tick) => <Text key={tick} style={styles.axisText}>{tick.toFixed(3)} s</Text>)}
         </View>
-        <Svg accessibilityRole="image" accessibilityLabel={`Lap times for ${visible.map(({ name }) => name).join(', ')}`} width="100%" height={142} viewBox="0 0 600 120" preserveAspectRatio="none" style={styles.svg}>
+        <Svg accessibilityRole="image" accessibilityLabel={`Lap times for ${visible.map(({ name }) => name).join(', ')}`} width="100%" height={compact ? 112 : 142} viewBox="0 0 600 120" preserveAspectRatio="none" style={styles.svg}>
           {[5, 60, 115].map((height) => (
             <Line key={height} x1={8} x2={592} y1={height} y2={height} stroke={colors.border} vectorEffect="non-scaling-stroke" />
           ))}
@@ -51,7 +51,7 @@ function ComparisonPlot({ drivers, hiddenDrivers }) {
   );
 }
 
-export default function RaceDayDesktopStandings({ rows, run, buildStats, displayPosition, makeRowKey }) {
+export default function RaceDayDesktopStandings({ rows, run, buildStats, displayPosition, makeRowKey, compact = false }) {
   const [hiddenDrivers, setHiddenDrivers] = useState(() => new Set());
   const [expandedKey, setExpandedKey] = useState(null);
   const drivers = useMemo(() => {
@@ -89,7 +89,7 @@ export default function RaceDayDesktopStandings({ rows, run, buildStats, display
 
   return (
     <View style={styles.standings}>
-      <View style={styles.chart}>
+      <View style={[styles.chart, compact && styles.compactChart]}>
         <View style={styles.chartHeader}>
           <Text accessibilityRole="header" style={styles.title}>Lap time comparison</Text>
           {chartable.length > 1 && active.length < chartable.length && (
@@ -98,7 +98,7 @@ export default function RaceDayDesktopStandings({ rows, run, buildStats, display
             </Pressable>
           )}
         </View>
-        {active.length ? <ComparisonPlot drivers={chartable} hiddenDrivers={hiddenDrivers} /> : (
+        {active.length ? <ComparisonPlot drivers={chartable} hiddenDrivers={hiddenDrivers} compact={compact} /> : (
           <Text style={styles.axisText}>{chartable.length ? 'Select a driver to show laps.' : 'Lap-by-lap times are unavailable for these results.'}</Text>
         )}
         {!!drivers.length && (
@@ -108,7 +108,7 @@ export default function RaceDayDesktopStandings({ rows, run, buildStats, display
               return (
                 <Pressable key={id} accessibilityRole="checkbox" aria-checked={selected}
                   accessibilityLabel={laps.length ? name : `${name}, no lap times`} disabled={!laps.length}
-                  onPress={() => toggleDriver(id)} style={[styles.legendButton, selected && { borderColor: color }]}>
+                  onPress={() => toggleDriver(id)} style={[styles.legendButton, compact && styles.touchTarget, selected && { borderColor: color }]}>
                   <View aria-hidden style={[styles.dot, { backgroundColor: color, opacity: selected ? 1 : 0.48 }]} />
                   <Text style={[styles.legendName, selected && { color }]}>{name}{laps.length ? '' : ' · No laps'}</Text>
                 </Pressable>
@@ -118,17 +118,19 @@ export default function RaceDayDesktopStandings({ rows, run, buildStats, display
         )}
       </View>
 
-      <View style={[styles.row, styles.head]}>
-        <Text style={[styles.label, styles.identity]}>Driver</Text>
-        {buildStats().slice(0, 3).map((stat) => <Text key={stat.key} style={[styles.label, styles.number]}>{stat.label}</Text>)}
-        <View style={styles.actionCell} />
-      </View>
+      {!compact && (
+        <View style={[styles.row, styles.head]}>
+          <Text style={[styles.label, styles.identity]}>Driver</Text>
+          {buildStats().slice(0, 3).map((stat) => <Text key={stat.key} style={[styles.label, styles.number]}>{stat.label}</Text>)}
+          <View style={styles.actionCell} />
+        </View>
+      )}
       {drivers.map(({ row, id, name, color, position }) => {
         const expanded = expandedKey === id;
         const stats = buildStats(row);
         return (
           <View key={id} style={[styles.driver, row.isMe && styles.myDriver]}>
-            <View style={styles.row}>
+            <View style={[styles.row, compact && styles.compactRow]}>
               <View style={[styles.identity, styles.driverIdentity]}>
                 <Text style={[styles.position, { color }]}>P{position}</Text>
                 <View style={styles.driverCopy}>
@@ -136,23 +138,15 @@ export default function RaceDayDesktopStandings({ rows, run, buildStats, display
                   {row.isMe && <Text style={styles.me}>Selected driver</Text>}
                 </View>
               </View>
-              {stats.slice(0, 3).map((stat) => <Text key={stat.key} style={[styles.value, styles.number]}>{clean(stat.value)}</Text>)}
+              {!compact && stats.slice(0, 3).map((stat) => <Text key={stat.key} style={[styles.value, styles.number]}>{clean(stat.value)}</Text>)}
               <Pressable accessibilityRole="button" accessibilityLabel={`${expanded ? 'Hide' : 'Show'} details for ${name}`}
                 aria-expanded={expanded} onPress={() => setExpandedKey(expanded ? null : id)}
-                style={[styles.button, styles.actionCell]}>
+                style={[styles.button, styles.actionCell, compact && styles.touchTarget]}>
                 <Text style={styles.buttonText}>{expanded ? 'Hide details' : 'Details'}</Text>
               </Pressable>
             </View>
-            {expanded && (
-              <View style={styles.stats}>
-                {stats.slice(3).map((stat) => (
-                  <View key={stat.key} style={styles.stat}>
-                    <Text style={styles.label}>{stat.label}</Text>
-                    <Text style={styles.value}>{clean(stat.value)}</Text>
-                  </View>
-                ))}
-              </View>
-            )}
+            {compact && <StandingStats stats={stats.slice(0, 3)} compact />}
+            {expanded && <StandingStats stats={stats.slice(3)} compact={compact} />}
           </View>
         );
       })}
@@ -160,9 +154,23 @@ export default function RaceDayDesktopStandings({ rows, run, buildStats, display
   );
 }
 
+function StandingStats({ stats, compact }) {
+  return (
+    <View style={[styles.stats, compact && styles.compactStats]}>
+      {stats.map((stat) => (
+        <View key={stat.key} style={[styles.stat, compact && styles.compactStat]}>
+          <Text style={styles.label}>{stat.label}</Text>
+          <Text style={styles.value}>{clean(stat.value)}</Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   standings: { width: '100%', paddingBottom: 8 },
   chart: { backgroundColor: colors.bg, borderRadius: 10, padding: 14, gap: 10, marginBottom: 12 },
+  compactChart: { padding: 8, gap: 5, marginBottom: 6 },
   chartHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 36 },
   title: { color: colors.text, fontSize: 17, fontWeight: '800' },
   plot: { flexDirection: 'row', alignItems: 'stretch', gap: 6 },
@@ -177,6 +185,7 @@ const styles = StyleSheet.create({
   driver: { borderBottomWidth: 1, borderBottomColor: colors.border },
   myDriver: { backgroundColor: colors.accentSofter },
   row: { minHeight: 58, flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 10, paddingVertical: 9 },
+  compactRow: { minHeight: 44, paddingVertical: 3, gap: 5 },
   head: { minHeight: 35, borderBottomWidth: 1, borderBottomColor: colors.border },
   identity: { flex: 2, minWidth: 0 },
   driverIdentity: { flexDirection: 'row', alignItems: 'center', gap: 9 },
@@ -190,6 +199,9 @@ const styles = StyleSheet.create({
   actionCell: { width: 90 },
   button: { minHeight: 36, paddingHorizontal: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.cardAlt, borderRadius: 6 },
   buttonText: { color: '#A6CDFF', fontSize: 12, fontWeight: '700' },
+  touchTarget: { minHeight: 44 },
   stats: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, padding: 10 },
+  compactStats: { gap: 6, paddingTop: 0, paddingBottom: 7 },
+  compactStat: { flexBasis: '30%', flexGrow: 1, gap: 1, minWidth: 0 },
   stat: { minWidth: 84, gap: 3 },
 });

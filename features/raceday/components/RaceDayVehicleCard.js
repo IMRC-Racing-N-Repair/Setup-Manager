@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { Platform, Text, TouchableOpacity, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { buildCompareRows, getCompareValue } from '../lib/raceDayCompare';
 import { getVehicleDisplayName, getVehicleTransponder } from '../lib/raceDayModel';
@@ -25,7 +25,11 @@ function WrenchIcon() {
 
 export function RaceRunStat({ label, value, desktop }) {
   return (
-    <View style={[raceDayStyles.raceRunStatBox, desktop && desktopStyles.stat]}>
+    <View style={[
+      raceDayStyles.raceRunStatBox,
+      desktop && desktopStyles.stat,
+      Platform.OS === 'web' && !desktop && raceDayStyles.webRunStat,
+    ]}>
       <Text style={[raceDayStyles.raceRunStatLabel, desktop && desktopStyles.statLabel]} numberOfLines={1}>{label}</Text>
       <Text style={[raceDayStyles.raceRunStatValue, desktop && desktopStyles.statValue]} numberOfLines={1}>{value}</Text>
     </View>
@@ -56,32 +60,33 @@ function getRunTitle(run = {}) {
 
 function RaceRunCard({ run, compareFields, onOpenResults, desktop, first }) {
   const [expanded, setExpanded] = useState(false);
+  const mobileWeb = Platform.OS === 'web' && !desktop;
   const rows = buildCompareRows(run, compareFields);
-  const position = desktop ? getCompareValue(run, 'position') : '—';
+  const position = desktop || mobileWeb ? getCompareValue(run, 'position') : '—';
   const showPosition = position !== '—' && !rows.some((row) => row.key === 'position');
 
   return (
     <View style={[raceDayStyles.raceRunCardThin, desktop && desktopStyles.run, desktop && first && desktopStyles.firstRun]}>
       <View style={raceDayStyles.raceRunTopRow}>
         <View style={raceDayStyles.flex1}>
-          <Text style={[raceDayStyles.raceRunTitleThin, desktop && desktopStyles.runTitle]}>{getRunTitle(run)}</Text>
+          <Text style={[raceDayStyles.raceRunTitleThin, desktop && desktopStyles.runTitle, mobileWeb && raceDayStyles.webRunTitle]}>{getRunTitle(run)}</Text>
           {!!run.className && <Text style={[raceDayStyles.raceRunSub, desktop && desktopStyles.runClass]}>{run.className}</Text>}
         </View>
         <TouchableOpacity
           accessibilityRole="button"
           aria-expanded={expanded}
-          style={[raceDayStyles.resultsMiniButton, desktop && desktopStyles.resultsButton]}
+          style={[raceDayStyles.resultsMiniButton, desktop && desktopStyles.resultsButton, mobileWeb && raceDayStyles.webResultsButton]}
           onPress={() => setExpanded((value) => !value)}
         >
           <Text style={[raceDayStyles.resultsMiniButtonText, desktop && desktopStyles.resultsButtonText]}>{expanded ? 'Hide laps' : 'Lap chart'}</Text>
         </TouchableOpacity>
-        <TouchableOpacity accessibilityRole="button" style={[raceDayStyles.resultsMiniButton, desktop && desktopStyles.resultsButton]} onPress={() => onOpenResults?.(run)} activeOpacity={0.82}>
+        <TouchableOpacity accessibilityRole="button" style={[raceDayStyles.resultsMiniButton, desktop && desktopStyles.resultsButton, mobileWeb && raceDayStyles.webResultsButton]} onPress={() => onOpenResults?.(run)} activeOpacity={0.82}>
           <Text style={[raceDayStyles.resultsMiniButtonText, desktop && desktopStyles.resultsButtonText]}>Results</Text>
         </TouchableOpacity>
       </View>
 
-      <View style={[raceDayStyles.raceRunStatsRow, desktop && desktopStyles.runStats]}>
-        {showPosition && <RaceRunStat desktop label="Position" value={position} />}
+      <View style={[raceDayStyles.raceRunStatsRow, desktop && desktopStyles.runStats, mobileWeb && raceDayStyles.webRunStats]}>
+        {showPosition && <RaceRunStat desktop={desktop} label="Position" value={position} />}
         {rows.map((row) => (
           <RaceRunStat key={row.key} label={row.label} value={row.value} desktop={desktop} />
         ))}
@@ -142,10 +147,11 @@ export function RaceDayVehicleCardFrame({ vehicle, desktop, lineup, onOpenSetup,
   const model = [vehicle?.manufacturer, vehicle?.model].filter(Boolean).join(' ');
   const transponder = getVehicleTransponder(vehicle);
   const identity = [model, vehicle?.chassisStyle || vehicle?.vehicleStyle, transponder && `TX ${transponder}`].filter(Boolean).join(' · ');
-  const accent = desktop ? vehicleColor(vehicle, title) : null;
+  const mobileWeb = Platform.OS === 'web' && !desktop;
+  const accent = desktop || mobileWeb ? vehicleColor(vehicle, title) : null;
   return (
-    <View style={[raceDayStyles.raceVehicleCard, desktop && desktopStyles.vehicle, desktop && { borderLeftWidth: 4, borderLeftColor: accent }]}>
-      {!desktop && <View style={raceDayStyles.cardAccent} />}
+    <View style={[raceDayStyles.raceVehicleCard, desktop && desktopStyles.vehicle, mobileWeb && raceDayStyles.webVehicleCard, accent && { borderLeftWidth: 4, borderLeftColor: accent }]}>
+      {!accent && <View style={raceDayStyles.cardAccent} />}
 
       <View style={[raceDayStyles.raceVehicleHeader, desktop && desktopStyles.vehicleHeader]}>
         <View style={raceDayStyles.raceVehicleMain}>
@@ -158,7 +164,7 @@ export function RaceDayVehicleCardFrame({ vehicle, desktop, lineup, onOpenSetup,
           <View style={raceDayStyles.raceVehicleIdentity}>
             <Text style={[raceDayStyles.cardTitle, desktop && desktopStyles.vehicleTitle]}>{title}</Text>
             <Text style={[raceDayStyles.raceVehicleMeta, desktop && desktopStyles.vehicleMeta]} numberOfLines={1}>
-              {desktop ? identity || 'Vehicle' : model || 'Manufacturer / Model not set'}
+              {desktop || mobileWeb ? identity || 'Vehicle' : model || 'Manufacturer / Model not set'}
             </Text>
           </View>
         </View>

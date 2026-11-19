@@ -22,6 +22,7 @@ export default function RaceDayBottomActions({
 
   if (docked) {
     const desktopWeb = desktop && Platform.OS === 'web';
+    const mobileWeb = !desktop && Platform.OS === 'web';
     const actions = [
       secondaryLabel ? { key: 'notes', glyph: '▤', label: secondaryLabel, onPress: onSecondaryPress, disabled: secondaryDisabled } : null,
       tertiaryLabel ? { key: 'changes', glyph: '↻', label: tertiaryLabel, onPress: onTertiaryPress, disabled: tertiaryDisabled } : null,
@@ -35,7 +36,8 @@ export default function RaceDayBottomActions({
         tabletLandscape && raceDayStyles.bottomBarTabletLandscape,
         tabletLandscape && raceDayStyles.bottomBarDockedTabletLandscape,
         desktopWeb && styles.desktopBar,
-        !desktopWeb && { bottom: 66 + insets.bottom },
+        mobileWeb && styles.mobileBar,
+        Platform.OS !== 'web' && { bottom: 66 + insets.bottom },
       ]}>
         <View style={[
           raceDayStyles.actionNavRow,
@@ -68,6 +70,7 @@ export default function RaceDayBottomActions({
                 tabletLandscape && raceDayStyles.actionNavLabelTabletLandscape,
                 action.primary && raceDayStyles.actionNavPrimary,
                 desktopWeb && styles.desktopLabel,
+                mobileWeb && styles.mobileLabel,
               ]} numberOfLines={desktopWeb ? undefined : 1}>{action.label}</Text>
             </TouchableOpacity>
           ))}
@@ -116,6 +119,8 @@ export default function RaceDayBottomActions({
 export { RaceDayBottomActions };
 
 const styles = StyleSheet.create({
+  mobileBar: { position: 'relative', flexShrink: 0, bottom: 0 },
+  mobileLabel: { fontSize: 10, lineHeight: 13 },
   desktopBar: {
     position: 'absolute',
     left: 0,

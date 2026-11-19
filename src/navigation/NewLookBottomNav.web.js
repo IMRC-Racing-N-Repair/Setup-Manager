@@ -48,7 +48,7 @@ function NavItem({ item, active, router, onRaceDay, desktop }) {
   );
 }
 
-export default function NewLookBottomNav({ active = 'home', router, onRaceDay, bottomOffset = 0 }) {
+export default function NewLookBottomNav({ active = 'home', router, onRaceDay, bottomOffset = 0, inFlow = false }) {
   const { width } = useViewport();
   const desktop = width >= DESKTOP_WEB_MIN_WIDTH;
 
@@ -56,7 +56,7 @@ export default function NewLookBottomNav({ active = 'home', router, onRaceDay, b
 
   const safeBottom = Math.max(0, Number(bottomOffset) || 0);
   return (
-    <View style={[styles.mobileNav, safeBottom > 0 && { paddingBottom: 6 + safeBottom }]}>
+    <View style={[styles.mobileNav, inFlow && styles.mobileNavInFlow, safeBottom > 0 && { paddingBottom: 6 + safeBottom }]}>
       {primaryItems.map((item) => (
         <NavItem key={item.key} item={item} active={active} router={router} onRaceDay={onRaceDay} />
       ))}
@@ -140,6 +140,7 @@ const styles = StyleSheet.create({
     backgroundColor: AppColors.background,
     zIndex: 1000,
   },
+  mobileNavInFlow: { position: 'relative', flexShrink: 0, paddingBottom: 'max(6px, env(safe-area-inset-bottom))' },
   mobileItem: {
     flex: 1,
     minHeight: 52,

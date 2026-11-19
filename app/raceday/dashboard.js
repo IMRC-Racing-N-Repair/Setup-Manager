@@ -84,6 +84,7 @@ export default function RaceDayDashboardScreen() {
   const { width, height } = useViewport();
   const isTabletLandscape = width >= 700 && width > height;
   const isDesktopWeb = Platform.OS === 'web' && width >= DESKTOP_WEB_MIN_WIDTH;
+  const mobileWeb = Platform.OS === 'web' && !isDesktopWeb;
   const useTabletGrid = isTabletLandscape && !isDesktopWeb;
   const [loading, setLoading] = useState(true);
   const [active, setActive] = useState(null);
@@ -695,7 +696,7 @@ export default function RaceDayDashboardScreen() {
             <Text style={raceDayStyles.loadingShellText}>Checking RaceDay, vehicles, and saved race information…</Text>
           </View>
         </View>
-        <NewLookBottomNav active="raceday" router={router} bottomOffset={insets.bottom} />
+        <NewLookBottomNav active="raceday" router={router} bottomOffset={insets.bottom} inFlow={mobileWeb} />
       </View>
     );
   }
@@ -710,7 +711,7 @@ export default function RaceDayDashboardScreen() {
           </View>
         </View>
         <RaceDayBottomActions docked desktop={isDesktopWeb} tabletLandscape={isTabletLandscape} primaryLabel="Select Track" onPrimaryPress={() => router.replace('/raceday/select-track')} />
-        <NewLookBottomNav active="raceday" router={router} bottomOffset={insets.bottom} />
+        <NewLookBottomNav active="raceday" router={router} bottomOffset={insets.bottom} inFlow={mobileWeb} />
       </View>
     );
   }
@@ -841,7 +842,7 @@ export default function RaceDayDashboardScreen() {
           topOffset={false}
         />
 
-        <ScrollView contentContainerStyle={[raceDayStyles.scrollContent, isTabletLandscape && raceDayStyles.scrollContentTabletLandscape, isDesktopWeb ? desktopStyles.scroll : { paddingBottom: 142 + insets.bottom }]} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={[raceDayStyles.scrollContent, isTabletLandscape && raceDayStyles.scrollContentTabletLandscape, isDesktopWeb ? desktopStyles.scroll : { paddingBottom: mobileWeb ? 8 : 142 + insets.bottom }]} showsVerticalScrollIndicator={false}>
           <RaceDayModeToggle desktop={isDesktopWeb} mode={dashboardMode} onChange={handleDashboardModeChange} />
 
           {isDesktopWeb ? (
@@ -866,7 +867,17 @@ export default function RaceDayDashboardScreen() {
                 onOpenChanges={() => setChangesOpen(true)}
               />
             </View>
-          ) : <>{eventPanel}{vehicleResults}</>}
+          ) : (
+            <>
+              {eventPanel}
+              {mobileWeb && (
+                <Text accessibilityRole="header" style={raceDayStyles.webResultsHeading}>
+                  {dashboardMode === 'race' ? 'Vehicle results' : 'Practice results'}
+                </Text>
+              )}
+              {vehicleResults}
+            </>
+          )}
         </ScrollView>
       </View>
 
@@ -890,7 +901,7 @@ export default function RaceDayDashboardScreen() {
           : (selectedVehicle ? `${getVehicleDisplayName(selectedVehicle)} • tap stats to choose dashboard blocks` : 'Tap stats to choose dashboard blocks')}
         onClose={() => setResultsOpen(false)}
         onDismiss={finishResultsDismissal}
-        centered={isDesktopWeb}
+        centered={Platform.OS === 'web'}
         desktop={isDesktopWeb}
       >
         <RaceDayResultCard
@@ -963,7 +974,7 @@ export default function RaceDayDashboardScreen() {
         onSelectClass={handleEventClassSelection}
         onSubmitDriverName={handleEventDriverName}
       />
-      <NewLookBottomNav active="raceday" router={router} bottomOffset={insets.bottom} />
+      <NewLookBottomNav active="raceday" router={router} bottomOffset={insets.bottom} inFlow={mobileWeb} />
     </View>
   );
 }

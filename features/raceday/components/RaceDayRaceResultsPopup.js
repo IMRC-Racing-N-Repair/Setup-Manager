@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import RaceDayDesktopStandings from './RaceDayDesktopStandings';
 import RaceDayPopup from './RaceDayPopup';
 import { raceDayColors, raceDayStyles } from '../styles/raceDayStyles';
@@ -96,6 +96,7 @@ function DriverRaceResultCard({ row = {} }) {
 }
 
 export default function RaceDayRaceResultsPopup({ visible, run, onClose, desktop = false }) {
+  const showComparison = Platform.OS === 'web' || desktop;
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -122,7 +123,7 @@ export default function RaceDayRaceResultsPopup({ visible, run, onClose, desktop
     }
 
     setLoading(true);
-    buildRaceResultsForRun(run, { includeAll: desktop })
+    buildRaceResultsForRun(run, { includeAll: showComparison })
       .then((nextRows) => {
         if (cancelled) return;
         setRows(Array.isArray(nextRows) ? nextRows : []);
@@ -140,7 +141,7 @@ export default function RaceDayRaceResultsPopup({ visible, run, onClose, desktop
     return () => {
       cancelled = true;
     };
-  }, [visible, run, desktop]);
+  }, [visible, run, showComparison]);
 
   return (
     <RaceDayPopup
@@ -151,15 +152,15 @@ export default function RaceDayRaceResultsPopup({ visible, run, onClose, desktop
       centered
       showScrollIndicator
       desktop={desktop}
-      bodyScroll={desktop}
+      bodyScroll={showComparison}
       contentContainerStyle={localStyles.popupContent}
     >
       {loading ? (
         <View style={raceDayStyles.empty}>
           <Text style={raceDayStyles.emptyText}>Loading this race...</Text>
         </View>
-      ) : rows.length && desktop ? (
-        <RaceDayDesktopStandings rows={rows} run={run} buildStats={buildStats} displayPosition={displayPosition} makeRowKey={makeRowKey} />
+      ) : rows.length && showComparison ? (
+        <RaceDayDesktopStandings compact={!desktop} rows={rows} run={run} buildStats={buildStats} displayPosition={displayPosition} makeRowKey={makeRowKey} />
       ) : rows.length ? (
         <View style={localStyles.shell}>
           <Text style={localStyles.scrollHint} numberOfLines={1}>Swipe left/right to compare this race</Text>

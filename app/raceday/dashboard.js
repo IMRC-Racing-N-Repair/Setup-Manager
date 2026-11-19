@@ -322,7 +322,7 @@ export default function RaceDayDashboardScreen() {
           },
         });
         waitingForClassSelection = Boolean(result?.needsUserInput?.length);
-        if (waitingForClassSelection && result?.needsUserInput?.[0]) {
+        if (!cancelToken.cancelled && waitingForClassSelection && result?.needsUserInput?.[0]) {
           setVehicleLinkSessionItem((current) => {
             const nextItem = result.needsUserInput[0];
             const currentId = normalizeId(current?.vehicleId);
@@ -330,7 +330,7 @@ export default function RaceDayDashboardScreen() {
             if (currentId && nextId && currentId !== nextId) return current;
             return { ...(current || {}), ...nextItem };
           });
-        } else if (!waitingForClassSelection) {
+        } else if (!cancelToken.cancelled && !waitingForClassSelection) {
           setVehicleLinkSessionItem(null);
         }
         if (!cancelled && !cancelToken.cancelled) await load({ showLoading: false });
@@ -573,7 +573,7 @@ export default function RaceDayDashboardScreen() {
       });
 
       waitingForClassSelection = Boolean(result?.needsUserInput?.length);
-      if (waitingForClassSelection && result?.needsUserInput?.[0]) {
+      if (!cancelToken.cancelled && waitingForClassSelection && result?.needsUserInput?.[0]) {
         setVehicleLinkSessionItem((current) => {
           const nextItem = result.needsUserInput[0];
           const currentId = normalizeId(current?.vehicleId);
@@ -581,7 +581,7 @@ export default function RaceDayDashboardScreen() {
           if (currentId && nextId && currentId !== nextId) return current;
           return { ...(current || {}), ...nextItem };
         });
-      } else if (!waitingForClassSelection) {
+      } else if (!cancelToken.cancelled && !waitingForClassSelection) {
         setVehicleLinkSessionItem(null);
       }
 

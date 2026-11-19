@@ -1,7 +1,7 @@
 import React from 'react';
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { raceDayStyles } from '../styles/raceDayStyles';
+import { raceDayColors, raceDayStyles } from '../styles/raceDayStyles';
 
 export default function RaceDayBottomActions({
   primaryLabel,
@@ -113,9 +113,9 @@ export { RaceDayBottomActions };
 const styles = StyleSheet.create({
   desktopBar: {
     position: 'relative',
-    left: undefined,
-    right: undefined,
-    bottom: undefined,
+    left: 0,
+    right: 0,
+    bottom: 0,
     zIndex: 1,
     width: '100%',
     maxWidth: '100%',

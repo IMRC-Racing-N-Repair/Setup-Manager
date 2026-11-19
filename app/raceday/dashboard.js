@@ -323,7 +323,13 @@ export default function RaceDayDashboardScreen() {
         });
         waitingForClassSelection = Boolean(result?.needsUserInput?.length);
         if (waitingForClassSelection && result?.needsUserInput?.[0]) {
-          setVehicleLinkSessionItem((current) => current || result.needsUserInput[0]);
+          setVehicleLinkSessionItem((current) => {
+            const nextItem = result.needsUserInput[0];
+            const currentId = normalizeId(current?.vehicleId);
+            const nextId = normalizeId(nextItem?.vehicleId);
+            if (currentId && nextId && currentId !== nextId) return current;
+            return { ...(current || {}), ...nextItem };
+          });
         } else if (!waitingForClassSelection) {
           setVehicleLinkSessionItem(null);
         }
@@ -568,7 +574,13 @@ export default function RaceDayDashboardScreen() {
 
       waitingForClassSelection = Boolean(result?.needsUserInput?.length);
       if (waitingForClassSelection && result?.needsUserInput?.[0]) {
-        setVehicleLinkSessionItem((current) => current || result.needsUserInput[0]);
+        setVehicleLinkSessionItem((current) => {
+          const nextItem = result.needsUserInput[0];
+          const currentId = normalizeId(current?.vehicleId);
+          const nextId = normalizeId(nextItem?.vehicleId);
+          if (currentId && nextId && currentId !== nextId) return current;
+          return { ...(current || {}), ...nextItem };
+        });
       } else if (!waitingForClassSelection) {
         setVehicleLinkSessionItem(null);
       }

@@ -2,6 +2,7 @@ import { fetchEntryListHtml } from './liveRcEntryList';
 import { findDriverClassCandidatesInEntryList, findDriverInEntryList } from './liveRcDriverFinder';
 import { scanRaceLinks } from './liveRcRaceScanner';
 import { parseQualifierResult } from './liveRcQualifierParser';
+import { parseTimeSeconds } from './liveRcTop5Shared';
 import { parseMainResult } from './liveRcMainParser';
 import { createLiveRcDebug } from './liveRcDebug';
 import { normalizeLiveRcEventUrl, normalizeLiveRcSiteUrl } from './liveRcUrls';
@@ -79,6 +80,13 @@ function sameSavedRace(saved = {}, candidate = {}) {
 }
 
 function isCompleteSavedResult(run = {}) {
+  if (run.resultType === 'seeding' || /\bseeding\b/i.test(run.roundLabel || '')) {
+    // Older seeding results were saved as qualifiers and may lack lap times.
+    return run.resultType === 'seeding' && Boolean(
+      (Array.isArray(run.stats?.laps) && run.stats.laps.some((lap) => Number(lap.lapNumber) > 0 && parseTimeSeconds(lap.lapTime) > 0))
+      || (run.lapsTime && run.fastestLap)
+    );
+  }
   return Boolean(
     String(run?.lapsTime || run?.stats?.lapsTime || '').trim()
     || (String(run?.laps || run?.lapCount || '').trim() && String(run?.totalTime || run?.time || '').trim())

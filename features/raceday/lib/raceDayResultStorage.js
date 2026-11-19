@@ -43,7 +43,8 @@ export async function addRaceDayRuns(raceDayId, newRuns = []) {
   const byKey = new Map();
 
   [...newRuns, ...existing].forEach((run) => {
-    const key = [run.vehicleId, run.eventUrl, run.roundLabel, run.raceUrl, run.resultType].map((x) => normalizeId(x)).join('|');
+    const type = /\bseeding\b/i.test(run.roundLabel || '') ? 'seeding' : run.resultType;
+    const key = [run.vehicleId, run.eventUrl, run.roundLabel, run.raceUrl, type].map((x) => normalizeId(x)).join('|');
     if (!byKey.has(key)) {
       byKey.set(key, {
         id: run.id || `run_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,

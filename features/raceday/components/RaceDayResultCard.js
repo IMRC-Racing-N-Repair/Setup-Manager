@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { getCompareLabel, sortCompareFieldsForDashboard } from '../lib/raceDayCompare';
+import RaceDayLapChart from './RaceDayLapChart';
 import { raceDayColors, raceDayStyles } from '../styles/raceDayStyles';
 
 function clean(value) {
@@ -16,6 +17,7 @@ function Stat({
   label,
   value,
   wide = false,
+  desktop = false,
   compareKey,
   activeCompareFields = [],
   onToggleCompareField,
@@ -31,24 +33,29 @@ function Stat({
         wide && raceDayStyles.resultStatBoxWide,
         selectable && raceDayStyles.resultStatBoxSelectable,
         selected && raceDayStyles.resultStatBoxSelected,
+        desktop && localStyles.desktopStat,
+        desktop && wide && localStyles.desktopWideStat,
+        desktop && selected && localStyles.desktopSelectedStat,
       ]}
+      accessibilityRole={selectable ? 'button' : undefined}
+      accessibilityState={selectable ? { selected } : undefined}
       onPress={selectable ? () => onToggleCompareField(compareKey) : undefined}
       activeOpacity={selectable ? 0.84 : 1}
     >
       <View style={raceDayStyles.resultStatHeaderRow}>
-        <Text style={raceDayStyles.statLabel} numberOfLines={1}>{label}</Text>
+        <Text style={[raceDayStyles.statLabel, desktop && localStyles.desktopStatLabel]} numberOfLines={1}>{label}</Text>
         {selected ? <Text style={raceDayStyles.resultShownBadge}>Shown</Text> : null}
       </View>
-      <Text style={raceDayStyles.resultStatValue} numberOfLines={1}>{clean(value)}</Text>
+      <Text style={[raceDayStyles.resultStatValue, desktop && localStyles.desktopStatValue]} numberOfLines={1}>{clean(value)}</Text>
     </Box>
   );
 }
 
-function SectionTitle({ children }) {
-  return <Text style={raceDayStyles.resultSectionTitle}>{children}</Text>;
+function SectionTitle({ children, desktop }) {
+  return <Text style={[raceDayStyles.resultSectionTitle, desktop && localStyles.desktopSection]}>{children}</Text>;
 }
 
-export default function RaceDayResultCard({ run, compareFields = [], onToggleCompareField, onOpenTop5, onOpenRaceResults }) {
+export default function RaceDayResultCard({ run, desktop = false, compareFields = [], onToggleCompareField, onOpenTop5, onOpenRaceResults }) {
   if (!run) {
     return (
       <View style={raceDayStyles.empty}>
@@ -64,69 +71,71 @@ export default function RaceDayResultCard({ run, compareFields = [], onToggleCom
   const hasRaceUrl = Boolean(run.raceUrl || run.resultUrl || run.url);
 
   return (
-    <>
-    <View style={raceDayStyles.resultDetailCard}>
-      <View style={raceDayStyles.rowBetween}>
+    <View style={[raceDayStyles.resultDetailCard, desktop && localStyles.desktopCard]}>
+      <View style={[raceDayStyles.rowBetween, desktop && localStyles.desktopHeader]}>
         <View style={raceDayStyles.flex1}>
-          <Text style={raceDayStyles.cardTitle}>{round}</Text>
-          <Text style={raceDayStyles.cardSub}>
+          <Text style={[raceDayStyles.cardTitle, desktop && localStyles.desktopRound]}>{round}</Text>
+          <Text style={[raceDayStyles.cardSub, desktop && localStyles.desktopMeta]}>
             {[raceNumber, run.className, resultType].filter(Boolean).join(' • ')}
           </Text>
         </View>
-        <View style={localStyles.resultActionRow}>
+        <View style={[localStyles.resultActionRow, desktop && localStyles.desktopActions]}>
           <TouchableOpacity
-            style={[raceDayStyles.resultTop5Button, localStyles.resultActionButton, !hasRaceUrl && localStyles.disabledButton]}
+            accessibilityRole="button"
+            style={[raceDayStyles.resultTop5Button, localStyles.resultActionButton, desktop && localStyles.desktopButton, !hasRaceUrl && localStyles.disabledButton]}
             onPress={onOpenRaceResults ? () => onOpenRaceResults(run) : undefined}
             disabled={!hasRaceUrl}
             activeOpacity={0.82}
           >
-            <Text style={raceDayStyles.resultTop5ButtonText}>Race Results</Text>
+            <Text style={[raceDayStyles.resultTop5ButtonText, desktop && localStyles.desktopButtonText]}>Race Results</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[raceDayStyles.resultTop5Button, localStyles.resultActionButton]}
+            accessibilityRole="button"
+            style={[raceDayStyles.resultTop5Button, localStyles.resultActionButton, desktop && localStyles.desktopButton]}
             onPress={onOpenTop5 ? () => onOpenTop5(run) : undefined}
             disabled={!onOpenTop5}
             activeOpacity={0.82}
           >
-            <Text style={raceDayStyles.resultTop5ButtonText}>View Top 5</Text>
+            <Text style={[raceDayStyles.resultTop5ButtonText, desktop && localStyles.desktopButtonText]}>View Top 5</Text>
           </TouchableOpacity>
         </View>
       </View>
 
-      <View style={raceDayStyles.dashboardBlockHintBox}>
+      {desktop && <RaceDayLapChart run={run} detailed />}
+      <View style={[raceDayStyles.dashboardBlockHintBox, desktop && localStyles.desktopHint]}>
         <Text style={raceDayStyles.dashboardBlockHintTitle}>Dashboard Blocks</Text>
-        <Text style={raceDayStyles.dashboardBlockHintText} numberOfLines={2}>
-          Tap any stat box to show it on the dashboard. Current: {selectedLabels || 'none'}
+        <Text style={[raceDayStyles.dashboardBlockHintText, desktop && localStyles.desktopMeta]} numberOfLines={2}>
+          {desktop ? 'Select a stat to show it on the dashboard. Showing ' : 'Tap any stat box to show it on the dashboard. Current: '}{selectedLabels || 'none'}
         </Text>
       </View>
 
-      <SectionTitle>Race</SectionTitle>
-      <View style={raceDayStyles.resultStatGrid}>
-        <Stat label="Driver" value={run.driver || run.driverName || run.stats?.driverName} wide />
-        <Stat label="Position" value={run.position} compareKey="position" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
-        <Stat label="Laps/Time" value={getRunValue(run, 'lapsTime')} compareKey="lapsTime" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
-        <Stat label="Fast Lap" value={getRunValue(run, 'fastestLap')} compareKey="fastestLap" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
-        <Stat label="Avg Lap" value={getRunValue(run, 'avgLap')} compareKey="avgLap" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
+      <SectionTitle desktop={desktop}>Race</SectionTitle>
+      <View style={[raceDayStyles.resultStatGrid, desktop && localStyles.desktopGrid]}>
+        <Stat desktop={desktop} label="Driver" value={run.driver || run.driverName || run.stats?.driverName} wide />
+        <Stat desktop={desktop} label="Position" value={run.position} compareKey="position" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
+        <Stat desktop={desktop} label="Laps/Time" value={getRunValue(run, 'lapsTime')} compareKey="lapsTime" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
+        <Stat desktop={desktop} label="Fast Lap" value={getRunValue(run, 'fastestLap')} compareKey="fastestLap" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
+        <Stat desktop={desktop} label="Avg Lap" value={getRunValue(run, 'avgLap')} compareKey="avgLap" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
       </View>
 
-      <SectionTitle>Averages</SectionTitle>
-      <View style={raceDayStyles.resultStatGrid}>
-        <Stat label="Avg Top 5" value={getRunValue(run, 'top5Avg')} compareKey="top5Avg" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
-        <Stat label="Avg Top 10" value={getRunValue(run, 'top10Avg')} compareKey="top10Avg" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
-        <Stat label="Avg Top 15" value={getRunValue(run, 'top15Avg')} compareKey="top15Avg" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
+      <SectionTitle desktop={desktop}>Averages</SectionTitle>
+      <View style={[raceDayStyles.resultStatGrid, desktop && localStyles.desktopGrid]}>
+        <Stat desktop={desktop} label="Avg Top 5" value={getRunValue(run, 'top5Avg')} compareKey="top5Avg" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
+        <Stat desktop={desktop} label="Avg Top 10" value={getRunValue(run, 'top10Avg')} compareKey="top10Avg" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
+        <Stat desktop={desktop} label="Avg Top 15" value={getRunValue(run, 'top15Avg')} compareKey="top15Avg" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
       </View>
 
-      <SectionTitle>Consecutive / Consistency</SectionTitle>
-      <View style={raceDayStyles.resultStatGrid}>
-        <Stat label="Top 2 Cons." value={getRunValue(run, 'top2Consecutive')} compareKey="top2Consecutive" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
-        <Stat label="Top 3 Cons." value={getRunValue(run, 'top3Consecutive')} compareKey="top3Consecutive" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
-        <Stat label="Std Dev" value={getRunValue(run, 'stdDeviation')} compareKey="stdDeviation" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
-        <Stat label="Consistency" value={getRunValue(run, 'consistency')} compareKey="consistency" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
+      <SectionTitle desktop={desktop}>Consecutive / Consistency</SectionTitle>
+      <View style={[raceDayStyles.resultStatGrid, desktop && localStyles.desktopGrid]}>
+        <Stat desktop={desktop} label="Top 2 Cons." value={getRunValue(run, 'top2Consecutive')} compareKey="top2Consecutive" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
+        <Stat desktop={desktop} label="Top 3 Cons." value={getRunValue(run, 'top3Consecutive')} compareKey="top3Consecutive" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
+        <Stat desktop={desktop} label="Std Dev" value={getRunValue(run, 'stdDeviation')} compareKey="stdDeviation" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
+        <Stat desktop={desktop} label="Consistency" value={getRunValue(run, 'consistency')} compareKey="consistency" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
       </View>
 
       {Array.isArray(run.stats?.laps) && run.stats.laps.length ? (
         <>
-          <SectionTitle>Laps</SectionTitle>
+          <SectionTitle desktop={desktop}>Laps</SectionTitle>
           <View style={raceDayStyles.lapListBox}>
             {run.stats.laps.slice(0, 80).map((lap, index) => (
               <View key={`${lap.lapNumber || index}_${lap.lapTime || ''}`} style={raceDayStyles.lapRow}>
@@ -139,13 +148,27 @@ export default function RaceDayResultCard({ run, compareFields = [], onToggleCom
         </>
       ) : null}
     </View>
-    </>
   );
 }
 
 export { RaceDayResultCard };
 
 const localStyles = StyleSheet.create({
+  desktopCard: { backgroundColor: 'transparent', borderWidth: 0, padding: 0, gap: 5 },
+  desktopHeader: { alignItems: 'center', gap: 10 },
+  desktopRound: { fontSize: 21 },
+  desktopMeta: { fontSize: 13, lineHeight: 18 },
+  desktopActions: { flexWrap: 'wrap', marginLeft: 0 },
+  desktopButton: { minHeight: 38, borderRadius: 6, backgroundColor: raceDayColors.cardAlt },
+  desktopButtonText: { fontSize: 13, color: '#A6CDFF' },
+  desktopHint: { backgroundColor: 'transparent', borderWidth: 0, paddingHorizontal: 0, marginTop: 10 },
+  desktopGrid: { gap: 8 },
+  desktopStat: { flexBasis: '20%', minHeight: 65, backgroundColor: raceDayColors.card, borderRadius: 8 },
+  desktopWideStat: { flexBasis: '100%' },
+  desktopSelectedStat: { backgroundColor: raceDayColors.accentSoft },
+  desktopStatLabel: { fontSize: 11, color: raceDayColors.muted },
+  desktopStatValue: { fontSize: 17, lineHeight: 22, fontVariant: ['tabular-nums'] },
+  desktopSection: { color: raceDayColors.text, fontSize: 13, lineHeight: 19 },
   resultActionRow: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -865,12 +865,17 @@ export default function RaceDayDashboardScreen() {
       <RaceDayPopup
         visible={resultsOpen}
         title="Race Results"
-        subtitle={selectedVehicle ? `${getVehicleDisplayName(selectedVehicle)} • tap stats to choose dashboard blocks` : 'Tap stats to choose dashboard blocks'}
+        subtitle={isDesktopWeb
+          ? (selectedVehicle ? getVehicleDisplayName(selectedVehicle) : undefined)
+          : (selectedVehicle ? `${getVehicleDisplayName(selectedVehicle)} • tap stats to choose dashboard blocks` : 'Tap stats to choose dashboard blocks')}
         onClose={() => setResultsOpen(false)}
         onDismiss={finishResultsDismissal}
+        centered={isDesktopWeb}
+        desktop={isDesktopWeb}
       >
         <RaceDayResultCard
           run={selectedRun}
+          desktop={isDesktopWeb}
           compareFields={compareFields}
           onToggleCompareField={handleToggleCompareField}
           onOpenTop5={openTop5}
@@ -879,7 +884,7 @@ export default function RaceDayDashboardScreen() {
       </RaceDayPopup>
 
       <RaceDayTop5Popup visible={top5Open} run={selectedRun} onClose={() => setTop5Open(false)} />
-      <RaceDayRaceResultsPopup visible={raceResultsOpen} run={selectedRun} onClose={() => setRaceResultsOpen(false)} />
+      <RaceDayRaceResultsPopup desktop={isDesktopWeb} visible={raceResultsOpen} run={selectedRun} onClose={() => setRaceResultsOpen(false)} />
 
       <RaceDayNotesPopup
         visible={notesOpen}

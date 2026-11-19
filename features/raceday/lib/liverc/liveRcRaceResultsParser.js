@@ -160,9 +160,9 @@ function markMe(row = {}, run = {}) {
     || (row.driverCandidates || []).some((candidate) => driverMatches(candidate, driver));
 }
 
-function selectRowsForRace(rows = [], run = {}) {
+function selectRowsForRace(rows = [], run = {}, includeAll = false) {
   const sorted = [...rows].sort(sortRaceRows).map((row) => ({ ...row, isMe: markMe(row, run) }));
-  if (sorted.length <= 6) return sorted;
+  if (includeAll || sorted.length <= 6) return sorted;
 
   const topFive = sorted.slice(0, 5);
   const me = sorted.find((row) => row.isMe);
@@ -180,7 +180,7 @@ function buildFallbackRows(visibleRows = [], run = {}) {
   }));
 }
 
-export async function buildRaceResultsForRun(run = {}) {
+export async function buildRaceResultsForRun(run = {}, { includeAll = false } = {}) {
   const raceUrl = run.raceUrl || run.resultUrl || run.url || '';
   if (!raceUrl) return [];
 
@@ -208,7 +208,7 @@ export async function buildRaceResultsForRun(run = {}) {
     ? racerRows.map((row, index) => mergeRacerLapWithVisibleRow(row, visibleRows, index))
     : buildFallbackRows(visibleRows, run);
 
-  const selected = selectRowsForRace(mergedRows, run);
+  const selected = selectRowsForRace(mergedRows, run, includeAll);
 
   debug('built', {
     visibleRows: visibleRows.length,

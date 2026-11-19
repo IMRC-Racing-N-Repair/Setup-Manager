@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { buildCompareRows, getCompareValue } from '../lib/raceDayCompare';
-import { getVehicleDisplayName } from '../lib/raceDayModel';
+import { getVehicleDisplayName, getVehicleTransponder } from '../lib/raceDayModel';
 import { pickPreferredLineup } from '../lib/raceDayLineupPriority';
 import RaceDayLineupBadge from './RaceDayLineupBadge';
 import RaceDayLapChart from './RaceDayLapChart';
@@ -54,14 +54,14 @@ function getRunTitle(run = {}) {
   return title;
 }
 
-function RaceRunCard({ run, compareFields, onOpenResults, desktop }) {
+function RaceRunCard({ run, compareFields, onOpenResults, desktop, first }) {
   const [expanded, setExpanded] = useState(false);
   const rows = buildCompareRows(run, compareFields);
   const position = desktop ? getCompareValue(run, 'position') : '—';
   const showPosition = position !== '—' && !rows.some((row) => row.key === 'position');
 
   return (
-    <View style={[raceDayStyles.raceRunCardThin, desktop && desktopStyles.run]}>
+    <View style={[raceDayStyles.raceRunCardThin, desktop && desktopStyles.run, desktop && first && desktopStyles.firstRun]}>
       <View style={raceDayStyles.raceRunTopRow}>
         <Text style={[raceDayStyles.raceRunTitleThin, desktop && desktopStyles.runTitle]} numberOfLines={1}>{getRunTitle(run)}</Text>
         {desktop && (
@@ -128,6 +128,15 @@ function getLineupFromRunList(runs = []) {
   return candidates[0] || null;
 }
 
+const vehicleColors = ['#8ABAFF', '#E7A8FB', '#79DBC5', '#FBB48C', '#C4BBFF', '#B5D58A'];
+
+function vehicleColor(vehicle, title) {
+  const key = String(vehicle?.id || vehicle?.vehicleId || title);
+  let hash = 0;
+  for (const letter of key) hash = (Math.imul(31, hash) + letter.codePointAt(0)) >>> 0;
+  return vehicleColors[hash % vehicleColors.length];
+}
+
 export default function RaceDayVehicleCard({
   vehicle,
   desktop = false,
@@ -139,6 +148,10 @@ export default function RaceDayVehicleCard({
   onOpenSetup,
 }) {
   const title = getVehicleDisplayName(vehicle);
+  const model = [vehicle?.manufacturer, vehicle?.model].filter(Boolean).join(' ');
+  const transponder = getVehicleTransponder(vehicle);
+  const identity = [model, vehicle?.chassisStyle || vehicle?.vehicleStyle, transponder && `TX ${transponder}`].filter(Boolean).join(' · ');
+  const accent = desktop ? vehicleColor(vehicle, title) : null;
   const raceRuns = useMemo(() => {
     const list = Array.isArray(runsForVehicle) && runsForVehicle.length
       ? runsForVehicle
@@ -160,21 +173,27 @@ export default function RaceDayVehicleCard({
   );
 
   return (
-    <View style={[raceDayStyles.raceVehicleCard, desktop && desktopStyles.vehicle]}>
+    <View style={[raceDayStyles.raceVehicleCard, desktop && desktopStyles.vehicle, desktop && { borderLeftWidth: 4, borderLeftColor: accent }]}>
       {!desktop && <View style={raceDayStyles.cardAccent} />}
 
-      <View style={raceDayStyles.raceVehicleHeader}>
+      <View style={[raceDayStyles.raceVehicleHeader, desktop && desktopStyles.vehicleHeader]}>
         <View style={raceDayStyles.raceVehicleMain}>
-          <RaceDayLineupBadge lineup={displayLineup} desktop={desktop} />
+          {desktop && (
+            <View aria-hidden style={[desktopStyles.vehicleMarker, { borderColor: accent + '64', backgroundColor: accent + '20' }]}>
+              <Text style={[desktopStyles.vehicleInitials, { color: accent }]}>{title.trim().split(/\s+/).slice(0, 2).map((word) => Array.from(word)[0]).join('').toUpperCase()}</Text>
+            </View>
+          )}
+          {!desktop && <RaceDayLineupBadge lineup={displayLineup} />}
           <View style={raceDayStyles.raceVehicleIdentity}>
             <Text style={[raceDayStyles.cardTitle, desktop && desktopStyles.vehicleTitle]}>{title}</Text>
             <Text style={[raceDayStyles.raceVehicleMeta, desktop && desktopStyles.vehicleMeta]} numberOfLines={1}>
-              {vehicle?.manufacturer || vehicle?.model ? [vehicle.manufacturer, vehicle.model].filter(Boolean).join(' ') : 'Manufacturer / Model not set'}
+              {desktop ? identity || 'Vehicle' : model || 'Manufacturer / Model not set'}
             </Text>
           </View>
         </View>
+        {desktop && <RaceDayLineupBadge lineup={displayLineup} desktop />}
         <View style={raceDayStyles.raceVehicleActions}>
-          <TouchableOpacity style={raceDayStyles.raceVehicleWrench} onPress={onOpenSetup} activeOpacity={0.82}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel={desktop ? `Open setup for ${title}` : undefined} style={[raceDayStyles.raceVehicleWrench, desktop && desktopStyles.setupButton]} onPress={onOpenSetup} activeOpacity={0.82}>
             <WrenchIcon />
             <Text style={[raceDayStyles.raceVehicleWrenchText, desktop && desktopStyles.vehicleAction]}>WRENCH</Text>
           </TouchableOpacity>
@@ -182,11 +201,12 @@ export default function RaceDayVehicleCard({
       </View>
 
       {raceRuns.length ? (
-        <View style={raceDayStyles.raceRunList}>
+        <View style={[raceDayStyles.raceRunList, desktop && desktopStyles.vehicleRuns]}>
           {raceRuns.map((run, index) => (
             <RaceRunCard
               key={run.id || `${run.raceUrl || 'race'}_${run.roundLabel || 'round'}_${run.raceNumber || index}`}
               run={run}
+              first={index === 0}
               desktop={desktop}
               compareFields={compareFields}
               onOpenResults={onOpenResults}
@@ -194,7 +214,7 @@ export default function RaceDayVehicleCard({
           ))}
         </View>
       ) : (
-        <Text style={[raceDayStyles.cardSub, { marginTop: 8 }]}>No results synced yet</Text>
+        <Text style={[raceDayStyles.cardSub, { marginTop: 8 }, desktop && desktopStyles.vehicleEmpty]}>No results synced yet</Text>
       )}
     </View>
   );

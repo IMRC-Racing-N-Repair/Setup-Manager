@@ -10,7 +10,7 @@ function getLapSeconds(value) {
   return parts.length === 2 ? parts[0] * 60 + parts[1] : parts[0];
 }
 
-function LapPlot({ laps }) {
+function LapPlot({ laps, detailed }) {
   const first = laps[0].number;
   const last = laps[laps.length - 1].number;
   const best = laps.reduce((fastest, lap) => lap.seconds < fastest.seconds ? lap : fastest);
@@ -22,13 +22,14 @@ function LapPlot({ laps }) {
 
   return (
     <View style={styles.plot}>
-      <Svg accessibilityLabel={`Lap progression. Fastest lap ${best.number} at ${best.seconds.toFixed(3)} seconds.`} width="100%" height={94} viewBox="0 0 360 84" preserveAspectRatio="none">
+      <Svg accessibilityLabel={`Lap progression. Fastest lap ${best.number} at ${best.seconds.toFixed(3)} seconds.`} width="100%" height={detailed ? 158 : 94} viewBox="0 0 360 84" preserveAspectRatio="none">
         {[10, 42, 74].map((position) => (
           <Line key={position} x1={8} x2={352} y1={position} y2={position} stroke={AppColors.border} vectorEffect="non-scaling-stroke" />
         ))}
         <Polyline points={points} fill="none" stroke="#82B9FF" strokeWidth={2} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
         <Circle cx={x(best)} cy={y(best)} r={3} fill="#74DFAB" />
       </Svg>
+      {detailed && <Text style={styles.caption}>Lap time range · {best.seconds.toFixed(3)}–{slowest.toFixed(3)} s</Text>}
       <View style={styles.axis}>
         <Text style={styles.caption}>Lap {first}</Text>
         <Text style={styles.caption}>Best {best.seconds.toFixed(3)}s · Lap {best.number}</Text>
@@ -38,8 +39,9 @@ function LapPlot({ laps }) {
   );
 }
 
-export default function RaceDayLapChart({ run }) {
-  const laps = (Array.isArray(run.stats?.laps) ? run.stats.laps : []).map((lap) => ({
+export default function RaceDayLapChart({ run, detailed = false }) {
+  const entries = Array.isArray(run.stats?.laps) && run.stats.laps.length ? run.stats.laps : run.laps;
+  const laps = (Array.isArray(entries) ? entries : []).map((lap) => ({
     number: Number(lap.lapNumber),
     seconds: getLapSeconds(lap.lapTime),
   })).filter(({ number, seconds }) => Number.isInteger(number) && number > 0 && Number.isFinite(seconds) && seconds > 0)
@@ -52,7 +54,7 @@ export default function RaceDayLapChart({ run }) {
     <View style={styles.panel}>
       <Text style={styles.title}>Lap progression</Text>
       {laps.length > 1 && laps[0].number < laps[laps.length - 1].number
-        ? <LapPlot laps={laps} />
+        ? <LapPlot laps={laps} detailed={detailed} />
         : <Text style={styles.caption}>Lap-by-lap times are unavailable for this run.</Text>}
       {hasConsistency && (
         <View style={styles.consistency}>

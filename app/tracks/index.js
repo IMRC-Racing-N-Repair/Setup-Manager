@@ -213,14 +213,9 @@ export default function TracksScreen() {
     setImportVisible(false);
   }
 
-  function handleImportedTrack(savedTrack) {
-    pendingImportActionRef.current = { type: 'openTrack', track: savedTrack };
-    setImportVisible(false);
-
-    if (Platform.OS !== 'ios') {
-      if (importDismissTimerRef.current) clearTimeout(importDismissTimerRef.current);
-      importDismissTimerRef.current = setTimeout(handleImportSheetDismiss, 260);
-    }
+  function handleImportedTrack() {
+    closeImportSheet();
+    return loadTracks();
   }
 
   function openSubmitTrackScreen() {
@@ -239,7 +234,7 @@ export default function TracksScreen() {
     }
   }
 
-  async function handleImportSheetDismiss() {
+  function handleImportSheetDismiss() {
     const pendingAction = pendingImportActionRef.current;
     if (!pendingAction) return;
 
@@ -251,13 +246,6 @@ export default function TracksScreen() {
 
     if (pendingAction.type === 'submitTrack') {
       router.push('/tracks/submit');
-      return;
-    }
-
-    if (pendingAction.type === 'openTrack' && pendingAction.track) {
-      await loadTracks();
-      setEditingTrack(pendingAction.track);
-      setSheetVisible(true);
     }
   }
 

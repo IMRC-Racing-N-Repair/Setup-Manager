@@ -22,8 +22,8 @@ function LapPlot({ laps, detailed, compact }) {
   const points = laps.map((lap) => `${x(lap)},${y(lap)}`).join(' ');
 
   return (
-    <View style={styles.plot}>
-      <Svg accessibilityRole="image" accessibilityLabel={best ? `Lap progression. Fastest lap ${best.number} at ${best.seconds.toFixed(3)} seconds.` : 'Lap progression. No valid laps.'} width="100%" height={detailed ? (compact ? 112 : 158) : 94} viewBox="0 0 360 84" preserveAspectRatio="none">
+    <View style={[styles.plot, compact && styles.plotCompact]}>
+      <Svg accessibilityRole="image" accessibilityLabel={best ? `Lap progression. Fastest lap ${best.number} at ${best.seconds.toFixed(3)} seconds.` : 'Lap progression. No valid laps.'} width="100%" height={detailed && !compact ? 158 : 90} viewBox="0 0 360 84" preserveAspectRatio="none">
         {[10, 42, 74].map((position) => (
           <Line key={position} x1={8} x2={352} y1={position} y2={position} stroke={AppColors.border} vectorEffect="non-scaling-stroke" />
         ))}
@@ -83,6 +83,7 @@ const styles = StyleSheet.create({
   panelCompact: { marginTop: 2, padding: 7, gap: 4 },
   title: { color: AppColors.text, fontSize: 14, fontWeight: '700' },
   plot: { gap: 4 },
+  plotCompact: { gap: 2 },
   axis: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 5 },
   caption: { color: AppColors.mutedText, fontSize: 12 },
   consistency: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 4 },

@@ -6,7 +6,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import RaceDayHeader from '../../features/raceday/components/RaceDayHeader';
 import RaceDayVehicleCard from '../../features/raceday/components/RaceDayVehicleCard';
 import RaceDayBottomActions from '../../features/raceday/components/RaceDayBottomActions';
-import { getTimedLaps } from '../../features/raceday/components/RaceDayLapChart';
 import RaceDayPopup from '../../features/raceday/components/RaceDayPopup';
 import RaceDayResultCard from '../../features/raceday/components/RaceDayResultCard';
 import RaceDayTop5Popup from '../../features/raceday/components/RaceDayTop5Popup';
@@ -848,9 +847,9 @@ export default function RaceDayDashboardScreen() {
         visible={resultsOpen}
         centered
         chart
-        lockLandscape={!!selectedRun && getTimedLaps(selectedRun).length > 0}
         title="Race Results"
-        subtitle={selectedVehicle ? `${getVehicleDisplayName(selectedVehicle)} • tap stats to choose dashboard blocks` : 'Tap stats to choose dashboard blocks'}
+        subtitle={selectedVehicle ? getVehicleDisplayName(selectedVehicle) : undefined}
+        showScrollIndicator
         onClose={() => setResultsOpen(false)}
         onDismiss={finishResultsDismissal}
       >

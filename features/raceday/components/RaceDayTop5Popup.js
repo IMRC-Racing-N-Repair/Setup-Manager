@@ -281,8 +281,8 @@ export default function RaceDayTop5Popup({ visible, run, onClose }) {
 const localStyles = StyleSheet.create({
   popupContent: {
     width: '100%',
-    paddingTop: 12,
-    paddingBottom: 6,
+    paddingTop: 4,
+    paddingBottom: 4,
   },
   shell: {
     width: '100%',

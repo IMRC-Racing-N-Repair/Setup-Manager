@@ -194,8 +194,8 @@ export { RaceDayRaceResultsPopup };
 
 const localStyles = StyleSheet.create({
   popupContent: {
-    paddingTop: 10,
-    paddingBottom: 6,
+    paddingTop: 4,
+    paddingBottom: 4,
   },
   shell: {
     width: '100%',

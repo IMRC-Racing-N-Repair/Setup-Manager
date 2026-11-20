@@ -1,7 +1,7 @@
 import React from 'react';
 import RaceDayLapChart from './RaceDayLapChart';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { getCompareLabel, sortCompareFieldsForDashboard } from '../lib/raceDayCompare';
+import { useSafeAreaLayout } from '../../../src/layout/safeAreaLayout';
 import { raceDayColors, raceDayStyles } from '../styles/raceDayStyles';
 
 function clean(value) {
@@ -16,8 +16,7 @@ function getRunValue(run = {}, key) {
 function Stat({
   label,
   value,
-  wide = false,
-  third = false,
+  size,
   compareKey,
   activeCompareFields = [],
   onToggleCompareField,
@@ -30,11 +29,12 @@ function Stat({
     <Box
       style={[
         raceDayStyles.resultStatBox,
-        wide && raceDayStyles.resultStatBoxWide,
-        third && raceDayStyles.resultStatBoxThird,
+        size,
         selectable && raceDayStyles.resultStatBoxSelectable,
         selected && raceDayStyles.resultStatBoxSelected,
       ]}
+      accessibilityRole={selectable ? 'button' : undefined}
+      accessibilityState={selectable ? { selected } : undefined}
       onPress={selectable ? () => onToggleCompareField(compareKey) : undefined}
       activeOpacity={selectable ? 0.84 : 1}
     >
@@ -52,6 +52,13 @@ function SectionTitle({ children }) {
 }
 
 export default function RaceDayResultCard({ run, compareFields = [], onToggleCompareField, onOpenTop5, onOpenRaceResults }) {
+  const { modalAvailableWidth, fontScale } = useSafeAreaLayout({ horizontalGap: 6 });
+  const readableWidth = Math.min(modalAvailableWidth, 900) / Math.max(fontScale, 1);
+  const fitsDriverInRow = readableWidth >= 620;
+  const fourColumns = readableWidth >= 430;
+  const raceStatSize = fitsDriverInRow ? localStyles.raceStatWide : fourColumns ? localStyles.statQuarter : undefined;
+  const averageStatSize = readableWidth >= 340 ? localStyles.statThird : undefined;
+
   if (!run) {
     return (
       <View style={raceDayStyles.empty}>
@@ -63,15 +70,14 @@ export default function RaceDayResultCard({ run, compareFields = [], onToggleCom
   const round = run.roundLabel || 'Race Result';
   const raceNumber = run.raceNumber ? `Race ${run.raceNumber}` : '';
   const resultType = run.resultType ? String(run.resultType).toUpperCase() : 'RACE';
-  const selectedLabels = sortCompareFieldsForDashboard(compareFields).map(getCompareLabel).join(' • ');
   const hasRaceUrl = Boolean(run.raceUrl || run.resultUrl || run.url);
 
   return (
     <View style={raceDayStyles.resultDetailCard}>
-      <View style={raceDayStyles.rowBetween}>
-        <View style={raceDayStyles.flex1}>
-          <Text style={raceDayStyles.cardTitle}>{round}</Text>
-          <Text style={raceDayStyles.cardSub}>
+      <View style={localStyles.resultHeader}>
+        <View style={localStyles.resultHeading}>
+          <Text style={localStyles.roundTitle}>{round}</Text>
+          <Text style={localStyles.roundMeta}>
             {[raceNumber, run.className, resultType].filter(Boolean).join(' • ')}
           </Text>
         </View>
@@ -95,38 +101,34 @@ export default function RaceDayResultCard({ run, compareFields = [], onToggleCom
         </View>
       </View>
 
-      <RaceDayLapChart run={run} detailed compact />
-
-      <View style={raceDayStyles.dashboardBlockHintBox}>
-        <Text style={raceDayStyles.dashboardBlockHintTitle}>Dashboard Blocks</Text>
-        <Text style={raceDayStyles.dashboardBlockHintText} numberOfLines={2}>
-          Tap any stat box to show it on the dashboard. Current: {selectedLabels || 'none'}
-        </Text>
+      <View style={localStyles.sectionHeading}>
+        <SectionTitle>Race</SectionTitle>
+        <Text style={localStyles.dashboardHint}>Tap a stat to show or hide it on the dashboard</Text>
       </View>
-
-      <SectionTitle>Race</SectionTitle>
       <View style={raceDayStyles.resultStatGrid}>
-        <Stat label="Driver" value={run.driver || run.driverName || run.stats?.driverName} wide />
-        <Stat label="Position" value={run.position} compareKey="position" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
-        <Stat label="Laps/Time" value={getRunValue(run, 'lapsTime')} compareKey="lapsTime" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
-        <Stat label="Fast Lap" value={getRunValue(run, 'fastestLap')} compareKey="fastestLap" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
-        <Stat label="Avg Lap" value={getRunValue(run, 'avgLap')} compareKey="avgLap" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
+        <Stat label="Driver" value={run.driver || run.driverName || run.stats?.driverName} size={fitsDriverInRow ? localStyles.driverWide : localStyles.driverFull} />
+        <Stat size={raceStatSize} label="Position" value={run.position} compareKey="position" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
+        <Stat size={raceStatSize} label="Laps/Time" value={getRunValue(run, 'lapsTime')} compareKey="lapsTime" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
+        <Stat size={raceStatSize} label="Fast Lap" value={getRunValue(run, 'fastestLap')} compareKey="fastestLap" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
+        <Stat size={raceStatSize} label="Avg Lap" value={getRunValue(run, 'avgLap')} compareKey="avgLap" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
       </View>
 
       <SectionTitle>Averages</SectionTitle>
       <View style={raceDayStyles.resultStatGrid}>
-        <Stat third label="Avg Top 5" value={getRunValue(run, 'top5Avg')} compareKey="top5Avg" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
-        <Stat third label="Avg Top 10" value={getRunValue(run, 'top10Avg')} compareKey="top10Avg" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
-        <Stat third label="Avg Top 15" value={getRunValue(run, 'top15Avg')} compareKey="top15Avg" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
+        <Stat size={averageStatSize} label="Avg Top 5" value={getRunValue(run, 'top5Avg')} compareKey="top5Avg" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
+        <Stat size={averageStatSize} label="Avg Top 10" value={getRunValue(run, 'top10Avg')} compareKey="top10Avg" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
+        <Stat size={averageStatSize} label="Avg Top 15" value={getRunValue(run, 'top15Avg')} compareKey="top15Avg" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
       </View>
 
       <SectionTitle>Consecutive / Consistency</SectionTitle>
       <View style={raceDayStyles.resultStatGrid}>
-        <Stat label="Top 2 Cons." value={getRunValue(run, 'top2Consecutive')} compareKey="top2Consecutive" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
-        <Stat label="Top 3 Cons." value={getRunValue(run, 'top3Consecutive')} compareKey="top3Consecutive" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
-        <Stat label="Std Dev" value={getRunValue(run, 'stdDeviation')} compareKey="stdDeviation" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
-        <Stat label="Consistency" value={getRunValue(run, 'consistency')} compareKey="consistency" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
+        <Stat size={fourColumns && localStyles.statQuarter} label="Top 2 Cons." value={getRunValue(run, 'top2Consecutive')} compareKey="top2Consecutive" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
+        <Stat size={fourColumns && localStyles.statQuarter} label="Top 3 Cons." value={getRunValue(run, 'top3Consecutive')} compareKey="top3Consecutive" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
+        <Stat size={fourColumns && localStyles.statQuarter} label="Std Dev" value={getRunValue(run, 'stdDeviation')} compareKey="stdDeviation" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
+        <Stat size={fourColumns && localStyles.statQuarter} label="Consistency" value={getRunValue(run, 'consistency')} compareKey="consistency" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />
       </View>
+
+      <RaceDayLapChart run={run} detailed compact />
 
       {Array.isArray(run.stats?.laps) && run.stats.laps.length ? (
         <>
@@ -149,16 +151,26 @@ export default function RaceDayResultCard({ run, compareFields = [], onToggleCom
 export { RaceDayResultCard };
 
 const localStyles = StyleSheet.create({
+  resultHeader: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 },
+  resultHeading: { flexGrow: 1, flexBasis: 158, minWidth: 0 },
+  roundTitle: { color: raceDayColors.text, fontSize: 16, fontWeight: '900' },
+  roundMeta: { color: raceDayColors.muted, fontSize: 11, marginTop: 2 },
+  sectionHeading: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', columnGap: 8 },
+  dashboardHint: { color: raceDayColors.muted, fontSize: 11, marginBottom: 4 },
+  driverFull: { flexBasis: '100%' },
+  driverWide: { flexBasis: '26%' },
+  raceStatWide: { flexBasis: '16%' },
+  statQuarter: { flexBasis: '23%' },
+  statThird: { flexBasis: '31%' },
   resultActionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-end',
-    gap: 7,
-    marginLeft: 8,
+    flexWrap: 'wrap',
+    gap: 5,
   },
   resultActionButton: {
-    minHeight: 31,
-    paddingHorizontal: 10,
+    minHeight: 32,
+    paddingHorizontal: 8,
   },
   disabledButton: {
     opacity: 0.45,

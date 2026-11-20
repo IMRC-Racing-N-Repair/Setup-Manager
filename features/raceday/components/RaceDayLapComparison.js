@@ -1,5 +1,4 @@
 import { useMemo } from 'react';
-import { useWindowDimensions } from 'react-native';
 import { getTimedLaps } from './RaceDayLapChart';
 import RaceDayLapOverlay, { lapSeriesColor } from './RaceDayLapOverlay';
 
@@ -12,8 +11,6 @@ export function sortRaceDayStandings(rows, displayPosition) {
 }
 
 export default function RaceDayLapComparison({ rows, run, makeRowKey }) {
-  const { width, height } = useWindowDimensions();
-  const compact = width > height && height < 620;
   const drivers = useMemo(() => {
     return rows.map((row, index) => {
       const laps = getTimedLaps(row);
@@ -25,5 +22,5 @@ export default function RaceDayLapComparison({ rows, run, makeRowKey }) {
       };
     });
   }, [rows, run, makeRowKey]);
-  return <RaceDayLapOverlay series={drivers} compact={compact} />;
+  return <RaceDayLapOverlay series={drivers} compact />;
 }

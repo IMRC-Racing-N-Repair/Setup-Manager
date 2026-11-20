@@ -196,7 +196,6 @@ export default function RaceDayPracticeSessionsPopup({ visible, raceDay, vehicle
       onClose={onClose}
       centered
       chart
-      lockLandscape={!loading && practiceSeries.some(({ laps }) => laps.length > 0)}
       showScrollIndicator
       contentContainerStyle={styles.popupContent}
     >

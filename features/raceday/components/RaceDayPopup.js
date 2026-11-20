@@ -1,8 +1,7 @@
 import React from 'react';
-import { KeyboardAvoidingView, Modal, Platform, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaLayout } from '../../../src/layout/safeAreaLayout';
 import { raceDayStyles } from '../styles/raceDayStyles';
-import useRaceDayChartOrientation from './useRaceDayChartOrientation';
 
 const chartOrientations = ['portrait', 'landscape'];
 
@@ -19,17 +18,14 @@ export default function RaceDayPopup({
   contentContainerStyle,
   bodyScroll = true,
   chart = false,
-  lockLandscape = chart,
 }) {
-  useRaceDayChartOrientation(visible && lockLandscape);
-  const { insets, compact, isLandscape, isShortScreen, modalBackdropStyle, modalCardStyle } = useSafeAreaLayout({
+  const { insets, compact, modalBackdropStyle, modalCardStyle } = useSafeAreaLayout({
     edgeGap: chart ? 5 : centered ? 10 : 0,
     horizontalGap: chart ? 6 : centered ? 12 : 0,
     modalSize: chart ? 'large' : 'normal',
   });
-  const compactChart = chart && isLandscape && isShortScreen;
-  const cardPadding = compactChart ? 8 : compact ? 12 : 16;
-  const bodyPadding = compactChart ? { paddingTop: 6, paddingBottom: 6 } : { paddingTop: 14, paddingBottom: 12 };
+  const cardPadding = chart ? 8 : compact ? 12 : 16;
+  const bodyPadding = chart ? styles.chartBody : styles.body;
   const Wrapper = keyboardAware ? KeyboardAvoidingView : View;
 
   return (
@@ -66,10 +62,10 @@ export default function RaceDayPopup({
         >
           <View style={raceDayStyles.rowBetween}>
             <View style={raceDayStyles.flex1}>
-              <Text style={raceDayStyles.modalTitle}>{title}</Text>
-              {subtitle ? <Text style={raceDayStyles.modalSub}>{subtitle}</Text> : null}
+              <Text style={[raceDayStyles.modalTitle, chart && styles.chartTitle]}>{title}</Text>
+              {subtitle ? <Text style={[raceDayStyles.modalSub, chart && styles.chartSubtitle]}>{subtitle}</Text> : null}
             </View>
-            <TouchableOpacity style={raceDayStyles.smallButton} onPress={onClose} activeOpacity={0.82}>
+            <TouchableOpacity style={[raceDayStyles.smallButton, chart && styles.chartClose]} accessibilityRole="button" onPress={onClose} activeOpacity={0.82}>
               <Text style={raceDayStyles.smallButtonText}>Close</Text>
             </TouchableOpacity>
           </View>
@@ -92,5 +88,13 @@ export default function RaceDayPopup({
     </Modal>
   );
 }
+
+const styles = StyleSheet.create({
+  body: { paddingTop: 14, paddingBottom: 12 },
+  chartBody: { paddingTop: 4, paddingBottom: 4 },
+  chartTitle: { fontSize: 16 },
+  chartSubtitle: { marginTop: 1, lineHeight: 15 },
+  chartClose: { minWidth: 54, minHeight: 36, borderRadius: 5 },
+});
 
 export { RaceDayPopup };

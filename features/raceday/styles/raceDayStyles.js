@@ -1244,8 +1244,7 @@ export const raceDayStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: raceDayColors.border,
     borderRadius: 6,
-    padding: 8,
-    marginBottom: 4,
+    padding: 6,
   },
   resultTop5Button: {
     minHeight: 32,
@@ -1262,42 +1261,19 @@ export const raceDayStyles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '900',
   },
-  dashboardBlockHintBox: {
-    marginTop: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 5,
-    borderRadius: 5,
-    backgroundColor: raceDayColors.accentSofter,
-    borderWidth: 1,
-    borderColor: 'rgba(47,140,255,0.28)',
-  },
-  dashboardBlockHintTitle: {
-    color: raceDayColors.accent,
-    fontSize: 10,
-    fontWeight: '900',
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  dashboardBlockHintText: {
-    color: raceDayColors.muted,
-    fontSize: 11,
-    lineHeight: 15,
-    marginTop: 2,
-    fontWeight: '700',
-  },
   resultSectionTitle: {
     color: raceDayColors.accent,
     fontSize: 10,
     fontWeight: '900',
     textTransform: 'uppercase',
     letterSpacing: 0.9,
-    marginTop: 8,
-    marginBottom: 4,
+    marginTop: 6,
+    marginBottom: 3,
   },
   resultStatGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 5,
+    gap: 4,
   },
   resultStatBox: {
     flexGrow: 1,
@@ -1309,13 +1285,10 @@ export const raceDayStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(39,49,67,0.78)',
     paddingHorizontal: 7,
-    paddingVertical: 5,
-  },
-  resultStatBoxThird: {
-    flexBasis: '29%',
+    paddingVertical: 3,
   },
   resultStatBoxSelectable: {
-    minHeight: 44,
+    minHeight: 36,
     borderColor: 'rgba(39,49,67,0.92)',
   },
   resultStatBoxSelected: {
@@ -1335,9 +1308,6 @@ export const raceDayStyles = StyleSheet.create({
     fontSize: 8.5,
     fontWeight: '900',
     textTransform: 'uppercase',
-  },
-  resultStatBoxWide: {
-    flexBasis: '100%',
   },
   resultStatValue: {
     color: raceDayColors.text,

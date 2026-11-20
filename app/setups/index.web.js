@@ -3,7 +3,7 @@ import { ActivityIndicator, FlatList, Pressable, ScrollView, StyleSheet, Text, V
 import useViewport from '../../src/layout/useViewport';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 
-import { DESKTOP_WEB_MIN_WIDTH, DESKTOP_WORKSPACE_MAX_WIDTH } from '../../src/layout/desktopWorkspace';
+import { desktopBrowse, DESKTOP_WEB_MIN_WIDTH, DESKTOP_WORKSPACE_GUTTER, DESKTOP_WORKSPACE_MAX_WIDTH } from '../../src/layout/desktopWorkspace';
 import CornerWeightChart from '../../src/components/CornerWeightChart';
 import AppScreenHeader from '../../src/layout/AppScreenHeader';
 import { getLastViewedSetup, getSetupHistory, getSetups, getTracks, getVehicles } from '../../features/setups/lib/setupStorage';
@@ -33,20 +33,52 @@ function Action({ children, onPress, primary = false, disabled = false }) {
   );
 }
 
-function Choice({ name, detail, count, selected, onPress }) {
+function Choice({ name, detail, count, selected, onPress, desktop }) {
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityState={{ selected }}
       onPress={onPress}
-      style={({ hovered, pressed }) => [styles.choice, hovered && styles.choiceHovered, selected && styles.choiceSelected, pressed && styles.dim]}
+      style={({ hovered, pressed }) => [
+        styles.choice,
+        desktop && styles.choiceWide,
+        hovered && styles.choiceHovered,
+        selected && styles.choiceSelected,
+        desktop && selected && styles.choiceWideSelected,
+        pressed && styles.dim,
+      ]}
     >
       <View style={styles.identity}>
-        <Text style={styles.name}>{name}</Text>
+        <Text style={[styles.name, desktop && styles.nameWide]}>{name}</Text>
         {!!detail && <Text style={styles.muted}>{detail}</Text>}
       </View>
-      {count !== undefined && <Text style={styles.count}>{count}</Text>}
+      {count !== undefined && (
+        <View style={desktop ? styles.choiceCount : undefined}>
+          <Text style={[styles.count, desktop && styles.countWide]}>{count}</Text>
+          {desktop && <Text style={styles.countLabel}>SETUPS</Text>}
+        </View>
+      )}
+      {desktop && <Text aria-hidden style={styles.chevron}>›</Text>}
     </Pressable>
+  );
+}
+
+function ChoiceList({ items, getKey, renderChoice, empty, desktop }) {
+  if (desktop) {
+    return (
+      <View style={styles.choiceListWide}>
+        {items.length ? items.map((item) => <View key={getKey(item)}>{renderChoice(item)}</View>) : empty}
+      </View>
+    );
+  }
+
+  return (
+    <FlatList
+      data={items}
+      keyExtractor={getKey}
+      renderItem={({ item }) => renderChoice(item)}
+      ListEmptyComponent={empty}
+    />
   );
 }
 
@@ -124,7 +156,8 @@ export default function SetupsWebScreen() {
   const params = useLocalSearchParams();
   const vehicleId = String(params.vehicleId || '');
   const selectedTrackId = String(params.setupTrackId || '');
-  const trackFilter = params.mode === 'track' ? String(params.trackId || '') : '';
+  // The exported page has no query string during hydration.
+  const trackFilter = width > 0 && params.mode === 'track' ? String(params.trackId || '') : '';
 
   const [data, setData] = useState(null);
   const [loadError, setLoadError] = useState(false);
@@ -219,10 +252,68 @@ export default function SetupsWebScreen() {
     else router.replace(trackFilter ? '/tracks' : '/garage');
   }
 
+  const workspace = (
+    <>
+      {(desktop || !vehicle) && (
+        <View style={desktop ? styles.vehiclesWide : styles.panel}>
+          <View style={desktop ? styles.listHeadingWide : undefined}>
+            <Text style={desktop ? styles.listTitleWide : styles.panelTitle}>Vehicles</Text>
+            {desktop && <Text style={styles.countLabel}>{vehicles.length} SAVED</Text>}
+          </View>
+          <ChoiceList
+            desktop={desktop}
+            items={vehicles}
+            getKey={(item) => String(getEntityId(item))}
+            renderChoice={(item) => {
+              const id = String(getEntityId(item));
+              return (
+                <Choice desktop={desktop} name={getVehicleDisplayName(item)} detail={item.chassisStyle || item.model}
+                  count={setupsByVehicle.get(id)?.size || 0} selected={id === vehicleId}
+                  onPress={() => router.setParams({ vehicleId: id, setupTrackId: '' })} />
+              );
+            }}
+            empty={<Text style={styles.empty}>{trackFilter ? 'No setups saved for this track.' : 'Add a vehicle before creating a setup.'}</Text>}
+          />
+        </View>
+      )}
+
+      {(desktop || vehicle) && (
+        <View style={desktop ? styles.detailsWide : styles.panel}>
+          {vehicle ? (
+            <>
+              <View style={desktop ? styles.listHeadingWide : undefined}>
+                <Text style={desktop ? styles.listTitleWide : styles.panelTitle}>{getVehicleDisplayName(vehicle)}</Text>
+                {desktop && <Text style={styles.countLabel}>{trackRows.length} SAVED SETUPS</Text>}
+              </View>
+              <ChoiceList
+                desktop={desktop}
+                items={trackRows}
+                getKey={(item) => item.trackId}
+                renderChoice={(item) => (
+                  <Choice desktop={desktop} name={getTrackDisplayName(item.track)}
+                    detail={[item.track.surface, item.track.trackType || item.track.type].filter(Boolean).join(' · ')}
+                    selected={desktop && item.trackId === preview?.trackId}
+                    onPress={() => desktop ? router.setParams({ setupTrackId: item.trackId }) : openSetup(item)} />
+                )}
+                empty={<Text style={styles.empty}>No setups saved for this vehicle. Choose Add to create one.</Text>}
+              />
+              {desktop && preview && (
+                <View style={styles.previewPanel}>
+                  <Text style={styles.panelTitle}>Setup details</Text>
+                  <SetupPreview key={`${preview.vehicleId}/${preview.trackId}`} row={preview} onOpen={openSetup} />
+                </View>
+              )}
+            </>
+          ) : <Text style={[styles.empty, styles.desktopEmpty]}>Choose a vehicle to browse its track setups.</Text>}
+        </View>
+      )}
+    </>
+  );
+
   return (
     <View style={[styles.screen, desktop && styles.screenWide]}>
       <AppScreenHeader title="Setups" kicker="IMRC GARAGE" onBack={goBack} rightLabel="+ Add" onRightPress={addSetup} />
-      <View style={styles.toolbar}>
+      <View style={[styles.toolbar, desktop && styles.toolbarWide]}>
         <View style={styles.identity}>
           <Text style={styles.sectionTitle}>{trackFilter ? (filterTrack ? getTrackDisplayName(filterTrack) : 'Track setups') : 'Saved setups'}</Text>
           <Text style={styles.muted}>{trackFilter ? `${vehicles.length} vehicles with setups` : `${data?.setups.length || 0} saved`}</Text>
@@ -236,56 +327,11 @@ export default function SetupsWebScreen() {
 
       {loadError ? <Text style={styles.empty}>Saved setups could not be loaded.</Text> : !data ? (
         <ActivityIndicator style={styles.empty} color={colors.primary} accessibilityLabel="Loading setups" />
-      ) : (
-        <View style={[styles.workspace, desktop && styles.workspaceWide]}>
-          {(desktop || !vehicle) && (
-            <View style={[styles.panel, desktop && styles.panelWide, desktop && styles.vehiclePanel]}>
-              <Text style={styles.panelTitle}>Vehicles</Text>
-              <FlatList
-                data={vehicles}
-                keyExtractor={(item) => String(getEntityId(item))}
-                renderItem={({ item }) => {
-                  const id = String(getEntityId(item));
-                  return <Choice name={getVehicleDisplayName(item)} detail={item.chassisStyle || item.model}
-                    count={setupsByVehicle.get(id)?.size || 0} selected={id === vehicleId}
-                    onPress={() => router.setParams({ vehicleId: id, setupTrackId: '' })} />;
-                }}
-                ListEmptyComponent={<Text style={styles.empty}>{trackFilter ? 'No setups saved for this track.' : 'Add a vehicle before creating a setup.'}</Text>}
-              />
-            </View>
-          )}
-
-          {(desktop || vehicle) && (
-            <View style={[styles.panel, desktop && styles.panelWide]}>
-              <Text style={styles.panelTitle}>{vehicle ? getVehicleDisplayName(vehicle) : 'Track setups'}</Text>
-              {vehicle ? (
-                <FlatList
-                  data={trackRows}
-                  keyExtractor={(item) => item.trackId}
-                  renderItem={({ item }) => (
-                    <Choice name={getTrackDisplayName(item.track)}
-                      detail={[item.track.surface, item.track.trackType || item.track.type].filter(Boolean).join(' · ')}
-                      selected={desktop && item.trackId === preview?.trackId}
-                      onPress={() => desktop ? router.setParams({ setupTrackId: item.trackId }) : openSetup(item)} />
-                  )}
-                  ListEmptyComponent={<Text style={styles.empty}>No setups saved for this vehicle. Choose Add to create one.</Text>}
-                />
-              ) : <Text style={styles.empty}>Choose a vehicle to browse its track setups.</Text>}
-            </View>
-          )}
-
-          {desktop && (
-            <View style={[styles.panel, styles.panelWide, styles.detailsPanel]}>
-              <Text style={styles.panelTitle}>Setup details</Text>
-              <ScrollView>
-                {preview
-                  ? <SetupPreview key={`${preview.vehicleId}/${preview.trackId}`} row={preview} onOpen={openSetup} />
-                  : <Text style={styles.empty}>Select a saved setup to see its details.</Text>}
-              </ScrollView>
-            </View>
-          )}
-        </View>
-      )}
+      ) : desktop ? (
+        <ScrollView style={styles.workspace} contentContainerStyle={styles.workspaceWide}>
+          {workspace}
+        </ScrollView>
+      ) : <View style={styles.workspace}>{workspace}</View>}
 
       {lastViewed?.vehicleId && lastViewed?.trackId && (desktop || !vehicle) && (
         <View style={styles.lastOpened}>
@@ -302,21 +348,33 @@ export default function SetupsWebScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background, paddingHorizontal: 14, paddingTop: 8, paddingBottom: 14, gap: 12 },
-  screenWide: { width: '100%', maxWidth: DESKTOP_WORKSPACE_MAX_WIDTH, alignSelf: 'center', paddingHorizontal: 28, paddingTop: 16, paddingBottom: 20, gap: 16 },
+  screenWide: { width: '100%', maxWidth: DESKTOP_WORKSPACE_MAX_WIDTH, alignSelf: 'center', paddingHorizontal: DESKTOP_WORKSPACE_GUTTER, paddingTop: 0, paddingBottom: 20, gap: 12 },
   toolbar: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 10 },
+  toolbarWide: { paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: colors.border },
   identity: { flex: 1, minWidth: 0, gap: 4 },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   workspace: { flex: 1, minHeight: 0, gap: 12 },
-  workspaceWide: { flexDirection: 'row', gap: 16 },
+  workspaceWide: { ...desktopBrowse.columns, marginTop: 0, paddingTop: 12, paddingBottom: 16 },
+  vehiclesWide: desktopBrowse.list,
+  detailsWide: desktopBrowse.detail,
+  listHeadingWide: { minHeight: 50, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
+  listTitleWide: { flex: 1, minWidth: 0, color: colors.text, fontSize: 20, fontWeight: '800' },
+  choiceListWide: { borderTopWidth: 1, borderTopColor: colors.borderStrong },
   panel: { flex: 1, minWidth: 0, borderWidth: 1, borderColor: colors.border, borderRadius: 12, backgroundColor: colors.surface },
-  panelWide: { borderWidth: 0, borderRadius: 10 },
-  vehiclePanel: { flex: 0.85 },
-  detailsPanel: { flex: 1.45 },
+  previewPanel: { marginTop: 16, borderWidth: 1, borderColor: colors.border, borderRadius: 12, backgroundColor: colors.surface },
   panelTitle: { paddingVertical: 12, paddingHorizontal: 13, borderBottomWidth: 1, borderBottomColor: colors.border, color: colors.text, fontSize: 16, fontWeight: '800' },
   sectionTitle: { color: colors.text, fontSize: 18, fontWeight: '800' },
   name: { color: colors.text, fontSize: 14, fontWeight: '700' },
   muted: { color: colors.mutedText, fontSize: 13 },
   choice: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 58, paddingHorizontal: 10, paddingVertical: 9, marginHorizontal: 6, marginTop: 5, borderRadius: 7, borderWidth: 1, borderColor: 'transparent' },
+  choiceWide: { minHeight: 65, marginHorizontal: 0, marginTop: 0, borderWidth: 0, borderRadius: 0, borderBottomWidth: 1, borderBottomColor: colors.border },
+  choiceWideSelected: { borderBottomColor: colors.border, borderLeftColor: '#426A99', borderLeftWidth: 2, paddingLeft: 8 },
+  nameWide: { fontSize: 17, fontWeight: '800' },
+  choiceCount: { minWidth: 48, alignItems: 'center' },
+  countWide: { fontSize: 15, fontWeight: '800' },
+  countLabel: { color: colors.mutedText, fontSize: 10, fontWeight: '800', letterSpacing: 0.5 },
+  chevron: { color: '#A8CBFC', fontSize: 20 },
+  desktopEmpty: { paddingHorizontal: 0, paddingVertical: 14 },
   choiceHovered: { backgroundColor: colors.cardSoft },
   choiceSelected: { backgroundColor: colors.primarySoft, borderColor: '#426A99' },
   count: { color: '#A8CBFC', fontSize: 12 },

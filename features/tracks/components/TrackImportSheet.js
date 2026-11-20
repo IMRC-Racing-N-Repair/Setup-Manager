@@ -53,9 +53,11 @@ export default function TrackImportSheet({
 }) {
   const [query, setQuery] = useState('');
   const [remoteTracks, setRemoteTracks] = useState([]);
-  const [selectedId, setSelectedId] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [importing, setImporting] = useState(false);
+  const [importingId, setImportingId] = useState(null);
+  const [importError, setImportError] = useState('');
+  const importInProgressRef = useRef(false);
+  const importing = importingId !== null;
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
@@ -74,11 +76,6 @@ export default function TrackImportSheet({
   const filteredTracks = useMemo(
     () => filterRemoteTracks(remoteTracks, query, filters),
     [remoteTracks, query, filters]
-  );
-
-  const selectedRemoteTrack = useMemo(
-    () => remoteTracks.find(item => item.id === selectedId) || null,
-    [remoteTracks, selectedId]
   );
 
   const activeFilterCount = useMemo(
@@ -119,7 +116,7 @@ export default function TrackImportSheet({
       setLoading(true);
       const tracks = await fetchRemoteTrackList();
       setRemoteTracks(tracks);
-      setSelectedId(null);
+      setImportError('');
       setLoading(false);
     } catch (error) {
       setLoading(false);
@@ -130,31 +127,25 @@ export default function TrackImportSheet({
     }
   }
 
-  async function importSelected() {
-    if (!selectedRemoteTrack?.track) return;
+  async function importSelected(item) {
+    if (!item?.track || importInProgressRef.current) return;
 
+    importInProgressRef.current = true;
+    setImportingId(item.id);
+    setImportError('');
+    let savedTrack;
     try {
-      setImporting(true);
-      const savedTrack = await saveImportedTrack(selectedRemoteTrack.track);
-      setImporting(false);
-
-      Alert.alert(
-        'Track Imported',
-        `${savedTrack.trackName} was added to your local track list.`,
-        [
-          {
-            text: 'OK',
-            onPress: () => onImported?.(savedTrack),
-          },
-        ]
-      );
+      savedTrack = await saveImportedTrack(item.track);
     } catch (error) {
-      setImporting(false);
-      Alert.alert(
-        'Import Failed',
-        error.userMessage || 'The selected track could not be imported.'
-      );
+      setImportError(error.userMessage || 'The selected track could not be imported.');
+      return;
+    } finally {
+      importInProgressRef.current = false;
+      setImportingId(null);
     }
+
+    Keyboard.dismiss();
+    onImported?.(savedTrack);
   }
 
   function handleSubmitTrack() {
@@ -166,12 +157,10 @@ export default function TrackImportSheet({
       ...current,
       [key]: current[key] === value ? '' : value,
     }));
-    setSelectedId(null);
   }
 
   function clearFilters() {
     setFilters(EMPTY_FILTERS);
-    setSelectedId(null);
   }
 
   return (
@@ -179,14 +168,14 @@ export default function TrackImportSheet({
       transparent
       visible={visible}
       animationType="fade"
-      onRequestClose={onCancel}
+      onRequestClose={() => { if (!importInProgressRef.current) onCancel?.(); }}
       onDismiss={onDismiss}
       presentationStyle="overFullScreen"
       statusBarTranslucent
       navigationBarTranslucent
     >
       <View style={[styles.importSheetOverlay, modalBackdropStyle]}>
-        <Pressable style={styles.importSheetDimmer} onPress={onCancel} />
+        <Pressable style={styles.importSheetDimmer} disabled={importing} onPress={onCancel} />
 
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -206,12 +195,12 @@ export default function TrackImportSheet({
                 <Text style={styles.importModalEyebrow}>TRACK IMPORT</Text>
                 <Text style={styles.importModalTitle}>Import Track</Text>
                 <Text style={styles.importModalDescription}>
-                  Select a track from the IMRC online directory and add it locally.
+                  Tap a track to import it and return to Tracks.
                 </Text>
               </View>
 
               <Pressable
-                onPress={onCancel}
+                disabled={importing} onPress={onCancel}
                 style={({ pressed }) => [
                   styles.importCloseButton,
                   pressed && styles.buttonPressed,
@@ -354,6 +343,9 @@ export default function TrackImportSheet({
               <Text style={styles.importResultsCount}>{loading ? 'LOADING' : `${filteredTracks.length} FOUND`}</Text>
             </View>
 
+            {importError ? <Text accessibilityRole="alert" style={styles.importEmptyText}>{importError}</Text> : null}
+            {importing ? <Text role="status" style={styles.importLoadingText}>Importing track…</Text> : null}
+
             {loading ? (
               <View style={styles.importLoadingWrap}>
                 <ActivityIndicator color={TRACK_BLUE} />
@@ -375,7 +367,7 @@ export default function TrackImportSheet({
                 keyboardDismissMode="none"
               >
                 {filteredTracks.map((item, index) => {
-                  const selected = item.id === selectedId;
+                  const selected = item.id === importingId;
                   const track = item.track;
                   const location = getLocationLabel(track);
                   const trackStyle = normalizeImportTrackStyle(track.trackType) || 'Track';
@@ -384,7 +376,11 @@ export default function TrackImportSheet({
                   return (
                     <Pressable
                       key={item.id}
-                      onPress={() => setSelectedId(item.id)}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Import ${track.trackName || 'unnamed track'}`}
+                      accessibilityState={{ busy: selected, disabled: importing }}
+                      disabled={importing}
+                      onPress={() => importSelected(item)}
                       style={({ pressed }) => [
                         styles.importVehicleCard,
                         selected && styles.importVehicleCardSelected,
@@ -421,40 +417,6 @@ export default function TrackImportSheet({
               </ScrollView>
             )}
 
-            {selectedRemoteTrack ? (
-              <View style={styles.importSelectedSummary}>
-                <View style={styles.importSelectedSummaryIcon}><Text style={styles.importSelectedSummaryIconText}>✓</Text></View>
-                <View style={styles.importSelectedSummaryCopy}>
-                  <Text style={styles.importSectionEyebrow}>SELECTED TRACK</Text>
-                  <Text style={styles.importSelectedSummaryTitle} numberOfLines={1}>{selectedRemoteTrack.track?.trackName || 'Track selected'}</Text>
-                  <Text style={styles.importSelectedSummaryMeta} numberOfLines={1}>
-                    {getLocationLabel(selectedRemoteTrack.track) || 'Ready to import locally'}
-                  </Text>
-                </View>
-              </View>
-            ) : null}
-
-            <View style={styles.importFooterRow}>
-              <Pressable
-                onPress={importSelected}
-                disabled={!selectedRemoteTrack || importing}
-                style={({ pressed }) => [
-                  styles.importSelectedButton,
-                  (!selectedRemoteTrack || importing) && styles.importSelectedButtonDisabled,
-                  pressed && selectedRemoteTrack && !importing && styles.buttonPressed,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.importSelectedText,
-                    (!selectedRemoteTrack || importing) && styles.importSelectedTextDisabled,
-                  ]}
-                >
-                  {importing ? 'Importing Track…' : 'Import Selected Track'}
-                </Text>
-              </Pressable>
-            </View>
-
             <View style={styles.importSecondaryActions}>
               <Pressable
                 onPress={loadTracks}
@@ -469,6 +431,7 @@ export default function TrackImportSheet({
               </Pressable>
 
               <Pressable
+                disabled={importing}
                 onPress={handleSubmitTrack}
                 style={({ pressed }) => [styles.importSubmitButton, pressed && styles.buttonPressed]}
               >

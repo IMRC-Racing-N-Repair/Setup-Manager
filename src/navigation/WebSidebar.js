@@ -8,6 +8,7 @@ const sections = [
     { label: 'Home', icon: '⌂', href: '/' },
     { label: 'Garage', icon: '▱', href: '/garage' },
     { label: 'RaceDay', icon: '⚑', href: '/raceday/dashboard', root: '/raceday' },
+    { label: 'LiveRC Results', icon: '▤', href: '/live-results' },
     { label: 'Tools', icon: '⌁', href: '/tools' },
   ] },
   { label: 'Garage records', items: [

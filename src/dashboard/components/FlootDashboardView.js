@@ -226,6 +226,11 @@ export default function FlootDashboardView({
               <Pressable disabled={loading} style={({ pressed }) => [styles.primaryButton, loading && styles.loadingMuted, pressed && styles.pressed]} onPress={onRaceDayPress}>
                 <Text style={styles.primaryButtonText}>{loading ? 'LOADING RACEDAY' : raceDayReady ? 'OPEN RACEDAY' : 'START RACEDAY'}</Text>
               </Pressable>
+              {Platform.OS === 'web' && !desktop && (
+                <Pressable accessibilityRole="link" onPress={() => router.push('/live-results')}>
+                  <Text style={styles.viewAll}>LIVERC RESULTS</Text>
+                </Pressable>
+              )}
             </View>
           </View>
 

@@ -110,7 +110,6 @@ function pushRaceLink(links, seen, { anchor, eventUrl, className, contextText = 
   links.push({
     raceUrl: url,
     linkText: matchText || text,
-    raceTitle: text || (raceNumber ? `Race ${raceNumber}` : 'Race result'),
     raceNumber,
     className,
     roundLabel: normalizeRoundLabel(roundLabel || matchText),

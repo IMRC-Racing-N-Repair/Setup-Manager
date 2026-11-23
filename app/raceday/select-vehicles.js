@@ -1,3 +1,4 @@
+import { useGuidedTour } from '../../features/support/components/GuidedTour';
 import { useCallback, useMemo, useState } from 'react';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 
@@ -7,6 +8,7 @@ import { normalizeIdList } from '../../features/raceday/lib/raceDayModel';
 import { GaragePickerScreen, GarageVehicleChoice } from '../../src/garage/GaragePicker';
 
 export default function RaceDaySelectVehiclesScreen() {
+  const tour = useGuidedTour();
   const router = useRouter();
   const params = useLocalSearchParams();
   const adding = params?.add === '1';
@@ -61,6 +63,7 @@ export default function RaceDaySelectVehiclesScreen() {
         <RaceDayBottomActions
           secondaryLabel="Back"
           onSecondaryPress={goBack}
+          primaryRef={tour.refFor('race-cars')}
           primaryLabel={adding ? 'Save Vehicles' : 'Start RaceDay'}
           onPrimaryPress={handleContinue}
           primaryDisabled={!active?.trackId || selectedIds.length === 0}

@@ -1,3 +1,4 @@
+import { useGuidedTour } from '../../features/support/components/GuidedTour';
 // app/tracks/index.js
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -63,6 +64,7 @@ const NEW_TRACK = {
 
 export default function TracksScreen() {
   const router = useRouter();
+  const tour = useGuidedTour();
   const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
@@ -150,6 +152,7 @@ export default function TracksScreen() {
 
       await loadTracks();
       setSaving(false);
+      tour.milestone('track-add', 'setup-car');
       setEditingTrack(savedTrack);
       setSheetVisible(false);
     } catch (error) {
@@ -255,6 +258,7 @@ export default function TracksScreen() {
   }
 
   function handleImportedTrack() {
+    tour.milestone('directory', 'setup-car');
     closeImportSheet();
     return loadTracks();
   }
@@ -327,7 +331,7 @@ export default function TracksScreen() {
 
           <View style={modernTrackStyles.utilityRow}>
             <Pressable
-              onPress={openImportSheet}
+              ref={tour.refFor('directory')} onPress={openImportSheet}
               style={({ pressed }) => [
                 modernTrackStyles.utilityButton,
                 modernTrackStyles.importButton,

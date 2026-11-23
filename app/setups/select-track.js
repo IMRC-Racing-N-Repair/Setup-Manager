@@ -1,3 +1,4 @@
+import { useGuidedTour } from '../../features/support/components/GuidedTour';
 import { useCallback, useState } from 'react';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 
@@ -6,6 +7,7 @@ import { getTracks, getVehicles } from '../../features/setups/lib/setupStorage';
 import { GaragePickerScreen, GarageTrackChoice } from '../../src/garage/GaragePicker';
 
 export default function SetupSelectTrackScreen() {
+  const tour = useGuidedTour();
   const router = useRouter();
   const { vehicleId, returnTo } = useLocalSearchParams();
   const [tracks, setTracks] = useState([]);
@@ -40,10 +42,11 @@ export default function SetupSelectTrackScreen() {
       loading={loading}
       emptyMessage={!loading && !tracks.length ? 'No tracks are saved yet. Add a track from Garage, then return to Setups.' : ''}
     >
-      {tracks.map((track) => {
+      {tracks.map((track, index) => {
         const trackId = getEntityId(track);
         return (
           <GarageTrackChoice
+            targetRef={index === 0 ? tour.refFor('setup-track') : undefined}
             key={trackId}
             track={track}
             actionLabel="SETUP"

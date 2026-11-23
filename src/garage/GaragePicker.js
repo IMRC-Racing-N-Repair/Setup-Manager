@@ -74,13 +74,13 @@ export function GarageVehicleChoice({ vehicle, selected = false, multiSelect = f
   );
 }
 
-export function GarageTrackChoice({ track, actionLabel = 'SELECT', selected = false, onPress, disabled = false, flat = false }) {
+export function GarageTrackChoice({ targetRef, track, actionLabel = 'SELECT', selected = false, onPress, disabled = false, flat = false }) {
   const name = clean(track?.trackName || track?.name || track?.title) || 'Unnamed track';
   const typeSurface = [track?.trackType || track?.type, track?.surface].filter(Boolean).join(' · ') || 'Track details';
   const location = [track?.city, track?.state].filter(Boolean).join(', ') || clean(track?.location) || 'Location not set';
 
   return (
-    <Pressable
+    <Pressable ref={targetRef}
       style={({ pressed }) => [styles.choiceRow, styles.trackChoiceRow, flat && styles.flatTrackChoiceRow, selected && styles.choiceRowSelected, flat && selected && styles.flatTrackChoiceRowSelected, pressed && !disabled && styles.pressed, disabled && styles.disabled]}
       onPress={disabled ? undefined : onPress}
     >

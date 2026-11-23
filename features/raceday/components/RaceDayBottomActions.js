@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { raceDayStyles } from '../styles/raceDayStyles';
 
 export default function RaceDayBottomActions({
+  primaryRef,
   primaryLabel,
   secondaryLabel,
   tertiaryLabel,
@@ -87,6 +88,7 @@ export default function RaceDayBottomActions({
         {primaryLabel ? (
           <TouchableOpacity
             style={[raceDayStyles.primaryButton, raceDayStyles.flex1, primaryDisabled && { opacity: 0.45 }]}
+            ref={primaryRef}
             onPress={primaryDisabled ? undefined : onPrimaryPress}
             activeOpacity={0.82}
           >

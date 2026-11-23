@@ -1,3 +1,4 @@
+import { useGuidedTour } from '../../support/components/GuidedTour';
 import React, { useMemo, useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
@@ -53,7 +54,8 @@ function getRunTitle(run = {}) {
   return title;
 }
 
-function RaceRunCard({ run, compareFields, onOpenResults }) {
+function RaceRunCard({ tutorialRun, run, compareFields, onOpenResults }) {
+  const tour = useGuidedTour();
   const [expanded, setExpanded] = useState(false);
   const rows = buildCompareRows(run, compareFields);
   const position = getCompareValue(run, 'position');
@@ -70,11 +72,11 @@ function RaceRunCard({ run, compareFields, onOpenResults }) {
           accessibilityRole="button"
           style={raceDayStyles.resultsMiniButton}
           aria-expanded={expanded}
-          onPress={() => setExpanded((value) => !value)}
+          ref={run === tutorialRun ? tour.refFor('lap') : undefined} onPress={() => setExpanded((value) => !value)}
         >
           <Text style={raceDayStyles.resultsMiniButtonText}>{expanded ? 'Hide laps' : 'Lap chart'}</Text>
         </TouchableOpacity>
-        <TouchableOpacity accessibilityRole="button" style={raceDayStyles.resultsMiniButton} onPress={() => onOpenResults?.(run)} activeOpacity={0.82}>
+        <TouchableOpacity accessibilityRole="button" style={raceDayStyles.resultsMiniButton} ref={run === tutorialRun ? tour.refFor('run-results') : undefined} onPress={() => onOpenResults?.(run)} activeOpacity={0.82}>
           <Text style={raceDayStyles.resultsMiniButtonText}>Results</Text>
         </TouchableOpacity>
       </View>
@@ -140,7 +142,8 @@ function vehicleColor(vehicle, title) {
   return vehicleColors[hash % vehicleColors.length];
 }
 
-export function RaceDayVehicleCardFrame({ vehicle, lineup, onOpenSetup, subtitle, children }) {
+export function RaceDayVehicleCardFrame({ tutorialVehicle, vehicle, lineup, onOpenSetup, subtitle, children }) {
+  const tour = useGuidedTour();
   const title = getVehicleDisplayName(vehicle);
   const accent = vehicleColor(vehicle, title);
   const model = [vehicle?.manufacturer, vehicle?.model].filter(Boolean).join(' ');
@@ -160,7 +163,7 @@ export function RaceDayVehicleCardFrame({ vehicle, lineup, onOpenSetup, subtitle
           </View>
         </View>
         <View style={raceDayStyles.raceVehicleActions}>
-          <TouchableOpacity accessibilityRole="button" accessibilityLabel={`Open setup for ${title}`} style={raceDayStyles.raceVehicleWrench} onPress={onOpenSetup} activeOpacity={0.82}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel={`Open setup for ${title}`} style={raceDayStyles.raceVehicleWrench} ref={tutorialVehicle ? tour.refFor('wrench') : undefined} onPress={onOpenSetup} activeOpacity={0.82}>
             <WrenchIcon />
             <Text style={raceDayStyles.raceVehicleWrenchText}>WRENCH</Text>
           </TouchableOpacity>
@@ -172,6 +175,7 @@ export function RaceDayVehicleCardFrame({ vehicle, lineup, onOpenSetup, subtitle
 }
 
 export default function RaceDayVehicleCard({
+  tutorialRun,
   vehicle,
   latestRun,
   runsForVehicle = [],
@@ -201,11 +205,11 @@ export default function RaceDayVehicleCard({
   );
 
   return (
-    <RaceDayVehicleCardFrame vehicle={vehicle} lineup={displayLineup} onOpenSetup={onOpenSetup}>
+    <RaceDayVehicleCardFrame tutorialVehicle={raceRuns.includes(tutorialRun)} vehicle={vehicle} lineup={displayLineup} onOpenSetup={onOpenSetup}>
       {raceRuns.length ? (
         <View style={raceDayStyles.raceRunList}>
           {raceRuns.map((run, index) => (
-            <RaceRunCard
+            <RaceRunCard tutorialRun={tutorialRun}
               key={run.id || `${run.raceUrl || 'race'}_${run.roundLabel || 'round'}_${run.raceNumber || index}`}
               run={run}
               compareFields={compareFields}

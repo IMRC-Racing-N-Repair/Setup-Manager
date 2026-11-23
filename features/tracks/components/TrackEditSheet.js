@@ -1,3 +1,4 @@
+import { GuideHint } from '../../support/components/GuidedTour';
 // features/tracks/components/TrackEditSheet.js
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -397,6 +398,7 @@ export default function TrackEditSheet({
               </View>
 
               <View style={styles.sheetFieldFull} onLayout={event => rememberFieldLayout('trackName', event)}>
+                <GuideHint step="track-add">Name and track type identify the venue. Use surface and direction to describe the layout, then enter the track’s LiveRC address for RaceDay.</GuideHint>
                 <Text style={styles.inputLabel}>Track Name *</Text>
                 <TextInput
                   {...getInputFocusProps('trackName')}

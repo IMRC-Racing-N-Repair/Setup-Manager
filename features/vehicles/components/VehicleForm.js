@@ -1,3 +1,4 @@
+import { GuideHint } from '../../support/components/GuidedTour';
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
@@ -423,6 +424,7 @@ export default function VehicleForm({
                   style={isWideForm ? styles.formRowItem : styles.fieldCompact}
                   onLayout={storeFieldPosition("transponder")}
                 >
+                  <GuideHint step="vehicle-add">TX is the number on this car’s transponder. Enter it exactly as used by race timing so RaceDay can find this car.</GuideHint>
                   <Text style={styles.labelCompact}>Transponder Number</Text>
                   <TextInput
                     value={draft.transponder}

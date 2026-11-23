@@ -1,3 +1,4 @@
+import { useGuidedTour } from '../support/components/GuidedTour';
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -45,6 +46,7 @@ function vehicleTx(vehicle) {
 }
 
 export default function VehicleScreen() {
+  const tour = useGuidedTour();
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
   const params = useLocalSearchParams();
@@ -137,6 +139,7 @@ export default function VehicleScreen() {
     setFormVisible(false);
     setEditingVehicle(null);
     await loadVehicles();
+    tour.milestone('vehicle-add', 'directory');
   }
 
   async function handleDelete(vehicleId) {

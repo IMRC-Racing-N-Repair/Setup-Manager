@@ -1,3 +1,4 @@
+import { useGuidedTour } from '../support/components/GuidedTour';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -48,6 +49,7 @@ function savedLabel(setup) {
 
 export default function GarageScreen() {
   const router = useRouter();
+  const tour = useGuidedTour();
   const params = useLocalSearchParams();
   const { width, height } = useViewport();
   const desktop = Platform.OS === 'web' && width >= DESKTOP_WEB_MIN_WIDTH;
@@ -138,7 +140,8 @@ export default function GarageScreen() {
     setSelectedVehicleId(id);
     setShowVehicleTracks(true);
     markVehicleViewed(id).catch(() => {});
-  }, []);
+    tour.milestone('setup-car', 'setup-track');
+  }, [tour.milestone]);
 
   const openVehicleTrack = useCallback((trackId) => {
     if (!selectedVehicleId || !trackId) return;
@@ -248,7 +251,7 @@ export default function GarageScreen() {
                     ) : <Text style={[styles.sectionCount, desktop && desktopStyles.count]}>{vehicles.length} SAVED</Text>}
                   </View>
 
-                  <View style={styles.vehicleList}>
+                  <View collapsable={false} ref={tour.refFor('setup-car')} style={styles.vehicleList}>
                     {vehicles.map((vehicle) => {
                       const id = clean(vehicle?.id || vehicle?.vehicleId);
                       const setupCount = vehicleSetupCounts.get(id)?.size || 0;
@@ -294,7 +297,7 @@ export default function GarageScreen() {
                     <Pressable style={({ pressed }) => [styles.manageButton, isTabletLandscape && styles.manageButtonTabletLandscape, desktopStyles.action, pressed && styles.pressed]} onPress={addTrack}>
                       <Text style={[styles.manageButtonText, isTabletLandscape && styles.manageButtonTextTabletLandscape, desktopStyles.actionLabel]}>+ ADD TRACK</Text>
                     </Pressable>
-                    <Pressable style={({ pressed }) => [styles.manageButton, styles.manageButtonPrimary, isTabletLandscape && styles.manageButtonTabletLandscape, desktopStyles.action, pressed && styles.pressed]} onPress={addSetup}>
+                    <Pressable style={({ pressed }) => [styles.manageButton, styles.manageButtonPrimary, isTabletLandscape && styles.manageButtonTabletLandscape, desktopStyles.action, pressed && styles.pressed]} ref={tour.refFor('setup-track')} onPress={addSetup}>
                       <Text style={[styles.manageButtonText, styles.manageButtonTextPrimary, isTabletLandscape && styles.manageButtonTextTabletLandscape, desktopStyles.actionLabel]}>+ ADD SETUP</Text>
                     </Pressable>
                   </View>

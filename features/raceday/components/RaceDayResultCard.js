@@ -1,3 +1,4 @@
+import { GuideHint } from '../../support/components/GuidedTour';
 import React from 'react';
 import RaceDayLapChart from './RaceDayLapChart';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -105,6 +106,7 @@ export default function RaceDayResultCard({ run, compareFields = [], onToggleCom
         <SectionTitle>Race</SectionTitle>
         <Text style={localStyles.dashboardHint}>Tap a stat to show or hide it on the dashboard</Text>
       </View>
+      <GuideHint step="run-results">Tap a stat to choose what appears on your vehicle card. Race Results shows the full field. View Top 5 compares the leading drivers.</GuideHint>
       <View style={raceDayStyles.resultStatGrid}>
         <Stat label="Driver" value={run.driver || run.driverName || run.stats?.driverName} size={fitsDriverInRow ? localStyles.driverWide : localStyles.driverFull} />
         <Stat size={raceStatSize} label="Position" value={run.position} compareKey="position" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />

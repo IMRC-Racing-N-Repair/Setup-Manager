@@ -2,7 +2,7 @@
   "expo": {
     "name": "imrc-setup-manager",
     "slug": "imrc-setup-manager",
-    "version": "2.1.14",
+    "version": "2.1.16",
     "android": {
       "versionCode": 2114,
       "package": "com.joshy788.imrcsetupmanager",
@@ -123,6 +123,6 @@
     "updates": {
       "enabled": false
     },
-    "runtimeVersion": "2.1.14"
+    "runtimeVersion": "2.1.16"
   }
 }

@@ -128,6 +128,10 @@ export default function TracksScreen() {
     setSheetVisible(true);
   }
 
+  useEffect(() => {
+    if (tour.step === 'track-add') addTrack();
+  }, [tour.step]);
+
   function addTrack() {
     pendingEditActionRef.current = null;
     setEditingTrack({ ...NEW_TRACK });
@@ -270,7 +274,11 @@ export default function TracksScreen() {
       return;
     }
 
-    pendingImportActionRef.current = { type: 'submitTrack' };
+    dismissImportFor('submitTrack');
+  }
+
+  function dismissImportFor(type) {
+    pendingImportActionRef.current = { type };
     setImportVisible(false);
 
     if (Platform.OS !== 'ios') {
@@ -289,7 +297,10 @@ export default function TracksScreen() {
       importDismissTimerRef.current = null;
     }
 
-    if (pendingAction.type === 'submitTrack') {
+    if (pendingAction.type === 'addTrack') {
+      if (tour.step === 'directory') tour.milestone('directory', 'track-add');
+      else addTrack();
+    } else if (pendingAction.type === 'submitTrack') {
       router.push('/tracks/submit');
     }
   }
@@ -449,6 +460,7 @@ export default function TracksScreen() {
 
       <TrackImportSheet
         visible={importVisible}
+        onAddManually={() => dismissImportFor('addTrack')}
         onCancel={closeImportSheet}
         onImported={handleImportedTrack}
         onSubmitTrack={openSubmitTrackScreen}

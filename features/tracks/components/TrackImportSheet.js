@@ -49,6 +49,7 @@ export default function TrackImportSheet({
   visible,
   onCancel,
   onImported,
+  onAddManually,
   onSubmitTrack,
   onDismiss,
 }) {
@@ -222,7 +223,12 @@ export default function TrackImportSheet({
               </View>
             </View>
 
-            <GuideHint step="directory">Search by track name, then tap the matching track to import it. If it is missing, close this window and choose Add manually.</GuideHint>
+            <GuideHint step="directory">Search by track name, then tap the matching track to import it. If it is missing, choose Add manually to enter the track details.</GuideHint>
+            {onAddManually && (
+              <Pressable accessibilityRole="button" style={styles.importCloseButton} onPress={onAddManually} disabled={importing}>
+                <Text style={styles.importCloseText}>Add manually</Text>
+              </Pressable>
+            )}
             <View style={styles.importSearchRow}>
               <TextInput
                 value={query}

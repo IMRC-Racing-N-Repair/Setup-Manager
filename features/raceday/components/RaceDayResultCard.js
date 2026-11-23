@@ -1,4 +1,4 @@
-import { GuideHint } from '../../support/components/GuidedTour';
+import { FieldGuide, useFieldGuide } from '../../support/components/FieldGuide';
 import React from 'react';
 import RaceDayLapChart from './RaceDayLapChart';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -52,7 +52,7 @@ function SectionTitle({ children }) {
   return <Text style={raceDayStyles.resultSectionTitle}>{children}</Text>;
 }
 
-export default function RaceDayResultCard({ run, compareFields = [], onToggleCompareField, onOpenTop5, onOpenRaceResults }) {
+export default function RaceDayResultCard({ visible, run, compareFields = [], onToggleCompareField, onOpenTop5, onOpenRaceResults }) {
   const { modalAvailableWidth, fontScale } = useSafeAreaLayout({ horizontalGap: 6 });
   const readableWidth = Math.min(modalAvailableWidth, 900) / Math.max(fontScale, 1);
   const fitsDriverInRow = readableWidth >= 620;
@@ -60,6 +60,7 @@ export default function RaceDayResultCard({ run, compareFields = [], onToggleCom
   const raceStatSize = fitsDriverInRow ? localStyles.raceStatWide : fourColumns ? localStyles.statQuarter : undefined;
   const averageStatSize = readableWidth >= 340 ? localStyles.statThird : undefined;
 
+  const fieldGuide = useFieldGuide('run-results', visible && Boolean(run));
   if (!run) {
     return (
       <View style={raceDayStyles.empty}>
@@ -75,6 +76,7 @@ export default function RaceDayResultCard({ run, compareFields = [], onToggleCom
 
   return (
     <View style={raceDayStyles.resultDetailCard}>
+      <FieldGuide guide={fieldGuide} />
       <View style={localStyles.resultHeader}>
         <View style={localStyles.resultHeading}>
           <Text style={localStyles.roundTitle}>{round}</Text>
@@ -106,7 +108,6 @@ export default function RaceDayResultCard({ run, compareFields = [], onToggleCom
         <SectionTitle>Race</SectionTitle>
         <Text style={localStyles.dashboardHint}>Tap a stat to show or hide it on the dashboard</Text>
       </View>
-      <GuideHint step="run-results">Tap a stat to choose what appears on your vehicle card. Race Results shows the full field. View Top 5 compares the leading drivers.</GuideHint>
       <View style={raceDayStyles.resultStatGrid}>
         <Stat label="Driver" value={run.driver || run.driverName || run.stats?.driverName} size={fitsDriverInRow ? localStyles.driverWide : localStyles.driverFull} />
         <Stat size={raceStatSize} label="Position" value={run.position} compareKey="position" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />

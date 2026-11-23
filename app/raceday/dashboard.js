@@ -869,6 +869,7 @@ export default function RaceDayDashboardScreen() {
         onDismiss={finishResultsDismissal}
       >
         <RaceDayResultCard
+          visible={resultsOpen}
           run={selectedRun}
           compareFields={compareFields}
           onToggleCompareField={handleToggleCompareField}

@@ -1,4 +1,4 @@
-import { GuideHint } from '../../support/components/GuidedTour';
+import { FieldGuide, useFieldGuide } from '../../support/components/FieldGuide';
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
@@ -32,6 +32,7 @@ export default function VehicleForm({
   const { insets, height, usableWidth, usableHeight } = useSafeAreaLayout({ modalSize: "normal" });
 
   const scrollRef = useRef(null);
+  const fieldGuide = useFieldGuide('vehicle-add', visible && !vehicle?.id, scrollRef);
   const focusedFieldRef = useRef(null);
   const fieldPositionsRef = useRef({});
   const scrollTimerRef = useRef(null);
@@ -329,6 +330,7 @@ export default function VehicleForm({
                 style={styles.fieldCompact}
                 onLayout={storeFieldPosition("name")}
               >
+                <FieldGuide guide={fieldGuide} index={0} />
                 <Text style={styles.labelCompact}>Vehicle Name *</Text>
                 <TextInput
                   value={draft.name}
@@ -389,6 +391,7 @@ export default function VehicleForm({
                   style={isWideForm ? styles.formRowItem : styles.fieldCompact}
                   onLayout={storeFieldPosition("chassisStyle")}
                 >
+                  <FieldGuide guide={fieldGuide} index={1} />
                   <Text style={styles.labelCompact}>Chassis Style *</Text>
                   <Pressable
                     style={[
@@ -424,7 +427,7 @@ export default function VehicleForm({
                   style={isWideForm ? styles.formRowItem : styles.fieldCompact}
                   onLayout={storeFieldPosition("transponder")}
                 >
-                  <GuideHint step="vehicle-add">TX is the number on this car’s transponder. Enter it exactly as used by race timing so RaceDay can find this car.</GuideHint>
+                  <FieldGuide guide={fieldGuide} index={2} />
                   <Text style={styles.labelCompact}>Transponder Number</Text>
                   <TextInput
                     value={draft.transponder}

@@ -1,4 +1,4 @@
-import { GuideHint } from '../../support/components/GuidedTour';
+import { FieldGuide, useFieldGuide } from '../../support/components/FieldGuide';
 // features/tracks/components/TrackEditSheet.js
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -63,6 +63,7 @@ export default function TrackEditSheet({
 
   const scrollY = useRef(new Animated.Value(0)).current;
   const scrollRef = useRef(null);
+  const fieldGuide = useFieldGuide('track-add', visible && isNew, scrollRef);
   const fieldPositionsRef = useRef({});
   const focusedFieldRef = useRef(null);
   const actionLockedRef = useRef(false);
@@ -398,7 +399,7 @@ export default function TrackEditSheet({
               </View>
 
               <View style={styles.sheetFieldFull} onLayout={event => rememberFieldLayout('trackName', event)}>
-                <GuideHint step="track-add">Name and track type identify the venue. Use surface and direction to describe the layout, then enter the track’s LiveRC address for RaceDay.</GuideHint>
+                <FieldGuide guide={fieldGuide} index={0} />
                 <Text style={styles.inputLabel}>Track Name *</Text>
                 <TextInput
                   {...getInputFocusProps('trackName')}
@@ -414,6 +415,7 @@ export default function TrackEditSheet({
               </View>
 
               <View style={halfFieldStyle}>
+                <FieldGuide guide={fieldGuide} index={1} />
                 <Text style={styles.inputLabel}>Track Type *</Text>
                 <TrackTypeButton
                   value={track.trackType}
@@ -441,6 +443,7 @@ export default function TrackEditSheet({
               </View>
 
               <View style={styles.sheetFieldFull} onLayout={event => rememberFieldLayout('liveRcUrl', event)}>
+                <FieldGuide guide={fieldGuide} index={2} />
                 <Text style={styles.inputLabel}>LiveRC URL</Text>
                 <TextInput
                   {...getInputFocusProps('liveRcUrl')}

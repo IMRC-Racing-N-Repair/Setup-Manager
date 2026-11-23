@@ -218,6 +218,7 @@ export default function TracksWebScreen() {
           title="Tracks"
           kicker="IMRC GARAGE"
           onBack={() => router.replace('/garage')}
+          tourTarget="track-add"
           rightLabel="+ ADD"
           onRightPress={() => openTrack({ ...NEW_TRACK })}
         />

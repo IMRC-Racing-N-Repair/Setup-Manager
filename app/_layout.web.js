@@ -5,6 +5,7 @@ import { DESKTOP_WEB_MIN_WIDTH } from '../src/layout/desktopWorkspace';
 import { Slot } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { GuidedTourProvider } from '../features/support/components/GuidedTour';
 import AppCrashBoundary from '../features/support/components/AppCrashBoundary';
 import WebSidebar from '../src/navigation/WebSidebar';
 
@@ -15,12 +16,14 @@ export default function WebRootLayout() {
   return (
     <SafeAreaProvider style={styles.root}>
       <AppCrashBoundary>
-        <View style={[styles.shell, desktop && styles.desktopShell]}>
-          {desktop ? <WebSidebar /> : null}
-          <View style={styles.stage}>
-            <Slot />
+        <GuidedTourProvider>
+          <View style={[styles.shell, desktop && styles.desktopShell]}>
+            {desktop ? <WebSidebar /> : null}
+            <View style={styles.stage}>
+              <Slot />
+            </View>
           </View>
-        </View>
+        </GuidedTourProvider>
       </AppCrashBoundary>
     </SafeAreaProvider>
   );

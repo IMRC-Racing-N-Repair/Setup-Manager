@@ -1,3 +1,4 @@
+import { useGuidedTour } from '../../features/support/components/GuidedTour';
 import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Link, usePathname } from 'expo-router';
 
@@ -19,6 +20,7 @@ const sections = [
 ];
 
 export default function WebSidebar() {
+  const tour = useGuidedTour();
   const pathname = usePathname() || '/';
 
   return (
@@ -34,7 +36,7 @@ export default function WebSidebar() {
             {items.map(({ label: name, icon, href, root = href }) => {
               const selected = pathname === root || pathname.startsWith(root + '/');
               return (
-                <Link key={href} href={href} aria-current={selected ? 'page' : undefined} style={[styles.item, selected && styles.selected]}>
+                <Link ref={tour?.refFor(href.slice(1).split('/')[0])} key={href} href={href} aria-current={selected ? 'page' : undefined} style={[styles.item, selected && styles.selected]}>
                   <Text aria-hidden style={styles.icon}>{icon}</Text>
                   <Text style={styles.label}>{name}</Text>
                 </Link>

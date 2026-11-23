@@ -11,6 +11,7 @@ import {
 import { router } from 'expo-router';
 import StableSafeAreaView from '../../src/layout/StableSafeAreaView';
 import AppScreenHeader from '../../src/layout/AppScreenHeader';
+import { useGuidedTour } from './components/GuidedTour';
 import HowToUseAppModal from './components/HowToUseAppModal';
 import {
   getLatestCrashReport,
@@ -31,6 +32,7 @@ const TEXT = '#EEF5FF';
 const MUTED = '#9AA9BC';
 
 export default function SupportScreen({ navigation }) {
+  const tour = useGuidedTour();
   const [guideVisible, setGuideVisible] = useState(false);
   const [sendingReport, setSendingReport] = useState(false);
 
@@ -132,6 +134,14 @@ export default function SupportScreen({ navigation }) {
             body="Email the latest captured startup error and app/build details to IMRC."
             actionLabel={sendingReport ? 'Opening Email...' : 'Send Report'}
             onPress={sendCrashReport}
+            accent
+          />
+
+          <SupportCard
+            title="Guided tutorial"
+            body="Follow the highlighted controls for Garage, Tracks, and RaceDay."
+            actionLabel="Replay tutorial"
+            onPress={tour.start}
             accent
           />
 

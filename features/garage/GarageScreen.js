@@ -213,6 +213,7 @@ export default function GarageScreen() {
             title="Garage"
             kicker="IMRC GARAGE"
             onBack={goBack}
+            tourTarget={showVehicleTracks ? undefined : 'vehicle-add'}
             rightLabel={showVehicleTracks ? 'EDIT' : '+ ADD'}
             onRightPress={handleHeaderAction}
           />

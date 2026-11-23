@@ -1,3 +1,4 @@
+import { useGuidedTour } from '../../features/support/components/GuidedTour';
 import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
 import { AppColors } from '../theme/colors';
@@ -10,6 +11,7 @@ const items = [
 ];
 
 export default function NewLookBottomNav({ active = 'home', router, onRaceDay, bottomOffset = 0 }) {
+  const tour = useGuidedTour();
   const { width, height } = useWindowDimensions();
   const compact = height < 620 || width > height;
   const tabletLandscape = width >= 700 && width > height;
@@ -29,6 +31,7 @@ export default function NewLookBottomNav({ active = 'home', router, onRaceDay, b
     >
       {items.map((item) => (
         <Pressable
+          ref={active === 'home' ? tour?.refFor(item.key) : undefined}
           key={item.key}
           style={({ pressed }) => [
             styles.navItem,

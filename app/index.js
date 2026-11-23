@@ -2,26 +2,22 @@
 // Dashboard entry. Authentication and cloud-sync state have one owner inside
 // DashboardScreen so the app does not create duplicate listeners and pollers.
 
-import { Fragment, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, Image, StyleSheet, Text, View } from 'react-native';
 import CrashReportScreen from '../features/support/components/CrashReportScreen';
 import { makeCrashReport, saveCrashReport } from '../features/support/crashReporting';
 
 export default function HomeScreen() {
-  const [startup, setStartup] = useState({ Dashboard: null, FirstUseGate: null, error: null, report: null, attempt: 0 });
+  const [startup, setStartup] = useState({ Dashboard: null, error: null, report: null, attempt: 0 });
 
   useEffect(() => {
     let active = true;
 
-    Promise.all([
-      import('../src/dashboard/DashboardScreen'),
-      import('../features/support/components/FirstUseHowToUseGate'),
-    ]).then(([dashboardModule, firstUseModule]) => {
+    import('../src/dashboard/DashboardScreen').then((dashboardModule) => {
       if (!active) return;
       setStartup((state) => ({
         ...state,
         Dashboard: dashboardModule.default,
-        FirstUseGate: firstUseModule.default,
         error: null,
         report: null,
       }));
@@ -44,7 +40,6 @@ export default function HomeScreen() {
         report={startup.report}
         onRetry={() => setStartup((state) => ({
           Dashboard: null,
-          FirstUseGate: null,
           error: null,
           report: null,
           attempt: state.attempt + 1,
@@ -53,7 +48,7 @@ export default function HomeScreen() {
     );
   }
 
-  if (!startup.Dashboard || !startup.FirstUseGate) {
+  if (!startup.Dashboard) {
     return (
       <View style={styles.loadingScreen}>
         <Image source={require('../assets/logo.png')} style={styles.loadingLogo} resizeMode="contain" />
@@ -64,13 +59,7 @@ export default function HomeScreen() {
   }
 
   const DashboardScreen = startup.Dashboard;
-  const FirstUseHowToUseGate = startup.FirstUseGate;
-  return (
-    <Fragment>
-      <DashboardScreen />
-      <FirstUseHowToUseGate />
-    </Fragment>
-  );
+  return <DashboardScreen />;
 }
 
 const styles = StyleSheet.create({

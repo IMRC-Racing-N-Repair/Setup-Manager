@@ -1,3 +1,4 @@
+import { useGuidedTour } from '../../features/support/components/GuidedTour';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import useViewport from '../layout/useViewport';
 import { DESKTOP_WEB_MIN_WIDTH } from '../layout/desktopWorkspace';
@@ -26,9 +27,11 @@ function openItem(item, router, onRaceDay) {
 }
 
 function NavItem({ item, active, router, onRaceDay, desktop }) {
+  const tour = useGuidedTour();
   const selected = active === item.key;
   return (
     <Pressable
+      ref={active === 'home' ? tour?.refFor(item.key) : undefined}
       style={({ pressed }) => [
         desktop ? styles.desktopItem : styles.mobileItem,
         selected && (desktop ? styles.desktopItemActive : styles.mobileItemActive),

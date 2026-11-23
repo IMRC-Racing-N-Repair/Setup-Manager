@@ -139,7 +139,11 @@ export default function SupportScreen({ navigation }) {
 
           <SupportCard
             title="Guided tutorial"
-            body="Follow the highlighted controls for Garage, Tracks, and RaceDay."
+            body={({
+              skipped: 'You skipped the guide. Replay it whenever you are ready.',
+              completed: 'Guide completed. Replay it to revisit any part of race day.',
+              waiting: 'Tools complete. Open RaceDay with a synced, timed round to continue the results lesson.',
+            })[tour.status] || 'Walk through Home, cars, tracks, setup sheets, RaceDay results and Tools.'}
             actionLabel="Replay tutorial"
             onPress={tour.start}
             accent

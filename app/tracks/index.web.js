@@ -1,3 +1,4 @@
+import { useGuidedTour } from '../../features/support/components/GuidedTour';
 import React, { useCallback, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -104,6 +105,7 @@ function selectTrackFile() {
 
 export default function TracksWebScreen() {
   const router = useRouter();
+  const tour = useGuidedTour();
   const { addTrack, editTrackId } = useLocalSearchParams();
   const { width } = useViewport();
   const desktop = width >= DESKTOP_WEB_MIN_WIDTH;
@@ -148,6 +150,7 @@ export default function TracksWebScreen() {
       const saved = await upsertTrack({ ...editingTrack, ...nextTrack });
       setEditingTrack(saved);
       setSheetVisible(false);
+      tour.milestone('track-add', 'setup-car');
       await loadTracks();
     } catch (error) {
       Alert.alert('Save Failed', error?.validationErrors ? 'Track Name and Track Type are required.' : 'The track could not be saved.');
@@ -237,7 +240,7 @@ export default function TracksWebScreen() {
             <Text style={styles.actionIcon}>⇧</Text>
             <Text style={styles.actionTitle}>Export all</Text>
           </Pressable>
-          <Pressable style={styles.actionButton} onPress={() => setDirectoryVisible(true)}>
+          <Pressable style={styles.actionButton} ref={tour.refFor('directory')} onPress={() => setDirectoryVisible(true)}>
             <Text style={styles.actionIcon}>◎</Text>
             <Text style={styles.actionTitle}>Online directory</Text>
           </Pressable>
@@ -305,7 +308,7 @@ export default function TracksWebScreen() {
       <TrackImportSheet
         visible={directoryVisible}
         onCancel={() => setDirectoryVisible(false)}
-        onImported={async () => { setDirectoryVisible(false); await loadTracks(); }}
+        onImported={async () => { setDirectoryVisible(false); await loadTracks(); tour.milestone('directory', 'setup-car'); }}
         onSubmitTrack={() => { setDirectoryVisible(false); router.push('/tracks/submit'); }}
       />
     </View>

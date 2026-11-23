@@ -1,3 +1,4 @@
+import { GuideHint } from '../../support/components/GuidedTour';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import RaceDayPopup from './RaceDayPopup';
@@ -284,6 +285,7 @@ export default function RaceDaySyncPopup({
       ) : null}
 
       <View style={raceDayStyles.syncPickerStaticBottom}>
+        <GuideHint step="race-sync">Choose the event by name and date, then tap Sync Selected RaceDay to load the rounds for your cars.</GuideHint>
         {selectedEventUrl ? (
           <View style={raceDayStyles.selectedEventSummaryCompact}>
             <View style={raceDayStyles.selectedEventSummaryIcon}><Text style={raceDayStyles.selectedEventSummaryIconText}>✓</Text></View>

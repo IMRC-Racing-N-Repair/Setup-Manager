@@ -1,3 +1,4 @@
+import { GuideHint } from '../../support/components/GuidedTour';
 // features/tracks/components/TrackImportSheet.js
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -221,6 +222,7 @@ export default function TrackImportSheet({
               </View>
             </View>
 
+            <GuideHint step="directory">Search by track name, then tap the matching track to import it. If it is missing, close this window and choose Add manually.</GuideHint>
             <View style={styles.importSearchRow}>
               <TextInput
                 value={query}

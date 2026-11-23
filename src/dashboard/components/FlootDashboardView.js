@@ -1,3 +1,4 @@
+import { useGuidedTour, useGuideScroll } from '../../../features/support/components/GuidedTour';
 import { useState } from 'react';
 import { Linking, Modal, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import useViewport from '../../layout/useViewport';
@@ -50,6 +51,8 @@ export default function FlootDashboardView({
   onSelectDashboardTrack,
   loading = false,
 }) {
+  const tour = useGuidedTour();
+  const guideScroll = useGuideScroll('/');
   const { width, height } = useViewport();
   const desktop = Platform.OS === 'web' && width >= 900;
   const styles = desktop ? desktopDashboardStyles : mobileWorkspaceDashboardStyles;
@@ -130,6 +133,7 @@ export default function FlootDashboardView({
   return (
     <View style={styles.root}>
       <ScrollView
+        ref={guideScroll}
         contentContainerStyle={[
           styles.content,
           compactLayout && styles.contentCompact,
@@ -153,6 +157,7 @@ export default function FlootDashboardView({
               style={({ pressed }) => [styles.syncButton, pressed && styles.pressed]}
               accessibilityRole="button"
               accessibilityLabel={signedIn ? (syncProblemLabel ? 'View Cloud Sync details' : 'Sync account') : 'Sign in'}
+              ref={tour.refFor('account')}
               onPress={onAuthPress}
               onLongPress={onAuthLongPress}
             >
@@ -168,7 +173,7 @@ export default function FlootDashboardView({
           </View>
         </View>
 
-        <Pressable style={({ pressed }) => [styles.sponsorStrip, compactLayout && styles.sponsorStripCompact, pressed && styles.pressed]} onPress={openSponsor}>
+        <Pressable ref={tour.refFor('sponsor')} style={({ pressed }) => [styles.sponsorStrip, compactLayout && styles.sponsorStripCompact, pressed && styles.pressed]} onPress={openSponsor}>
           {sponsorImage ? (
             <Image source={{ uri: sponsorImage }} contentFit="contain" cachePolicy="memory-disk" style={styles.sponsorLogo} />
           ) : (
@@ -184,7 +189,7 @@ export default function FlootDashboardView({
 
         <View style={styles.workspaceGrid}>
           <View style={[styles.primaryGrid, desktop && styles.widePrimaryGrid]}>
-            <View style={[styles.racePanel, compactLayout && styles.racePanelCompact]}>
+            <View collapsable={false} ref={tour.refFor('home-race')} style={[styles.racePanel, compactLayout && styles.racePanelCompact]}>
               <View style={styles.sectionHeader}>
                 <View style={styles.sectionHeaderCopy}>
                   <Text style={styles.microLabel}>{loading ? 'CHECKING RACEDAY' : liveActive ? 'LIVE RACEDAY' : 'RACEDAY'}</Text>
@@ -223,7 +228,7 @@ export default function FlootDashboardView({
                 </View>
               </View>
 
-              <Pressable disabled={loading} style={({ pressed }) => [styles.primaryButton, loading && styles.loadingMuted, pressed && styles.pressed]} onPress={onRaceDayPress}>
+              <Pressable disabled={loading} ref={tour.refFor('race-start')} style={({ pressed }) => [styles.primaryButton, loading && styles.loadingMuted, pressed && styles.pressed]} onPress={onRaceDayPress}>
                 <Text style={styles.primaryButtonText}>{loading ? 'LOADING RACEDAY' : raceDayReady ? 'OPEN RACEDAY' : 'START RACEDAY'}</Text>
               </Pressable>
             </View>
@@ -237,7 +242,7 @@ export default function FlootDashboardView({
                 </View>
                 <Pressable onPress={() => router.push('/garage')}><Text style={styles.viewAll}>OPEN GARAGE  ›</Text></Pressable>
               </View>
-              <View style={styles.garageMetrics}>
+              <View collapsable={false} ref={tour.refFor('shortcuts')} style={styles.garageMetrics}>
                 <CountCell styles={styles} label="VEHICLES" value={counts?.vehicles || 0} onPress={() => router.push('/vehicles')} />
                 <CountCell styles={styles} label="TRACKS" value={counts?.tracks || 0} onPress={() => router.push('/tracks')} />
                 <CountCell styles={styles} label="SETUPS" value={counts?.setups || 0} onPress={() => router.push('/setups')} />

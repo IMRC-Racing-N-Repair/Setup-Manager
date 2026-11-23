@@ -1,3 +1,4 @@
+import { useGuidedTour, useGuideScroll } from '../support/components/GuidedTour';
 // features/tools/ToolsHomeScreen.js
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -96,6 +97,8 @@ function buildRolloutStat(state) {
 }
 
 export default function ToolsHomeScreen(props) {
+  const tour = useGuidedTour();
+  const guideScroll = useGuideScroll('/tools');
   const { width, height } = useViewport();
   const desktop = Platform.OS === 'web' && width >= DESKTOP_WEB_MIN_WIDTH;
   const threeColumns = desktop && width >= 1330;
@@ -158,13 +161,14 @@ export default function ToolsHomeScreen(props) {
   }, [loadStats, props?.navigation]);
 
   return (
-    <ToolScaffold title="Tools" onBack={() => goBack(props)}>
+    <ToolScaffold title="Tools" scrollRef={guideScroll} onBack={() => goBack(props)}>
       <View style={[styles.grid, (desktop || isLandscape) && styles.gridLandscape, desktop && styles.desktopGrid]}>
         {TOOLS.filter((tool) => !tool.hidden).map((tool) => {
           const stat = tool.statKey ? stats[tool.statKey] : null;
 
           return (
             <Pressable
+              ref={tour.refFor(tool.route.split('/').pop())}
               key={tool.route}
               onPress={() => openTool(tool)}
               accessibilityRole="button"

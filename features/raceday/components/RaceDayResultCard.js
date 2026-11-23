@@ -1,3 +1,4 @@
+import { GuideHint } from '../../support/components/GuidedTour';
 import React from 'react';
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { getCompareLabel, sortCompareFieldsForDashboard } from '../lib/raceDayCompare';
@@ -113,6 +114,7 @@ export default function RaceDayResultCard({ run, desktop = false, compareFields 
       </View>
 
       <SectionTitle desktop={desktop}>Race</SectionTitle>
+      <GuideHint step="run-results">Tap a stat to choose what appears on your vehicle card. Race Results shows the full field. View Top 5 compares the leading drivers.</GuideHint>
       <View style={[raceDayStyles.resultStatGrid, desktop && localStyles.desktopGrid]}>
         <Stat desktop={desktop} label="Driver" value={run.driver || run.driverName || run.stats?.driverName} wide />
         <Stat desktop={desktop} label="Position" value={run.position} compareKey="position" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />

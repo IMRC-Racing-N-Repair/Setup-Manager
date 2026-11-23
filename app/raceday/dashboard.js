@@ -1,3 +1,5 @@
+import { getTimedLaps } from '../../features/raceday/components/RaceDayLapChart';
+import { useGuidedTour } from '../../features/support/components/GuidedTour';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ActivityIndicator, Alert, Platform, ScrollView, Text, TouchableOpacity, View } from 'react-native';
@@ -39,7 +41,7 @@ import {
   saveRaceDaySelectedPracticeDay,
   formatPracticeDayLabel,
 } from '../../features/raceday/lib/raceDayPracticeDay';
-import { getCompareFields, saveCompareFields, toggleCompareField } from '../../features/raceday/lib/raceDayCompare';
+import { getCompareValue, getCompareFields, saveCompareFields, toggleCompareField } from '../../features/raceday/lib/raceDayCompare';
 import { getTrackDisplayName, getTrackLiveRcUrl, getVehicleDisplayName, normalizeId } from '../../features/raceday/lib/raceDayModel';
 import { syncLiveRcRaceDay } from '../../features/raceday/lib/liverc/liveRcSyncRunner';
 import { syncLiveRcPracticeDay } from '../../features/raceday/lib/liverc/liveRcPracticeSyncRunner';
@@ -79,6 +81,7 @@ function getEventIdLabel(eventUrl = '') {
 }
 
 export default function RaceDayDashboardScreen() {
+  const tour = useGuidedTour();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { width, height } = useViewport();
@@ -206,6 +209,16 @@ export default function RaceDayDashboardScreen() {
     });
     return map;
   }, [vehicles, runs]);
+
+  const timedRun = useMemo(() => Array.from(runsByVehicle.values()).flat().find(run =>
+    getTimedLaps(run).length || ['fastestLap', 'avgLap', 'lapsTime'].some(field =>
+      Number.parseFloat(getCompareValue(run, field)) > 0
+    )
+  ), [runsByVehicle]);
+  useEffect(() => {
+    tour.setRoundReady(Boolean(timedRun) && dashboardMode === 'race');
+    return () => tour.setRoundReady(false);
+  }, [timedRun, dashboardMode, tour.setRoundReady]);
 
   const lineupsByVehicle = useMemo(() => new Map(
     lineups.map((lineup) => [normalizeId(lineup?.vehicleId), lineup])
@@ -610,6 +623,7 @@ export default function RaceDayDashboardScreen() {
       }
 
       if (!cancelToken.cancelled) await load({ showLoading: false });
+      if (!waitingForClassSelection && !cancelToken.cancelled) tour.milestone('race-sync', 'after-sync');
       if (!waitingForClassSelection && !cancelToken.cancelled) await new Promise((resolve) => setTimeout(resolve, 450));
     } catch (error) {
       if (error?.code !== 'RACEDAY_SYNC_CANCELLED') {
@@ -734,7 +748,7 @@ export default function RaceDayDashboardScreen() {
     </RaceDayPracticeTrackCard>
   ) : (
     <View style={[raceDayStyles.trackCard, isDesktopWeb && desktopStyles.event]}>
-      <View style={raceDayStyles.trackCardHeader}>
+      <View collapsable={false} ref={tour.refFor('race-page')} style={raceDayStyles.trackCardHeader}>
         <View style={raceDayStyles.flex1}>
           {!isDesktopWeb && <Text style={raceDayStyles.trackCardEyebrow}>Live RaceDay</Text>}
           <Text style={[raceDayStyles.cardTitle, isDesktopWeb && desktopStyles.eventTitle]}>{trackName}</Text>
@@ -774,7 +788,7 @@ export default function RaceDayDashboardScreen() {
 
         <TouchableOpacity
           style={[raceDayStyles.trackSyncButton, isDesktopWeb && desktopStyles.sync, syncing && { opacity: 0.55 }]}
-          onPress={handleSyncPress}
+          ref={tour.refFor('race-sync')} onPress={handleSyncPress}
           disabled={syncing}
           activeOpacity={0.82}
         >
@@ -796,6 +810,7 @@ export default function RaceDayDashboardScreen() {
         return (
           <View key={id} style={useTabletGrid ? raceDayStyles.vehicleGridCellTabletLandscape : null}>
             <RaceDayVehicleCard
+              tutorialRun={timedRun}
               vehicle={vehicle}
               desktop={isDesktopWeb}
               latestRun={latestRunsByVehicle.get(id)}

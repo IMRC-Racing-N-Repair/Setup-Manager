@@ -143,6 +143,7 @@ export default function DashboardScreen({
   const activeDismissTimerRef = useRef(null);
   const archiveDismissTimerRef = useRef(null);
   const tour = useGuidedTour();
+  const [sponsorChecked, setSponsorChecked] = useState(Platform.OS !== 'web');
   const [sponsorDismissing, setSponsorDismissing] = useState(false);
   const [showSponsorPopup, setShowSponsorPopup] = useState(() => {
     if (Platform.OS === 'web' || sponsorPopupShownThisLaunch) return false;
@@ -154,6 +155,7 @@ export default function DashboardScreen({
       sponsorPopupShownThisLaunch = true;
       setShowSponsorPopup(true);
     }
+    setSponsorChecked(true);
   }, []);
   const [showCloudSyncStatus, setShowCloudSyncStatus] = useState(false);
   const [dashboardTrackId, setDashboardTrackId] = useState('');
@@ -672,7 +674,7 @@ export default function DashboardScreen({
         }}
         onDismiss={() => setSponsorDismissing(false)}
       />
-      {!showSponsorPopup && !sponsorDismissing && !tour.active && <FirstUseHowToUseGate />}
+      {sponsorChecked && !showSponsorPopup && !sponsorDismissing && !tour.active && <FirstUseHowToUseGate />}
     </StableSafeAreaView>
   );
 }

@@ -1,3 +1,4 @@
+import { useGuidedTour } from '../../support/components/GuidedTour';
 import React, { useMemo, useState } from 'react';
 import { Platform, Text, TouchableOpacity, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
@@ -58,7 +59,8 @@ function getRunTitle(run = {}) {
   return title;
 }
 
-function RaceRunCard({ run, compareFields, onOpenResults, desktop, first }) {
+function RaceRunCard({ tutorialRun, run, compareFields, onOpenResults, desktop, first }) {
+  const tour = useGuidedTour();
   const [expanded, setExpanded] = useState(false);
   const mobileWeb = Platform.OS === 'web' && !desktop;
   const rows = buildCompareRows(run, compareFields);
@@ -76,11 +78,11 @@ function RaceRunCard({ run, compareFields, onOpenResults, desktop, first }) {
           accessibilityRole="button"
           aria-expanded={expanded}
           style={[raceDayStyles.resultsMiniButton, desktop && desktopStyles.resultsButton, mobileWeb && raceDayStyles.webResultsButton]}
-          onPress={() => setExpanded((value) => !value)}
+          ref={run === tutorialRun ? tour.refFor('lap') : undefined} onPress={() => setExpanded((value) => !value)}
         >
           <Text style={[raceDayStyles.resultsMiniButtonText, desktop && desktopStyles.resultsButtonText]}>{expanded ? 'Hide laps' : 'Lap chart'}</Text>
         </TouchableOpacity>
-        <TouchableOpacity accessibilityRole="button" style={[raceDayStyles.resultsMiniButton, desktop && desktopStyles.resultsButton, mobileWeb && raceDayStyles.webResultsButton]} onPress={() => onOpenResults?.(run)} activeOpacity={0.82}>
+        <TouchableOpacity accessibilityRole="button" style={[raceDayStyles.resultsMiniButton, desktop && desktopStyles.resultsButton, mobileWeb && raceDayStyles.webResultsButton]} ref={run === tutorialRun ? tour.refFor('run-results') : undefined} onPress={() => onOpenResults?.(run)} activeOpacity={0.82}>
           <Text style={[raceDayStyles.resultsMiniButtonText, desktop && desktopStyles.resultsButtonText]}>Results</Text>
         </TouchableOpacity>
       </View>
@@ -142,7 +144,8 @@ function vehicleColor(vehicle, title) {
   return vehicleColors[hash % vehicleColors.length];
 }
 
-export function RaceDayVehicleCardFrame({ vehicle, desktop, lineup, onOpenSetup, children }) {
+export function RaceDayVehicleCardFrame({ tutorialVehicle, vehicle, desktop, lineup, onOpenSetup, children }) {
+  const tour = useGuidedTour();
   const title = getVehicleDisplayName(vehicle);
   const model = [vehicle?.manufacturer, vehicle?.model].filter(Boolean).join(' ');
   const transponder = getVehicleTransponder(vehicle);
@@ -164,7 +167,7 @@ export function RaceDayVehicleCardFrame({ vehicle, desktop, lineup, onOpenSetup,
           </View>
         </View>
         <View style={raceDayStyles.raceVehicleActions}>
-          <TouchableOpacity accessibilityRole="button" accessibilityLabel={desktop ? `Open setup for ${title}` : undefined} style={[raceDayStyles.raceVehicleWrench, desktop && desktopStyles.setupButton]} onPress={onOpenSetup} activeOpacity={0.82}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel={desktop ? `Open setup for ${title}` : undefined} style={[raceDayStyles.raceVehicleWrench, desktop && desktopStyles.setupButton]} ref={tutorialVehicle ? tour.refFor('wrench') : undefined} onPress={onOpenSetup} activeOpacity={0.82}>
             <WrenchIcon />
             <Text style={[raceDayStyles.raceVehicleWrenchText, desktop && desktopStyles.vehicleAction]}>WRENCH</Text>
           </TouchableOpacity>
@@ -177,6 +180,7 @@ export function RaceDayVehicleCardFrame({ vehicle, desktop, lineup, onOpenSetup,
 }
 
 export default function RaceDayVehicleCard({
+  tutorialRun,
   vehicle,
   desktop = false,
   latestRun,
@@ -207,11 +211,11 @@ export default function RaceDayVehicleCard({
   );
 
   return (
-    <RaceDayVehicleCardFrame vehicle={vehicle} desktop={desktop} lineup={displayLineup} onOpenSetup={onOpenSetup}>
+    <RaceDayVehicleCardFrame tutorialVehicle={raceRuns.includes(tutorialRun)} vehicle={vehicle} desktop={desktop} lineup={displayLineup} onOpenSetup={onOpenSetup}>
       {raceRuns.length ? (
         <View style={[raceDayStyles.raceRunList, desktop && desktopStyles.vehicleRuns]}>
           {raceRuns.map((run, index) => (
-            <RaceRunCard
+            <RaceRunCard tutorialRun={tutorialRun}
               key={run.id || `${run.raceUrl || 'race'}_${run.roundLabel || 'round'}_${run.raceNumber || index}`}
               run={run}
               first={index === 0}

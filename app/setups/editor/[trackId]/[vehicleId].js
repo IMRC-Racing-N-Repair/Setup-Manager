@@ -1,3 +1,4 @@
+import { useGuidedTour } from '../../../../features/support/components/GuidedTour';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
@@ -1036,6 +1037,7 @@ function CrossWeightCenter({ setup, onPress, layoutMetrics }) {
 }
 
 function CornerHotspot({ corner, setup, profile, onPress, layoutMetrics }) {
+  const tour = useGuidedTour();
   const isPanCar = isPanCarProfile(profile || setup?.chassisProfile);
   const tire = setup.tires?.[corner] || '--';
   const compound = setup.tires?.compound?.[corner] || tire || '--';
@@ -1044,7 +1046,7 @@ function CornerHotspot({ corner, setup, profile, onPress, layoutMetrics }) {
   const weight = setup.cornerWeights?.[corner] || '--';
 
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [setupStyles.cornerHotspot, layoutMetrics?.cornerHotspot, pressed && setupStyles.cardPressed]}>
+    <Pressable ref={corner === 'LF' ? tour.refFor('corner') : undefined} onPress={onPress} style={({ pressed }) => [setupStyles.cornerHotspot, layoutMetrics?.cornerHotspot, pressed && setupStyles.cardPressed]}>
       <View style={setupStyles.chassisItemAccent} />
       <View style={[setupStyles.tireShape, layoutMetrics?.tireShape]}>
         <Text style={[setupStyles.cornerHotspotTitle, layoutMetrics?.cornerTitle]}>{corner}</Text>
@@ -1084,8 +1086,9 @@ function FixedBottomActions({ setup, historyCount, onOpenPanel, bottomInset = 0,
 }
 
 function MapAction({ glyph, label, onPress, layoutMetrics }) {
+  const tour = useGuidedTour();
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [setupStyles.mapActionButton, layoutMetrics?.mapActionButton, pressed && setupStyles.cardPressed]}>
+    <Pressable ref={tour.refFor('setup-' + label.toLowerCase())} onPress={onPress} style={({ pressed }) => [setupStyles.mapActionButton, layoutMetrics?.mapActionButton, pressed && setupStyles.cardPressed]}>
       <Text style={[setupStyles.mapActionGlyph, layoutMetrics?.tabletLandscape && setupStyles.mapActionGlyphTablet]}>{glyph}</Text>
       <Text style={[setupStyles.mapActionLabel, layoutMetrics?.tabletLandscape && setupStyles.mapActionLabelTablet]}>{label}</Text>
     </Pressable>

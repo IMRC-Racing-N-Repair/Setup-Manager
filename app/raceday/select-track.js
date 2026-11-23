@@ -1,3 +1,4 @@
+import { useGuidedTour } from '../../features/support/components/GuidedTour';
 import { useCallback, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 
@@ -5,6 +6,7 @@ import { getTracks, startRaceDayWithTrack } from '../../features/raceday/lib/rac
 import { GaragePickerScreen, GarageTrackChoice } from '../../src/garage/GaragePicker';
 
 export default function RaceDaySelectTrackScreen() {
+  const tour = useGuidedTour();
   const router = useRouter();
   const [tracks, setTracks] = useState([]);
   const [selectingTrackId, setSelectingTrackId] = useState('');
@@ -45,11 +47,12 @@ export default function RaceDaySelectTrackScreen() {
       flatList
       emptyMessage={!loading && !tracks.length ? 'No tracks are saved yet. Add a track from Garage before starting RaceDay.' : ''}
     >
-      {tracks.map((track) => {
+      {tracks.map((track, index) => {
         const id = track?.id || track?.trackId;
         const selecting = String(id) === selectingTrackId;
         return (
           <GarageTrackChoice
+            targetRef={index === 0 ? tour.refFor('race-track') : undefined}
             key={String(id)}
             track={track}
             actionLabel={selecting ? 'OPENING' : 'SELECT'}

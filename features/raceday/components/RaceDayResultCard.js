@@ -1,4 +1,4 @@
-import { GuideHint } from '../../support/components/GuidedTour';
+import { FieldGuide, useFieldGuide } from '../../support/components/FieldGuide';
 import React from 'react';
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { getCompareLabel, sortCompareFieldsForDashboard } from '../lib/raceDayCompare';
@@ -58,7 +58,8 @@ function SectionTitle({ children, desktop }) {
   return <Text style={[raceDayStyles.resultSectionTitle, desktop && localStyles.desktopSection]}>{children}</Text>;
 }
 
-export default function RaceDayResultCard({ run, desktop = false, compareFields = [], onToggleCompareField, onOpenTop5, onOpenRaceResults }) {
+export default function RaceDayResultCard({ visible, run, desktop = false, compareFields = [], onToggleCompareField, onOpenTop5, onOpenRaceResults }) {
+  const fieldGuide = useFieldGuide('run-results', visible && Boolean(run));
   if (!run) {
     return (
       <View style={raceDayStyles.empty}>
@@ -76,6 +77,7 @@ export default function RaceDayResultCard({ run, desktop = false, compareFields 
 
   return (
     <View style={[raceDayStyles.resultDetailCard, desktop && localStyles.desktopCard]}>
+      <FieldGuide guide={fieldGuide} />
       <View style={[raceDayStyles.rowBetween, desktop && localStyles.desktopHeader, mobileWeb && localStyles.mobileHeader]}>
         <View style={raceDayStyles.flex1}>
           <Text style={[raceDayStyles.cardTitle, desktop && localStyles.desktopRound]}>{round}</Text>
@@ -114,7 +116,6 @@ export default function RaceDayResultCard({ run, desktop = false, compareFields 
       </View>
 
       <SectionTitle desktop={desktop}>Race</SectionTitle>
-      <GuideHint step="run-results">Tap a stat to choose what appears on your vehicle card. Race Results shows the full field. View Top 5 compares the leading drivers.</GuideHint>
       <View style={[raceDayStyles.resultStatGrid, desktop && localStyles.desktopGrid]}>
         <Stat desktop={desktop} label="Driver" value={run.driver || run.driverName || run.stats?.driverName} wide />
         <Stat desktop={desktop} label="Position" value={run.position} compareKey="position" activeCompareFields={compareFields} onToggleCompareField={onToggleCompareField} />

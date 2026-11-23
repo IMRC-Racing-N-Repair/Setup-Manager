@@ -39,7 +39,7 @@ export const lessons = {
   "directory": {
     section: "Tracks",
     title: "Find your track first",
-    body: "Open the online directory using Import or Online directory. Search for your track and select it to import. If it is missing, close the directory and choose Add manually below.",
+    body: "Open the online directory using Import or Online directory. Search for your track and select it to import. If it is missing, choose Add manually to open the track form.",
     next: "track-add",
     route: "/tracks",
     label: "Add manually",
@@ -47,7 +47,7 @@ export const lessons = {
   "track-add": {
     section: "Tracks",
     title: "Add a track by hand",
-    body: "Tap + Add. Enter its name and type, then surface, direction and run line. Location helps identify the venue. The track’s LiveRC URL tells RaceDay where to find its events. Save when ready.",
+    body: "Enter the track name and type. You can also record its surface, direction and run line. Location helps identify the venue. The track’s LiveRC URL tells RaceDay where to find its events. Save when ready.",
     next: "setup-car",
     route: "/tracks",
     label: "Use saved track",

@@ -1,5 +1,5 @@
 import { useGuidedTour } from '../../features/support/components/GuidedTour';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -209,6 +209,10 @@ export default function TracksWebScreen() {
     });
   }
 
+  useEffect(() => {
+    if (tour.step === 'track-add') openTrack({ ...NEW_TRACK });
+  }, [tour.step]);
+
   function openTrack(track) {
     setEditingTrack(track);
     setSheetVisible(true);
@@ -307,6 +311,11 @@ export default function TracksWebScreen() {
 
       <TrackImportSheet
         visible={directoryVisible}
+        onAddManually={() => {
+          setDirectoryVisible(false);
+          if (tour.step === 'directory') tour.milestone('directory', 'track-add');
+          else openTrack({ ...NEW_TRACK });
+        }}
         onCancel={() => setDirectoryVisible(false)}
         onImported={async () => { setDirectoryVisible(false); await loadTracks(); tour.milestone('directory', 'setup-car'); }}
         onSubmitTrack={() => { setDirectoryVisible(false); router.push('/tracks/submit'); }}

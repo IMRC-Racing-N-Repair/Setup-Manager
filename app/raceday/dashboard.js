@@ -920,6 +920,7 @@ export default function RaceDayDashboardScreen() {
         desktop={isDesktopWeb}
       >
         <RaceDayResultCard
+          visible={resultsOpen}
           run={selectedRun}
           desktop={isDesktopWeb}
           compareFields={compareFields}

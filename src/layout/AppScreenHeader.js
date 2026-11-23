@@ -3,6 +3,7 @@ import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import useViewport from './useViewport';
 import { DESKTOP_WEB_MIN_WIDTH } from './desktopWorkspace';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useGuidedTour } from '../../features/support/components/GuidedTour';
 import Constants from 'expo-constants';
 
 import { AppColors } from '../theme/colors';
@@ -14,6 +15,7 @@ export default function AppScreenHeader({
   onBack,
   backLabel = 'BACK',
   right = null,
+  tourTarget,
   rightLabel = '',
   onRightPress,
   rightTone = 'primary',
@@ -23,6 +25,7 @@ export default function AppScreenHeader({
   titleStyle,
   version = Constants.expoConfig?.version || '',
 }) {
+  const tour = useGuidedTour();
   const insets = useSafeAreaInsets();
   const { width, height } = useViewport();
   const narrow = width < 375;
@@ -62,6 +65,7 @@ export default function AppScreenHeader({
             rightTone === 'outline' && styles.actionOutline,
             pressed && styles.pressed,
           ]}
+          ref={tour?.refFor(tourTarget)}
           onPress={onRightPress}
         >
           <Text style={[

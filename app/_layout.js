@@ -4,6 +4,7 @@ import { Slot } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 import useIncomingIMRC from '../features/setups/hooks/useIncomingIMRC';
+import { GuidedTourProvider } from '../features/support/components/GuidedTour';
 import AppCrashBoundary from '../features/support/components/AppCrashBoundary';
 
 function RootContent() {
@@ -16,7 +17,9 @@ export default function RootLayout() {
     <SafeAreaProvider initialMetrics={initialWindowMetrics} style={styles.root}>
       <StatusBar style="light" />
       <AppCrashBoundary>
-        <RootContent />
+        <GuidedTourProvider>
+          <RootContent />
+        </GuidedTourProvider>
       </AppCrashBoundary>
     </SafeAreaProvider>
   );

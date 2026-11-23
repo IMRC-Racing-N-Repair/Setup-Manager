@@ -315,6 +315,7 @@ export default function TracksScreen() {
             title="Tracks"
             kicker="IMRC GARAGE"
             onBack={goBack}
+            tourTarget="track-add"
             rightLabel="+ ADD"
             onRightPress={addTrack}
           />

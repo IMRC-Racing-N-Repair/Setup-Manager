@@ -3,7 +3,7 @@ import { Image } from 'expo-image';
 
 import { AppColors } from '../../theme/colors';
 
-export default function SponsorStartupModal({ visible, sponsor, onClose }) {
+export default function SponsorStartupModal({ visible, sponsor, onClose, onDismiss }) {
   const { height } = useWindowDimensions();
   const artworkHeight = Math.max(165, Math.min(285, Math.round(height * 0.35)));
   const sponsorImage = sponsor?.logo || sponsor?.image || '';
@@ -18,6 +18,7 @@ export default function SponsorStartupModal({ visible, sponsor, onClose }) {
       transparent
       visible={!!visible}
       statusBarTranslucent
+      onDismiss={onDismiss}
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>

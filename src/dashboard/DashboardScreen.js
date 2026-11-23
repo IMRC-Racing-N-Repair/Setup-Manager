@@ -25,6 +25,8 @@ import RaceDayButton from './buttons/RaceDayButton';
 import RaceDayStartModal from './modals/RaceDayStartModal';
 import RecentChangesCard from './components/RecentChangesCard';
 import SponsorBanner from './components/SponsorBanner';
+import FirstUseHowToUseGate from '../../features/support/components/FirstUseHowToUseGate';
+import { useGuidedTour } from '../../features/support/components/GuidedTour';
 import SponsorStartupModal from './modals/SponsorStartupModal';
 import StatsRow from './components/StatsRow';
 import FlootDashboardView from './components/FlootDashboardView';
@@ -139,6 +141,8 @@ export default function DashboardScreen({
   const startDismissTimerRef = useRef(null);
   const activeDismissTimerRef = useRef(null);
   const archiveDismissTimerRef = useRef(null);
+  const tour = useGuidedTour();
+  const [sponsorDismissing, setSponsorDismissing] = useState(false);
   const [showSponsorPopup, setShowSponsorPopup] = useState(() => {
     if (Platform.OS === 'web' || sponsorPopupShownThisLaunch) return false;
     sponsorPopupShownThisLaunch = true;
@@ -637,10 +641,15 @@ export default function DashboardScreen({
         onDismiss={finishArchiveModalDismissal}
       />
       <SponsorStartupModal
-        visible={showSponsorPopup}
+        visible={showSponsorPopup && !tour.active}
         sponsor={sponsor}
-        onClose={() => setShowSponsorPopup(false)}
+        onClose={() => {
+          setSponsorDismissing(Platform.OS === 'ios');
+          setShowSponsorPopup(false);
+        }}
+        onDismiss={() => setSponsorDismissing(false)}
       />
+      {!showSponsorPopup && !sponsorDismissing && !tour.active && <FirstUseHowToUseGate />}
     </StableSafeAreaView>
   );
 }

@@ -4,7 +4,7 @@
     "slug": "imrc-setup-manager",
     "version": "2.1.16",
     "android": {
-      "versionCode": 2114,
+      "versionCode": 2116,
       "package": "com.joshy788.imrcsetupmanager",
       "permissions": [
         "ACCESS_COARSE_LOCATION",
@@ -13,7 +13,7 @@
       "softwareKeyboardLayoutMode": "resize"
     },
     "ios": {
-      "buildNumber": "2114",
+      "buildNumber": "2116",
       "bundleIdentifier": "com.joshy788.imrcsetupmanager",
       "usesAppleSignIn": true,
       "infoPlist": {
